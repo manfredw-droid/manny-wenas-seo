@@ -245,6 +245,17 @@ class MWSEO_Analyzer {
 			sprintf( __( '%1$d of %2$d images lack alt text.', 'manny-wenas-seo' ), $imgs['total'] - $imgs['with_alt'], $imgs['total'] )
 		);
 
+		// With no text there is nothing to read: readability cannot earn points.
+		if ( 0 === $word_count ) {
+			foreach ( $r as $i => $c ) {
+				if ( 'readability' === $c['group'] ) {
+					$r[ $i ]['points']  = 0;
+					$r[ $i ]['status']  = 'bad';
+					$r[ $i ]['message'] = __( 'Add some content to assess readability.', 'manny-wenas-seo' );
+				}
+			}
+		}
+
 		// ---- Totals --------------------------------------------------------------
 		$raw_total = array_sum( self::MAX );
 		$earned    = 0;
@@ -404,7 +415,7 @@ class MWSEO_Analyzer {
 			}
 			if ( ! empty( $synonyms[ $stem ] ) ) {
 				foreach ( (array) $synonyms[ $stem ] as $alt ) {
-					if ( isset( $hay[ self::stem( mb_strtolower( $alt ) ) ] ) ) {
+					if ( isset( $hay[ self::stem( self::lower( $alt ) ) ] ) ) {
 						++$hit;
 						break;
 					}
@@ -424,7 +435,7 @@ class MWSEO_Analyzer {
 	public static function stems( $text, $drop_stopwords ) {
 		$out  = array();
 		$stop = self::lang()['stop'];
-		foreach ( self::words( mb_strtolower( wp_strip_all_tags( (string) $text ) ) ) as $w ) {
+		foreach ( self::words( self::lower( wp_strip_all_tags( (string) $text ) ) ) as $w ) {
 			if ( $drop_stopwords && in_array( $w, $stop, true ) ) {
 				continue;
 			}
@@ -518,6 +529,17 @@ class MWSEO_Analyzer {
 			return 1;
 		}
 		return max( 0, 1 - ( $pct - $limit ) / ( $zero - $limit ) );
+	}
+
+	/**
+	 * Lower-case a string. WordPress polyfills mb_strlen/mb_substr but not
+	 * mb_strtolower, so fall back to strtolower when mbstring is missing.
+	 *
+	 * @param string $s String.
+	 * @return string
+	 */
+	private static function lower( $s ) {
+		return function_exists( 'mb_strtolower' ) ? mb_strtolower( (string) $s, 'UTF-8' ) : strtolower( (string) $s );
 	}
 
 	/**
