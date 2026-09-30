@@ -107,7 +107,13 @@ class MWSEO_Head {
 	public static function description_for_post( $id ) {
 		$desc = MWSEO_Meta::get( $id, 'desc' );
 		if ( ! $desc ) {
-			$desc = has_excerpt( $id ) ? get_the_excerpt( $id ) : wp_trim_words( wp_strip_all_tags( strip_shortcodes( get_post_field( 'post_content', $id ) ) ), 28, '…' );
+			if ( has_excerpt( $id ) ) {
+				$desc = get_the_excerpt( $id );
+			} else {
+				// Keep a space between blocks so words from adjacent paragraphs/headings do not fuse.
+				$content = preg_replace( '#</(p|h[1-6]|li|div|blockquote|figcaption)>#i', '$0 ', (string) get_post_field( 'post_content', $id ) );
+				$desc    = wp_trim_words( wp_strip_all_tags( strip_shortcodes( $content ) ), 28, '…' );
+			}
 		}
 		return trim( wp_strip_all_tags( $desc ) );
 	}

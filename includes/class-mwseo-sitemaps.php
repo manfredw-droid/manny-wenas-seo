@@ -55,6 +55,10 @@ class MWSEO_Sitemaps {
 	 * @return string
 	 */
 	public static function index_url() {
+		// Plain permalinks have no rewrite rules, so fall back to the query-string form.
+		if ( ! get_option( 'permalink_structure' ) ) {
+			return home_url( '/?mwseo_sitemap=index' );
+		}
 		return home_url( '/mwseo-sitemap.xml' );
 	}
 
