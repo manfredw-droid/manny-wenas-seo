@@ -49,6 +49,7 @@ final class MWSEO_Plugin {
 		MWSEO_Gsc::init();
 		MWSEO_Abilities::init();
 		MWSEO_Pro::init();
+		MWSEO_Importer::init();
 	}
 
 	/**
