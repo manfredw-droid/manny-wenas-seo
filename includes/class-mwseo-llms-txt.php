@@ -109,6 +109,10 @@ class MWSEO_Llms_Txt {
 						'key'   => '_yoast_wpseo_is_cornerstone',
 						'value' => '1',
 					),
+					array(
+						'key'   => 'rank_math_pillar_content',
+						'value' => 'on',
+					),
 				),
 			)
 		);

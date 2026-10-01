@@ -20,7 +20,7 @@ class MWSEO_Sitemaps {
 	 */
 	public static function init() {
 		add_shortcode( 'mwseo_html_sitemap', array( __CLASS__, 'html_sitemap' ) );
-		if ( MWSEO_Yoast::is_active() ) {
+		if ( MWSEO_Compat::other_active() ) {
 			return;
 		}
 		add_filter( 'wp_sitemaps_enabled', '__return_false' );

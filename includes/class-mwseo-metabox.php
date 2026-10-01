@@ -109,9 +109,9 @@ class MWSEO_Metabox {
 				<ul id="mwseo-suggestions"></ul>
 			</div>
 
-			<?php if ( MWSEO_Yoast::defers() ) : ?>
-				<?php // Yoast owns these fields. Unnamed hidden inputs keep the live score working but are never submitted, so saving cannot overwrite stored values. ?>
-				<p class="mwseo-yoast-notice notice notice-info inline"><?php esc_html_e( 'Yoast SEO is active — title and description are managed there.', 'manny-wenas-seo' ); ?></p>
+			<?php if ( MWSEO_Compat::owns_title_fields() ) : ?>
+				<?php // Another SEO plugin owns these fields. Unnamed hidden inputs keep the live score working but are never submitted, so saving cannot overwrite stored values. ?>
+				<p class="mwseo-yoast-notice notice notice-info inline"><?php /* translators: %s: SEO plugin name */ echo esc_html( sprintf( __( '%s is active — title and description are managed there.', 'manny-wenas-seo' ), MWSEO_Compat::owner_name() ) ); ?></p>
 				<input type="hidden" id="mwseo_title" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'title' ) ); ?>" />
 				<input type="hidden" id="mwseo_desc" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'desc' ) ); ?>" />
 			<?php else : ?>
@@ -190,8 +190,8 @@ class MWSEO_Metabox {
 		$related = isset( $_POST['mwseo_related'] ) ? array_slice( array_filter( array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['mwseo_related'] ) ) ), 0, 2 ) : array();
 		MWSEO_Meta::set( $post_id, 'focus', isset( $_POST['mwseo_focus'] ) ? sanitize_text_field( wp_unslash( $_POST['mwseo_focus'] ) ) : '' );
 		MWSEO_Meta::set( $post_id, 'related', $related );
-		// When deferring to Yoast the fields are not rendered; leave stored values untouched.
-		if ( ! MWSEO_Yoast::defers() ) {
+		// When another SEO plugin owns the fields they are not rendered; leave stored values untouched.
+		if ( ! MWSEO_Compat::owns_title_fields() ) {
 			MWSEO_Meta::set( $post_id, 'title', isset( $_POST['mwseo_title'] ) ? sanitize_text_field( wp_unslash( $_POST['mwseo_title'] ) ) : '' );
 			MWSEO_Meta::set( $post_id, 'desc', isset( $_POST['mwseo_desc'] ) ? sanitize_textarea_field( wp_unslash( $_POST['mwseo_desc'] ) ) : '' );
 		}

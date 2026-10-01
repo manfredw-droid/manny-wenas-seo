@@ -29,7 +29,7 @@ class MWSEO_Schema {
 	 * Hooks.
 	 */
 	public static function init() {
-		if ( MWSEO_Yoast::is_active() ) {
+		if ( MWSEO_Compat::other_active() ) {
 			return;
 		}
 		add_action( 'wp_head', array( __CLASS__, 'output' ), 20 );

@@ -18,7 +18,7 @@ Free:
 * Sitemaps: posts, news, images, videos, categories, tags, authors, plus an HTML sitemap shortcode
 * robots.txt management and weekly-generated llms.txt (cornerstone content first)
 * Connected @graph JSON-LD, server-side rendered
-* Yoast SEO coexistence (stitch or defer)
+* Yoast SEO coexistence (stitch or defer) and Rank Math coexistence (we defer: no duplicate meta, schema or sitemaps)
 * Google Search Console (OAuth), per-post query data
 * WordPress Abilities API (WP 6.9+)
 * 0-100 SEO and readability score with a written verdict in the editor

@@ -36,7 +36,7 @@ class MWSEO_Robots_Txt {
 		if ( $custom ) {
 			$output = rtrim( $output ) . "\n\n" . $custom . "\n";
 		}
-		if ( MWSEO_Options::get( 'robots_add_sitemap' ) && ! MWSEO_Yoast::is_active() ) {
+		if ( MWSEO_Options::get( 'robots_add_sitemap' ) && ! MWSEO_Compat::other_active() ) {
 			$line = 'Sitemap: ' . MWSEO_Sitemaps::index_url();
 			if ( false === strpos( $output, $line ) ) {
 				$output = rtrim( $output ) . "\n\n" . $line . "\n";

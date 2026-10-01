@@ -13,19 +13,19 @@ defined( 'ABSPATH' ) || exit;
 class MWSEO_Meta {
 
 	/**
-	 * Field definitions: key => [ type, yoast fallback key ].
+	 * Field definitions: key => [ type, Yoast fallback key, Rank Math fallback key ].
 	 *
 	 * @return array
 	 */
 	public static function fields() {
 		return array(
-			'focus'       => array( 'string', '_yoast_wpseo_focuskw' ),
+			'focus'       => array( 'string', '_yoast_wpseo_focuskw', 'rank_math_focus_keyword' ),
 			'related'     => array( 'array', '' ),
-			'title'       => array( 'string', '_yoast_wpseo_title' ),
-			'desc'        => array( 'string', '_yoast_wpseo_metadesc' ),
+			'title'       => array( 'string', '_yoast_wpseo_title', 'rank_math_title' ),
+			'desc'        => array( 'string', '_yoast_wpseo_metadesc', 'rank_math_description' ),
 			'noindex'     => array( 'boolean', '' ),
 			'nofollow'    => array( 'boolean', '' ),
-			'cornerstone' => array( 'boolean', '_yoast_wpseo_is_cornerstone' ),
+			'cornerstone' => array( 'boolean', '_yoast_wpseo_is_cornerstone', 'rank_math_pillar_content' ),
 			'score'       => array( 'integer', '' ),
 			'faq'         => array( 'string', '' ),
 			'video'       => array( 'string', '' ),
@@ -81,19 +81,52 @@ class MWSEO_Meta {
 		$def    = isset( $fields[ $key ] ) ? $fields[ $key ] : array( 'string', '' );
 		$value  = get_post_meta( $post_id, '_mwseo_' . $key, true );
 
-		if ( ( '' === $value || array() === $value || false === $value ) && $def[1] ) {
-			$value = get_post_meta( $post_id, $def[1], true );
+		if ( in_array( $key, array( 'title', 'desc' ), true ) && MWSEO_Compat::owns_title_fields() ) {
+			// Another SEO plugin outputs these, so its value is the effective one; ours is only a fallback.
+			$slots = MWSEO_Compat::rank_math_active() ? array( 2 ) : array( 1 );
+			$other = self::from_other_plugins( $post_id, $key, $def, $slots );
+			$value = '' !== $other ? $other : $value;
+		} elseif ( '' === $value || array() === $value || false === $value ) {
+			// Ours is empty: fall back to Yoast, then Rank Math.
+			$value = self::from_other_plugins( $post_id, $key, $def, array( 1, 2 ) );
 		}
 		if ( 'array' === $def[0] ) {
 			return is_array( $value ) ? array_values( array_filter( $value ) ) : array();
 		}
 		if ( 'boolean' === $def[0] ) {
-			return in_array( (string) $value, array( '1', 'true' ), true );
+			return in_array( (string) $value, array( '1', 'true', 'on' ), true );
 		}
 		if ( 'integer' === $def[0] ) {
 			return (int) $value;
 		}
 		return (string) $value;
+	}
+
+	/**
+	 * Read a value stored by another SEO plugin.
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $key     Field key (without prefix).
+	 * @param array  $def     Field definition (type, Yoast key, Rank Math key).
+	 * @param int[]  $slots   Definition slots to try in order (1 = Yoast, 2 = Rank Math).
+	 * @return mixed Empty string when nothing is stored.
+	 */
+	private static function from_other_plugins( $post_id, $key, array $def, array $slots ) {
+		foreach ( $slots as $slot ) {
+			if ( empty( $def[ $slot ] ) ) {
+				continue;
+			}
+			$value = get_post_meta( $post_id, $def[ $slot ], true );
+			if ( '' === $value || false === $value || array() === $value ) {
+				continue;
+			}
+			if ( 2 === $slot && 'focus' === $key && is_string( $value ) && false !== strpos( $value, ',' ) ) {
+				// Rank Math stores several focus keywords comma-separated; the first is primary.
+				$value = trim( strtok( $value, ',' ) );
+			}
+			return $value;
+		}
+		return '';
 	}
 
 	/**

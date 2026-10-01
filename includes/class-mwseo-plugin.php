@@ -42,6 +42,7 @@ final class MWSEO_Plugin {
 		MWSEO_Head::init();
 		MWSEO_Schema::init();
 		MWSEO_Yoast::init();
+		MWSEO_Compat::init();
 		MWSEO_Sitemaps::init();
 		MWSEO_Robots_Txt::init();
 		MWSEO_Llms_Txt::init();

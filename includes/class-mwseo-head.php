@@ -16,7 +16,7 @@ class MWSEO_Head {
 	 * Hooks.
 	 */
 	public static function init() {
-		if ( MWSEO_Yoast::is_active() ) {
+		if ( MWSEO_Compat::other_active() ) {
 			return;
 		}
 		add_filter( 'pre_get_document_title', array( __CLASS__, 'title' ), 20 );
