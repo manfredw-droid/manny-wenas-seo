@@ -109,16 +109,23 @@ class MWSEO_Metabox {
 				<ul id="mwseo-suggestions"></ul>
 			</div>
 
-			<p>
-				<label for="mwseo_title"><strong><?php esc_html_e( 'SEO title', 'manny-wenas-seo' ); ?></strong></label>
-				<input type="text" id="mwseo_title" name="mwseo_title" class="widefat" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'title' ) ); ?>" />
-				<span class="description mwseo-counter" data-for="mwseo_title" data-min="50" data-max="60"></span>
-			</p>
-			<p>
-				<label for="mwseo_desc"><strong><?php esc_html_e( 'Meta description', 'manny-wenas-seo' ); ?></strong></label>
-				<textarea id="mwseo_desc" name="mwseo_desc" class="widefat" rows="3"><?php echo esc_textarea( MWSEO_Meta::get( $id, 'desc' ) ); ?></textarea>
-				<span class="description mwseo-counter" data-for="mwseo_desc" data-min="120" data-max="155"></span>
-			</p>
+			<?php if ( MWSEO_Yoast::defers() ) : ?>
+				<?php // Yoast owns these fields. Unnamed hidden inputs keep the live score working but are never submitted, so saving cannot overwrite stored values. ?>
+				<p class="mwseo-yoast-notice notice notice-info inline"><?php esc_html_e( 'Yoast SEO is active — title and description are managed there.', 'manny-wenas-seo' ); ?></p>
+				<input type="hidden" id="mwseo_title" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'title' ) ); ?>" />
+				<input type="hidden" id="mwseo_desc" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'desc' ) ); ?>" />
+			<?php else : ?>
+				<p>
+					<label for="mwseo_title"><strong><?php esc_html_e( 'SEO title', 'manny-wenas-seo' ); ?></strong></label>
+					<input type="text" id="mwseo_title" name="mwseo_title" class="widefat" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'title' ) ); ?>" />
+					<span class="description mwseo-counter" data-for="mwseo_title" data-min="50" data-max="60"></span>
+				</p>
+				<p>
+					<label for="mwseo_desc"><strong><?php esc_html_e( 'Meta description', 'manny-wenas-seo' ); ?></strong></label>
+					<textarea id="mwseo_desc" name="mwseo_desc" class="widefat" rows="3"><?php echo esc_textarea( MWSEO_Meta::get( $id, 'desc' ) ); ?></textarea>
+					<span class="description mwseo-counter" data-for="mwseo_desc" data-min="120" data-max="155"></span>
+				</p>
+			<?php endif; ?>
 
 			<fieldset class="mwseo-robots">
 				<legend><strong><?php esc_html_e( 'Search engine visibility', 'manny-wenas-seo' ); ?></strong></legend>
@@ -183,8 +190,11 @@ class MWSEO_Metabox {
 		$related = isset( $_POST['mwseo_related'] ) ? array_slice( array_filter( array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['mwseo_related'] ) ) ), 0, 2 ) : array();
 		MWSEO_Meta::set( $post_id, 'focus', isset( $_POST['mwseo_focus'] ) ? sanitize_text_field( wp_unslash( $_POST['mwseo_focus'] ) ) : '' );
 		MWSEO_Meta::set( $post_id, 'related', $related );
-		MWSEO_Meta::set( $post_id, 'title', isset( $_POST['mwseo_title'] ) ? sanitize_text_field( wp_unslash( $_POST['mwseo_title'] ) ) : '' );
-		MWSEO_Meta::set( $post_id, 'desc', isset( $_POST['mwseo_desc'] ) ? sanitize_textarea_field( wp_unslash( $_POST['mwseo_desc'] ) ) : '' );
+		// When deferring to Yoast the fields are not rendered; leave stored values untouched.
+		if ( ! MWSEO_Yoast::defers() ) {
+			MWSEO_Meta::set( $post_id, 'title', isset( $_POST['mwseo_title'] ) ? sanitize_text_field( wp_unslash( $_POST['mwseo_title'] ) ) : '' );
+			MWSEO_Meta::set( $post_id, 'desc', isset( $_POST['mwseo_desc'] ) ? sanitize_textarea_field( wp_unslash( $_POST['mwseo_desc'] ) ) : '' );
+		}
 		foreach ( array( 'noindex', 'nofollow', 'cornerstone' ) as $flag ) {
 			MWSEO_Meta::set( $post_id, $flag, ! empty( $_POST[ 'mwseo_' . $flag ] ) );
 		}

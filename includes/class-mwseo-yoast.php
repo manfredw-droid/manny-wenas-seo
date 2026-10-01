@@ -34,6 +34,17 @@ class MWSEO_Yoast {
 	}
 
 	/**
+	 * Is Yoast active while we are set to defer to it completely?
+	 *
+	 * In this state Yoast owns the SEO title and meta description.
+	 *
+	 * @return bool
+	 */
+	public static function defers() {
+		return self::is_active() && 'defer' === MWSEO_Options::get( 'yoast_mode' );
+	}
+
+	/**
 	 * Add our nodes to Yoast's graph (stitch mode, Pro nodes only).
 	 *
 	 * @param array  $graph   Yoast graph pieces.
