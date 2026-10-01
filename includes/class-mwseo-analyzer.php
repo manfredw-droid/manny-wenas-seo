@@ -10,14 +10,21 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Scores a piece of content against the Manny Wenas rubric.
  *
- * The brief lists 12 SEO checks (65 raw points, not the 58 stated) and 6
- * readability checks (36 raw points), 101 in total. Raw points are kept as
- * specified per check and the final score is normalised to 0-100.
+ * Rubric: SEO 58 points, readability 36 points (94 raw points). The twelve
+ * SEO rows in the rubric sheet sum to 65, so each SEO weight is scaled by
+ * 58/65 to make the SEO block total exactly 58. The final score is the raw
+ * total normalised to 0-100.
  */
 class MWSEO_Analyzer {
 
 	/**
-	 * Raw point maximums per check.
+	 * Scale applied to the SEO weights below so the SEO block totals 58.
+	 */
+	const SEO_SCALE = 58 / 65;
+
+	/**
+	 * Point weights per check as listed in the rubric sheet (SEO rows are scaled
+	 * by SEO_SCALE when used; see check()).
 	 *
 	 * @var array
 	 */
@@ -257,14 +264,15 @@ class MWSEO_Analyzer {
 		}
 
 		// ---- Totals --------------------------------------------------------------
-		$raw_total = array_sum( self::MAX );
+		$raw_total = 0;
 		$earned    = 0;
 		$seo       = 0;
 		$read      = 0;
 		$seo_max   = 0;
 		$read_max  = 0;
 		foreach ( $r as $c ) {
-			$earned += $c['points'];
+			$raw_total += $c['max'];
+			$earned    += $c['points'];
 			if ( 'seo' === $c['group'] ) {
 				$seo     += $c['points'];
 				$seo_max += $c['max'];
@@ -284,11 +292,11 @@ class MWSEO_Analyzer {
 			'score'       => $score,
 			'seo'         => array(
 				'points' => round( $seo, 1 ),
-				'max'    => $seo_max,
+				'max'    => round( $seo_max ),
 			),
 			'readability' => array(
 				'points' => round( $read, 1 ),
-				'max'    => $read_max,
+				'max'    => round( $read_max ),
 			),
 			'verdict'     => self::verdict( $score, $r, '' !== $focus ),
 			'checks'      => $r,
@@ -354,8 +362,9 @@ class MWSEO_Analyzer {
 	 */
 	private static function check( $id, $group, $ratio, $good, $bad ) {
 		$ratio  = max( 0, min( 1, (float) $ratio ) );
-		$max    = self::MAX[ $id ];
+		$max    = 'seo' === $group ? self::MAX[ $id ] * self::SEO_SCALE : self::MAX[ $id ];
 		$points = round( $max * $ratio, 2 );
+		$max    = round( $max, 2 );
 		if ( $ratio >= 0.999 ) {
 			$status = 'good';
 		} elseif ( $ratio >= 0.4 ) {
