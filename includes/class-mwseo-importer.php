@@ -305,8 +305,9 @@ class MWSEO_Importer {
 				); ?>
 			</p>
 
-			<form id="mw-seo-import-form">
+			<form id="mw-seo-import-form" method="post" action="">
 				<?php wp_nonce_field( 'mw_seo_import', '_mw_nonce' ); ?>
+				<input type="hidden" name="page" value="mw-seo-import">
 
 				<table class="form-table" role="presentation">
 					<tr>
@@ -459,7 +460,7 @@ class MWSEO_Importer {
 				runImport(true);
 			});
 
-			$('#mw-import-form').on('submit', function(e){
+			$('#mw-seo-import-form').on('submit', function(e){
 				e.preventDefault();
 				runImport(false);
 			});
