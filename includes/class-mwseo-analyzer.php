@@ -20,7 +20,7 @@ class MWSEO_Analyzer {
 	/**
 	 * Scale applied to the SEO weights below so the SEO block totals 58.
 	 */
-	const SEO_SCALE = 58 / 65;
+	const SEO_SCALE = 58 / 69;
 
 	/**
 	 * Point weights per check as listed in the rubric sheet (SEO rows are scaled
@@ -41,6 +41,7 @@ class MWSEO_Analyzer {
 		'content_length'  => 6,
 		'internal_links'  => 3,
 		'related_body'    => 6,
+		'image_kp'        => 4,
 		'sentence_length' => 9,
 		'paragraph_len'   => 7,
 		'passive_voice'   => 6,
@@ -94,7 +95,8 @@ class MWSEO_Analyzer {
 		$word_count = count( $words );
 		$headings   = self::headings( $html );
 
-		$r = array();
+		$r    = array();
+		$imgs = self::images( $html );
 
 		// ---- SEO -----------------------------------------------------------------
 		$title_len = self::len( $in['title'] );
@@ -157,6 +159,15 @@ class MWSEO_Analyzer {
 				sprintf( __( '%1$d of %2$d related keyphrases appear in the text.', 'manny-wenas-seo' ), $found, count( $related ) )
 			);
 		}
+
+		$alt_haystack = implode( ' ', $imgs['alts'] );
+		$r[]          = self::kp_check(
+			'image_kp',
+			$focus,
+			$alt_haystack,
+			__( 'The focus keyphrase appears in an image alt text.', 'manny-wenas-seo' ),
+			__( 'Use the focus keyphrase in the alt text of at least one image.', 'manny-wenas-seo' )
+		);
 
 		// ---- Readability ---------------------------------------------------------
 		$lang = self::lang();
@@ -242,8 +253,7 @@ class MWSEO_Analyzer {
 			sprintf( __( 'One section runs %d words without a subheading; break it up (max 300).', 'manny-wenas-seo' ), $longest )
 		);
 
-		$imgs = self::images( $html );
-		$r[]  = self::check(
+		$r[] = self::check(
 			'image_alt',
 			'readability',
 			0 === $imgs['total'] ? 1 : $imgs['with_alt'] / $imgs['total'],
@@ -688,14 +698,17 @@ class MWSEO_Analyzer {
 	private static function images( $html ) {
 		preg_match_all( '#<img\b[^>]*>#i', $html, $m );
 		$with = 0;
+		$alts = array();
 		foreach ( $m[0] as $img ) {
 			if ( preg_match( '#\balt=(["\'])(.*?)\1#is', $img, $a ) && '' !== trim( $a[2] ) ) {
 				++$with;
+				$alts[] = trim( $a[2] );
 			}
 		}
 		return array(
 			'total'    => count( $m[0] ),
 			'with_alt' => $with,
+			'alts'     => $alts,
 		);
 	}
 }
