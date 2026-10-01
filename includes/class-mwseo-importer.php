@@ -269,7 +269,7 @@ class MWSEO_Importer {
 	 */
 	public static function register_admin_page(): void {
 		add_submenu_page(
-			'mw-seo',
+			'mwseo',
 			__( 'Import SEO Data', 'mw-seo' ),
 			__( 'Import', 'mw-seo' ),
 			'manage_options',
