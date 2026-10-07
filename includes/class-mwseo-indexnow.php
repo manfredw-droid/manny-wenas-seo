@@ -89,9 +89,15 @@ class MWSEO_Indexnow {
 	 * @param WP_Post $post       Post.
 	 */
 	public static function on_transition( $new_status, $old_status, $post ) {
-		if ( 'publish' === $new_status && 'publish' !== $old_status ) {
-			self::ping( $post );
+		if ( 'publish' !== $new_status || 'publish' === $old_status ) {
+			return;
 		}
+		// Pro auto-submit already pings IndexNow on first publication; avoid a double ping.
+		if ( MWSEO_Pro::is_active() && MWSEO_Options::get( 'sitemap_autosubmit' ) ) {
+			self::$pinged[] = (int) $post->ID; // Also stops the save_post hook in this request.
+			return;
+		}
+		self::ping( $post );
 	}
 
 	/**
