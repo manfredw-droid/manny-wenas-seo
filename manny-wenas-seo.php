@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Manny Wenas SEO
- * Plugin URI:        https://example.com/manny-wenas-seo
+ * Plugin URI:        https://mannywenas.com
  * Description:       Lean SEO for WordPress: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
  * Version:           1.0.0
  * Requires at least: 6.4
