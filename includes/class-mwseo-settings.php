@@ -349,11 +349,11 @@ class MWSEO_Settings {
 	private static function messages() {
 		$msg = isset( $_GET['mwseo_msg'] ) ? sanitize_key( wp_unslash( $_GET['mwseo_msg'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$map = array(
-			'connected'    => array( 'success', __( 'Connected to Google Search Console.', 'manny-wenas-seo' ) ),
-			'disconnected' => array( 'info', __( 'Disconnected from Google Search Console.', 'manny-wenas-seo' ) ),
-			'error'        => array( 'error', __( 'Google did not return a refresh token. Check your client ID, secret and redirect URI, then try again.', 'manny-wenas-seo' ) ),
+			'connected'        => array( 'success', __( 'Connected to Google Search Console.', 'manny-wenas-seo' ) ),
+			'disconnected'     => array( 'info', __( 'Disconnected from Google Search Console.', 'manny-wenas-seo' ) ),
+			'error'            => array( 'error', __( 'Google did not return a refresh token. Check your client ID, secret and redirect URI, then try again.', 'manny-wenas-seo' ) ),
 			'indexnow_renewed' => array( 'success', __( 'A new IndexNow key has been generated.', 'manny-wenas-seo' ) ),
-			'no_client'    => array( 'error', __( 'Save your OAuth client ID and secret first.', 'manny-wenas-seo' ) ),
+			'no_client'        => array( 'error', __( 'Save your OAuth client ID and secret first.', 'manny-wenas-seo' ) ),
 		);
 		if ( isset( $map[ $msg ] ) ) {
 			printf( '<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>', esc_attr( $map[ $msg ][0] ), esc_html( $map[ $msg ][1] ) );
