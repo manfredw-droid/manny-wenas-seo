@@ -52,8 +52,15 @@ class MWSEO_Metabox {
 				'postId' => get_the_ID(),
 				'isPro'  => MWSEO_Pro::is_active(),
 				'hasGsc' => MWSEO_Gsc::is_connected(),
+				'ajax'   => MWSEO_Options::get( 'trends_enabled' ) ? array(
+					'url'    => admin_url( 'admin-ajax.php' ),
+					'action' => MWSEO_Trends::ACTION,
+					'nonce'  => wp_create_nonce( MWSEO_Trends::ACTION ),
+				) : null,
 				'i18n'   => array(
 					'seo'         => __( 'SEO', 'manny-wenas-seo' ),
+					'trends'      => __( 'Trends (7 days)', 'manny-wenas-seo' ),
+					'average'     => __( 'Average', 'manny-wenas-seo' ),
 					'readability' => __( 'Readability', 'manny-wenas-seo' ),
 					'analysing'   => __( 'Analysing…', 'manny-wenas-seo' ),
 					'noData'      => __( 'No Search Console data for this URL yet.', 'manny-wenas-seo' ),
@@ -101,6 +108,7 @@ class MWSEO_Metabox {
 				<label for="mwseo_focus"><strong><?php esc_html_e( 'Focus keyphrase', 'manny-wenas-seo' ); ?></strong></label>
 				<input type="text" id="mwseo_focus" name="mwseo_focus" class="widefat" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'focus' ) ); ?>" />
 				<span class="description"><?php esc_html_e( 'Matching is semantic: word order and common variants (plurals, verb forms) count.', 'manny-wenas-seo' ); ?></span>
+				<span class="mwseo-trends" id="mwseo-trends" hidden></span>
 			</p>
 
 			<div class="mwseo-related">
@@ -141,7 +149,7 @@ class MWSEO_Metabox {
 				<legend><strong><?php esc_html_e( 'Search engine visibility', 'manny-wenas-seo' ); ?></strong></legend>
 				<label><input type="checkbox" name="mwseo_noindex" value="1" <?php checked( MWSEO_Meta::get( $id, 'noindex' ) ); ?> /> <?php esc_html_e( 'noindex: keep this out of search results', 'manny-wenas-seo' ); ?></label><br />
 				<label><input type="checkbox" name="mwseo_nofollow" value="1" <?php checked( MWSEO_Meta::get( $id, 'nofollow' ) ); ?> /> <?php esc_html_e( 'nofollow: do not follow links on this page', 'manny-wenas-seo' ); ?></label><br />
-				<label><input type="checkbox" name="mwseo_cornerstone" value="1" <?php checked( MWSEO_Meta::get( $id, 'cornerstone' ) ); ?> /> <?php esc_html_e( 'Cornerstone content (prioritised in llms.txt)', 'manny-wenas-seo' ); ?></label>
+				<label><input type="checkbox" name="mwseo_cornerstone" value="1" <?php checked( MWSEO_Meta::get( $id, 'cornerstone' ) ); ?> /> <?php esc_html_e( 'Anchor post (prioritised in llms.txt)', 'manny-wenas-seo' ); ?></label>
 			</fieldset>
 
 			<h4><?php esc_html_e( 'Analysis', 'manny-wenas-seo' ); ?></h4>
@@ -202,7 +210,12 @@ class MWSEO_Metabox {
 			$new_slug = sanitize_title( wp_unslash( $_POST['mwseo_slug'] ) );
 			if ( $new_slug && $new_slug !== $post->post_name ) {
 				remove_action( 'save_post', array( __CLASS__, 'save' ), 10 );
-				wp_update_post( array( 'ID' => $post_id, 'post_name' => $new_slug ) );
+				wp_update_post(
+					array(
+						'ID'        => $post_id,
+						'post_name' => $new_slug,
+					)
+				);
 				add_action( 'save_post', array( __CLASS__, 'save' ), 10, 2 );
 			}
 		}

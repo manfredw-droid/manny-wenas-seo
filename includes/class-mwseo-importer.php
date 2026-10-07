@@ -410,7 +410,7 @@ class MWSEO_Importer {
 				twitter_title:       '<?php echo esc_js( __( 'Twitter title', 'mw-seo' ) ); ?>',
 				twitter_description: '<?php echo esc_js( __( 'Twitter description', 'mw-seo' ) ); ?>',
 				twitter_image:       '<?php echo esc_js( __( 'Twitter image URL', 'mw-seo' ) ); ?>',
-				cornerstone:         '<?php echo esc_js( __( 'Cornerstone content', 'mw-seo' ) ); ?>',
+				cornerstone:         '<?php echo esc_js( __( 'Anchor post', 'mw-seo' ) ); ?>',
 				schema_page_type:    '<?php echo esc_js( __( 'Schema page type', 'mw-seo' ) ); ?>',
 				schema_article_type: '<?php echo esc_js( __( 'Schema article type', 'mw-seo' ) ); ?>',
 			};
