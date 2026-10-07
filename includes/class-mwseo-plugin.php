@@ -46,6 +46,8 @@ final class MWSEO_Plugin {
 		MWSEO_Sitemaps::init();
 		MWSEO_Robots_Txt::init();
 		MWSEO_Notices::init();
+		MWSEO_Verification::init();
+		MWSEO_Indexnow::init();
 		MWSEO_Llms_Txt::init();
 		MWSEO_Gsc::init();
 		MWSEO_Abilities::init();
@@ -62,6 +64,8 @@ final class MWSEO_Plugin {
 			add_option( MWSEO_Options::KEY, MWSEO_Options::defaults(), '', false );
 		}
 		MWSEO_Pro::create_table();
+		MWSEO_Options::flush();
+		MWSEO_Indexnow::ensure_key();
 		MWSEO_Sitemaps::add_rewrites();
 		MWSEO_Llms_Txt::add_rewrites();
 		MWSEO_Pro::add_rewrites();

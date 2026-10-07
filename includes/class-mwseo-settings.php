@@ -35,6 +35,7 @@ class MWSEO_Settings {
 			'sitemaps' => __( 'Sitemaps', 'manny-wenas-seo' ),
 			'robots'   => __( 'Robots & llms.txt', 'manny-wenas-seo' ),
 			'gsc'      => __( 'Search Console', 'manny-wenas-seo' ),
+			'verify'   => __( 'Verification & IndexNow', 'manny-wenas-seo' ),
 			'pro'      => __( 'Pro', 'manny-wenas-seo' ),
 		);
 	}
@@ -131,6 +132,10 @@ class MWSEO_Settings {
 				array( 'gsc_client_id', 'text', __( 'Google OAuth client ID', 'manny-wenas-seo' ), '' ),
 				array( 'gsc_client_secret', 'password', __( 'Google OAuth client secret', 'manny-wenas-seo' ), '' ),
 				array( 'gsc_property', 'text', __( 'Search Console property', 'manny-wenas-seo' ), __( 'For example https://example.com/ or sc-domain:example.com. Defaults to the home URL.', 'manny-wenas-seo' ) ),
+			),
+			'verify'   => array(
+				array( 'gsc_html_filename', 'text', __( 'Google Search Console HTML file', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'gsc_html_filename' ) ), array(), 'googleXXXXXXXXXXXXXXXX.html' ),
+				array( 'bing_verification_key', 'text', __( 'Bing Webmaster Tools verification code', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'bing_verification_key' ) ), array(), 'jouw Bing verificatiecode' ),
 			),
 			'pro'      => array(
 				array(
@@ -234,6 +239,12 @@ class MWSEO_Settings {
 				}
 			}
 		}
+		if ( array_key_exists( 'gsc_html_filename', $input ) ) {
+			$current['gsc_html_filename'] = MWSEO_Verification::sanitize_gsc_filename( $input['gsc_html_filename'] );
+		}
+		if ( array_key_exists( 'bing_verification_key', $input ) ) {
+			$current['bing_verification_key'] = MWSEO_Verification::sanitize_bing_key( $input['bing_verification_key'] );
+		}
 		// Non-UI keys set programmatically (kept when saving a tab).
 		if ( isset( $input['indexnow_key'] ) ) {
 			$current['indexnow_key'] = sanitize_text_field( $input['indexnow_key'] );
@@ -294,7 +305,41 @@ class MWSEO_Settings {
 				</table>
 				<?php submit_button(); ?>
 			</form>
+			<?php self::indexnow_box( $tab ); ?>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Read-only IndexNow key with a nonce-protected "renew" button.
+	 *
+	 * @param string $tab Tab slug.
+	 */
+	private static function indexnow_box( $tab ) {
+		if ( 'verify' !== $tab ) {
+			return;
+		}
+		$key = MWSEO_Indexnow::ensure_key();
+		?>
+		<h2><?php esc_html_e( 'IndexNow', 'manny-wenas-seo' ); ?></h2>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="mwseo_indexnow_regenerate" />
+			<?php wp_nonce_field( 'mwseo_indexnow_regenerate', 'mwseo_indexnow_nonce' ); ?>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label for="mwseo_indexnow_key"><?php esc_html_e( 'IndexNow key', 'manny-wenas-seo' ); ?></label></th>
+					<td>
+						<input type="text" id="mwseo_indexnow_key" class="regular-text code" value="<?php echo esc_attr( $key ); ?>" readonly="readonly" />
+						<button type="submit" class="button"><?php esc_html_e( 'Vernieuw sleutel', 'manny-wenas-seo' ); ?></button>
+						<p class="description">
+							<?php esc_html_e( 'Key file:', 'manny-wenas-seo' ); ?>
+							<a href="<?php echo esc_url( home_url( '/' . $key . '.txt' ) ); ?>" target="_blank" rel="noopener"><?php echo esc_html( home_url( '/' . $key . '.txt' ) ); ?></a>
+							<?php esc_html_e( 'Published and updated posts and pages are sent to IndexNow automatically.', 'manny-wenas-seo' ); ?>
+						</p>
+					</td>
+				</tr>
+			</table>
+		</form>
 		<?php
 	}
 
@@ -307,6 +352,7 @@ class MWSEO_Settings {
 			'connected'    => array( 'success', __( 'Connected to Google Search Console.', 'manny-wenas-seo' ) ),
 			'disconnected' => array( 'info', __( 'Disconnected from Google Search Console.', 'manny-wenas-seo' ) ),
 			'error'        => array( 'error', __( 'Google did not return a refresh token. Check your client ID, secret and redirect URI, then try again.', 'manny-wenas-seo' ) ),
+			'indexnow_renewed' => array( 'success', __( 'A new IndexNow key has been generated.', 'manny-wenas-seo' ) ),
 			'no_client'    => array( 'error', __( 'Save your OAuth client ID and secret first.', 'manny-wenas-seo' ) ),
 		);
 		if ( isset( $map[ $msg ] ) ) {
@@ -353,6 +399,7 @@ class MWSEO_Settings {
 		$name                              = MWSEO_Options::KEY . '[' . $key . ']';
 		$id                                = 'mwseo_opt_' . $key;
 		$val                               = isset( $opts[ $key ] ) ? $opts[ $key ] : '';
+		$placeholder                       = isset( $f[5] ) ? $f[5] : '';
 		?>
 		<tr>
 			<th scope="row"><label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label></th>
@@ -385,7 +432,7 @@ class MWSEO_Settings {
 						printf( '<input type="password" id="%1$s" name="%2$s" value="" class="regular-text" autocomplete="new-password" placeholder="%3$s" />', esc_attr( $id ), esc_attr( $name ), $val ? esc_attr__( '•••••••• (saved; leave blank to keep)', 'manny-wenas-seo' ) : '' );
 						break;
 					default:
-						printf( '<input type="text" id="%1$s" name="%2$s" value="%3$s" class="regular-text" />', esc_attr( $id ), esc_attr( $name ), esc_attr( $val ) );
+						printf( '<input type="text" id="%1$s" name="%2$s" value="%3$s" class="regular-text" placeholder="%4$s" />', esc_attr( $id ), esc_attr( $name ), esc_attr( $val ), esc_attr( $placeholder ) );
 				}
 				if ( $desc ) {
 					echo '<p class="description">' . esc_html( $desc ) . '</p>';
