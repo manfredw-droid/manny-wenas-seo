@@ -63,6 +63,7 @@ class MWSEO_Options {
 			'report_email'       => '',
 			'sitemap_autosubmit' => 1,
 			'indexnow_key'       => '',
+			'trends_enabled'     => 1,
 		);
 	}
 

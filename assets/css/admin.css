@@ -21,3 +21,9 @@
 .mwseo-settings .form-table th { width: 240px; }
 .mwseo-tab-panel { display: none; }
 .mwseo-tab-panel.is-active { display: block; }
+
+.mwseo-trends { display: block; margin-top: 4px; font-size: 12px; color: #50575e; }
+.mwseo-trends[hidden] { display: none; }
+.mwseo-trends-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; background: #a7aaad; }
+.mwseo-trends-dot[data-level="high"] { background: #00a32a; }
+.mwseo-trends-dot[data-level="medium"] { background: #dba617; }

@@ -51,6 +51,7 @@ final class MWSEO_Plugin {
 		MWSEO_Abilities::init();
 		MWSEO_Pro::init();
 		MWSEO_Importer::init();
+		MWSEO_Trends::init();
 	}
 
 	/**
