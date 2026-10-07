@@ -52,7 +52,12 @@ class MWSEO_Settings {
 			}
 		}
 		$users = array( 0 => __( '— none —', 'manny-wenas-seo' ) );
-		foreach ( get_users( array( 'capability' => 'edit_posts', 'fields' => array( 'ID', 'display_name' ) ) ) as $u ) {
+		foreach ( get_users(
+			array(
+				'capability' => 'edit_posts',
+				'fields'     => array( 'ID', 'display_name' ),
+			)
+		) as $u ) {
 			$users[ $u->ID ] = $u->display_name;
 		}
 
@@ -127,10 +132,16 @@ class MWSEO_Settings {
 				array( 'gsc_property', 'text', __( 'Search Console property', 'manny-wenas-seo' ), __( 'For example https://example.com/ or sc-domain:example.com. Defaults to the home URL.', 'manny-wenas-seo' ) ),
 			),
 			'pro'      => array(
-				array( 'ai_provider', 'select', __( 'AI provider (your own API key)', 'manny-wenas-seo' ), '', array(
-					'anthropic' => 'Anthropic',
-					'openai'    => 'OpenAI',
-				) ),
+				array(
+					'ai_provider',
+					'select',
+					__( 'AI provider (your own API key)', 'manny-wenas-seo' ),
+					'',
+					array(
+						'anthropic' => 'Anthropic',
+						'openai'    => 'OpenAI',
+					),
+				),
 				array( 'ai_api_key', 'password', __( 'API key', 'manny-wenas-seo' ), __( 'Stored in the database; used only for requests you trigger.', 'manny-wenas-seo' ) ),
 				array( 'ai_model', 'text', __( 'Model ID', 'manny-wenas-seo' ), '' ),
 				array( 'report_enabled', 'checkbox', __( 'Weekly rank report email', 'manny-wenas-seo' ), '' ),
@@ -256,7 +267,19 @@ class MWSEO_Settings {
 			<?php self::messages(); ?>
 			<h2 class="nav-tab-wrapper">
 				<?php foreach ( $tabs as $slug => $label ) : ?>
-					<a class="nav-tab <?php echo $slug === $tab ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( array( 'page' => 'mwseo', 'tab' => $slug ), admin_url( 'admin.php' ) ) ); ?>"><?php echo esc_html( $label ); ?></a>
+					<a class="nav-tab <?php echo $slug === $tab ? 'nav-tab-active' : ''; ?>" href="
+					<?php
+					echo esc_url(
+						add_query_arg(
+							array(
+								'page' => 'mwseo',
+								'tab'  => $slug,
+							),
+							admin_url( 'admin.php' )
+						)
+					);
+					?>
+										"><?php echo esc_html( $label ); ?></a>
 				<?php endforeach; ?>
 			</h2>
 
@@ -325,10 +348,10 @@ class MWSEO_Settings {
 	 */
 	private static function field( array $f, array $opts ) {
 		list( $key, $type, $label, $desc ) = $f;
-		$choices = isset( $f[4] ) ? $f[4] : array();
-		$name    = MWSEO_Options::KEY . '[' . $key . ']';
-		$id      = 'mwseo_opt_' . $key;
-		$val     = isset( $opts[ $key ] ) ? $opts[ $key ] : '';
+		$choices                           = isset( $f[4] ) ? $f[4] : array();
+		$name                              = MWSEO_Options::KEY . '[' . $key . ']';
+		$id                                = 'mwseo_opt_' . $key;
+		$val                               = isset( $opts[ $key ] ) ? $opts[ $key ] : '';
 		?>
 		<tr>
 			<th scope="row"><label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label></th>

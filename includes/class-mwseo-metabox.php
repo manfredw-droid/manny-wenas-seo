@@ -49,10 +49,10 @@ class MWSEO_Metabox {
 			'mwseo-metabox',
 			'mwseoBox',
 			array(
-				'postId'  => get_the_ID(),
-				'isPro'   => MWSEO_Pro::is_active(),
-				'hasGsc'  => MWSEO_Gsc::is_connected(),
-				'i18n'    => array(
+				'postId' => get_the_ID(),
+				'isPro'  => MWSEO_Pro::is_active(),
+				'hasGsc' => MWSEO_Gsc::is_connected(),
+				'i18n'   => array(
 					'seo'         => __( 'SEO', 'manny-wenas-seo' ),
 					'readability' => __( 'Readability', 'manny-wenas-seo' ),
 					'analysing'   => __( 'Analysing…', 'manny-wenas-seo' ),
