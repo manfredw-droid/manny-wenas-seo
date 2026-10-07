@@ -123,7 +123,7 @@ class MWSEO_Settings {
 			'robots'   => array(
 				array( 'robots_custom', 'textarea', __( 'Custom robots.txt rules', 'manny-wenas-seo' ), __( 'Appended to WordPress’s virtual robots.txt. A physical robots.txt file overrides this.', 'manny-wenas-seo' ) ),
 				array( 'robots_add_sitemap', 'checkbox', __( 'Add sitemap URL to robots.txt', 'manny-wenas-seo' ), '' ),
-				array( 'llms_enabled', 'checkbox', __( 'Serve /llms.txt', 'manny-wenas-seo' ), __( 'Regenerated weekly and whenever you save these settings. Cornerstone content is listed first.', 'manny-wenas-seo' ) ),
+				array( 'llms_enabled', 'checkbox', __( 'Serve /llms.txt', 'manny-wenas-seo' ), __( 'Regenerated weekly and whenever you save these settings. Anchor posts are listed first.', 'manny-wenas-seo' ) ),
 				array( 'llms_intro', 'textarea', __( 'llms.txt summary', 'manny-wenas-seo' ), __( 'Defaults to the site tagline.', 'manny-wenas-seo' ) ),
 			),
 			'gsc'      => array(

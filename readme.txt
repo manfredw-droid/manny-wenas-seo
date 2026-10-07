@@ -16,7 +16,7 @@ Free:
 * SEO title, meta description, noindex/nofollow per post
 * Open Graph and X/Twitter cards
 * Sitemaps: posts, news, images, videos, categories, tags, authors, plus an HTML sitemap shortcode
-* robots.txt management and weekly-generated llms.txt (cornerstone content first)
+* robots.txt management and weekly-generated llms.txt (anchor posts first)
 * Connected @graph JSON-LD, server-side rendered
 * Yoast SEO coexistence (stitch or defer) and Rank Math coexistence (we defer: no duplicate meta, schema or sitemaps)
 * Google Search Console (OAuth), per-post query data

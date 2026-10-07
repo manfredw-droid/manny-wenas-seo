@@ -141,7 +141,7 @@ class MWSEO_Metabox {
 				<legend><strong><?php esc_html_e( 'Search engine visibility', 'manny-wenas-seo' ); ?></strong></legend>
 				<label><input type="checkbox" name="mwseo_noindex" value="1" <?php checked( MWSEO_Meta::get( $id, 'noindex' ) ); ?> /> <?php esc_html_e( 'noindex: keep this out of search results', 'manny-wenas-seo' ); ?></label><br />
 				<label><input type="checkbox" name="mwseo_nofollow" value="1" <?php checked( MWSEO_Meta::get( $id, 'nofollow' ) ); ?> /> <?php esc_html_e( 'nofollow: do not follow links on this page', 'manny-wenas-seo' ); ?></label><br />
-				<label><input type="checkbox" name="mwseo_cornerstone" value="1" <?php checked( MWSEO_Meta::get( $id, 'cornerstone' ) ); ?> /> <?php esc_html_e( 'Cornerstone content (prioritised in llms.txt)', 'manny-wenas-seo' ); ?></label>
+				<label><input type="checkbox" name="mwseo_cornerstone" value="1" <?php checked( MWSEO_Meta::get( $id, 'cornerstone' ) ); ?> /> <?php esc_html_e( 'Anchor post (prioritised in llms.txt)', 'manny-wenas-seo' ); ?></label>
 			</fieldset>
 
 			<h4><?php esc_html_e( 'Analysis', 'manny-wenas-seo' ); ?></h4>

@@ -8,7 +8,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Generates /llms.txt weekly. Cornerstone content is listed first.
+ * Generates /llms.txt weekly. Anchor posts are listed first.
  */
 class MWSEO_Llms_Txt {
 
