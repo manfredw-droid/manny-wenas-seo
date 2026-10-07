@@ -46,6 +46,7 @@ final class MWSEO_Plugin {
 		MWSEO_Sitemaps::init();
 		MWSEO_Robots_Txt::init();
 		MWSEO_Notices::init();
+		MWSEO_Verification::init();
 		MWSEO_Llms_Txt::init();
 		MWSEO_Gsc::init();
 		MWSEO_Abilities::init();

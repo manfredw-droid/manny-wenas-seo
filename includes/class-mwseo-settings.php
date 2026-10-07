@@ -35,6 +35,7 @@ class MWSEO_Settings {
 			'sitemaps' => __( 'Sitemaps', 'manny-wenas-seo' ),
 			'robots'   => __( 'Robots & llms.txt', 'manny-wenas-seo' ),
 			'gsc'      => __( 'Search Console', 'manny-wenas-seo' ),
+			'verify'   => __( 'Verification & IndexNow', 'manny-wenas-seo' ),
 			'pro'      => __( 'Pro', 'manny-wenas-seo' ),
 		);
 	}
@@ -130,6 +131,9 @@ class MWSEO_Settings {
 				array( 'gsc_client_id', 'text', __( 'Google OAuth client ID', 'manny-wenas-seo' ), '' ),
 				array( 'gsc_client_secret', 'password', __( 'Google OAuth client secret', 'manny-wenas-seo' ), '' ),
 				array( 'gsc_property', 'text', __( 'Search Console property', 'manny-wenas-seo' ), __( 'For example https://example.com/ or sc-domain:example.com. Defaults to the home URL.', 'manny-wenas-seo' ) ),
+			),
+			'verify'   => array(
+				array( 'gsc_html_filename', 'text', __( 'Google Search Console HTML file', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'gsc_html_filename' ) ), array(), 'googleXXXXXXXXXXXXXXXX.html' ),
 			),
 			'pro'      => array(
 				array(
@@ -232,6 +236,9 @@ class MWSEO_Settings {
 						$current[ $key ] = sanitize_text_field( (string) $raw );
 				}
 			}
+		}
+		if ( array_key_exists( 'gsc_html_filename', $input ) ) {
+			$current['gsc_html_filename'] = MWSEO_Verification::sanitize_gsc_filename( $input['gsc_html_filename'] );
 		}
 		// Non-UI keys set programmatically (kept when saving a tab).
 		if ( isset( $input['indexnow_key'] ) ) {
@@ -352,6 +359,7 @@ class MWSEO_Settings {
 		$name                              = MWSEO_Options::KEY . '[' . $key . ']';
 		$id                                = 'mwseo_opt_' . $key;
 		$val                               = isset( $opts[ $key ] ) ? $opts[ $key ] : '';
+		$placeholder                       = isset( $f[5] ) ? $f[5] : '';
 		?>
 		<tr>
 			<th scope="row"><label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label></th>
@@ -384,7 +392,7 @@ class MWSEO_Settings {
 						printf( '<input type="password" id="%1$s" name="%2$s" value="" class="regular-text" autocomplete="new-password" placeholder="%3$s" />', esc_attr( $id ), esc_attr( $name ), $val ? esc_attr__( '•••••••• (saved; leave blank to keep)', 'manny-wenas-seo' ) : '' );
 						break;
 					default:
-						printf( '<input type="text" id="%1$s" name="%2$s" value="%3$s" class="regular-text" />', esc_attr( $id ), esc_attr( $name ), esc_attr( $val ) );
+						printf( '<input type="text" id="%1$s" name="%2$s" value="%3$s" class="regular-text" placeholder="%4$s" />', esc_attr( $id ), esc_attr( $name ), esc_attr( $val ), esc_attr( $placeholder ) );
 				}
 				if ( $desc ) {
 					echo '<p class="description">' . esc_html( $desc ) . '</p>';
