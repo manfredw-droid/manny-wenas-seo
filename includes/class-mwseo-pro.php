@@ -371,7 +371,7 @@ class MWSEO_Pro {
 	 */
 	private static function rank_rows() {
 		global $wpdb;
-		$table = $wpdb->prefix . 'mwseo_rank';
+		$table = esc_sql( $wpdb->prefix . 'mwseo_rank' );
 		$weeks = $wpdb->get_col( "SELECT DISTINCT week FROM {$table} ORDER BY week DESC LIMIT 2" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		if ( ! $weeks ) {
 			return array();

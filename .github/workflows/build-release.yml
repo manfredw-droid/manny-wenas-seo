@@ -1,0 +1,38 @@
+name: Build release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Build installable zip
+        run: |
+          set -euo pipefail
+          SLUG=manny-wenas-seo
+          ZIP="${SLUG}-${GITHUB_REF_NAME}.zip"
+          mkdir -p "build/${SLUG}"
+          # Copy everything except dev-only files (.distignore) and root-level *.md files.
+          rsync -a \
+            --exclude-from=.distignore \
+            --exclude='/*.md' \
+            --exclude='/build/' \
+            ./ "build/${SLUG}/"
+          (cd build && zip -r "../${ZIP}" "${SLUG}")
+          echo "ZIP=${ZIP}" >> "$GITHUB_ENV"
+          unzip -l "${ZIP}"
+
+      - name: Create release and attach zip
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.ZIP }}
+          generate_release_notes: true
