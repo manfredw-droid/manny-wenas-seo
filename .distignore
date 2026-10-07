@@ -1,3 +1,13 @@
+.git
 .gitignore
 .gitattributes
 .distignore
+phpcs.xml
+composer.json
+composer.lock
+package.json
+package-lock.json
+node_modules/
+.github/
+README.md
+CHANGELOG.md
