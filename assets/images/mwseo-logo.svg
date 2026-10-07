@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Manny Wenas SEO">
+  <circle cx="200" cy="200" r="188" fill="#7B1FA2"/>
+  <g stroke="white" stroke-width="15" stroke-linecap="butt" fill="none">
+    <line x1="100" y1="108" x2="100" y2="292"/>
+    <line x1="300" y1="108" x2="300" y2="292"/>
+    <line x1="142" y1="108" x2="142" y2="176"/>
+    <line x1="258" y1="108" x2="258" y2="176"/>
+    <line x1="142" y1="176" x2="200" y2="292"/>
+    <line x1="258" y1="176" x2="200" y2="292"/>
+    <line x1="142" y1="292" x2="142" y2="224"/>
+    <line x1="258" y1="292" x2="258" y2="224"/>
+    <line x1="142" y1="224" x2="200" y2="108"/>
+    <line x1="258" y1="224" x2="200" y2="108"/>
+  </g>
+</svg>

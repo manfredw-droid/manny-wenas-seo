@@ -25,11 +25,11 @@ class MWSEO_Robots_Txt {
 	 * Filter robots.txt output.
 	 *
 	 * @param string $output Existing output.
-	 * @param bool   $public Whether the site is public.
+	 * @param bool   $is_public Whether the site is public.
 	 * @return string
 	 */
-	public static function filter( $output, $public ) {
-		if ( ! $public ) {
+	public static function filter( $output, $is_public ) {
+		if ( ! $is_public ) {
 			return $output;
 		}
 		$custom = trim( (string) MWSEO_Options::get( 'robots_custom' ) );

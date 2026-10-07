@@ -116,7 +116,7 @@ class MWSEO_Schema {
 			$node   = self::image_node( $att_id );
 			if ( $node ) {
 				self::add( $node );
-				$img_refs              = array( array( '@id' => $node['@id'] ) );
+				$img_refs                   = array( array( '@id' => $node['@id'] ) );
 				$page['primaryImageOfPage'] = array( '@id' => $node['@id'] );
 				$page['image']              = $img_refs;
 			}
@@ -216,12 +216,12 @@ class MWSEO_Schema {
 		if ( null !== $cache ) {
 			return $cache;
 		}
-		$mode    = MWSEO_Options::get( 'site_represents' );
-		$user_id = (int) MWSEO_Options::get( 'person_user' );
-		$user    = $user_id ? get_userdata( $user_id ) : false;
+		$mode     = MWSEO_Options::get( 'site_represents' );
+		$user_id  = (int) MWSEO_Options::get( 'person_user' );
+		$user     = $user_id ? get_userdata( $user_id ) : false;
 		$profiles = array_values( array_filter( array_map( 'esc_url_raw', preg_split( '/\R+/', (string) MWSEO_Options::get( 'social_profiles' ) ) ) ) );
 
-		$logo = array();
+		$logo      = array();
 		$logo_node = self::image_node( (int) MWSEO_Options::get( 'org_logo' ) );
 		if ( $logo_node ) {
 			self::add( $logo_node );
@@ -296,9 +296,9 @@ class MWSEO_Schema {
 	 * @return array
 	 */
 	private static function article( $post, $page_id, $publisher, array $img_refs ) {
-		$type = apply_filters( 'mwseo_article_type', MWSEO_Options::get( 'article_type' ), $post );
-		$type = in_array( $type, array( 'Article', 'NewsArticle', 'BlogPosting' ), true ) ? $type : 'Article';
-		$node = array(
+		$type   = apply_filters( 'mwseo_article_type', MWSEO_Options::get( 'article_type' ), $post );
+		$type   = in_array( $type, array( 'Article', 'NewsArticle', 'BlogPosting' ), true ) ? $type : 'Article';
+		$node   = array(
 			'@type'            => $type,
 			'@id'              => self::id( $type, $post->ID ),
 			'isPartOf'         => array( '@id' => $page_id ),
@@ -424,7 +424,7 @@ class MWSEO_Schema {
 			'height'     => $src[2],
 			'inLanguage' => get_bloginfo( 'language' ),
 		);
-		$alt = trim( (string) get_post_meta( $att_id, '_wp_attachment_image_alt', true ) );
+		$alt  = trim( (string) get_post_meta( $att_id, '_wp_attachment_image_alt', true ) );
 		if ( $alt ) {
 			$node['caption'] = $alt;
 		}
@@ -470,7 +470,7 @@ class MWSEO_Schema {
 
 		$video = MWSEO_Meta::get( $post_id, 'video' );
 		if ( $video ) {
-			$node = array(
+			$node  = array(
 				'@type'            => 'VideoObject',
 				'@id'              => self::id( 'VideoObject', $post_id ),
 				'name'             => get_the_title( $post ),

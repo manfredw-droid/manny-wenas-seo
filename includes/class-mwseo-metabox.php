@@ -49,10 +49,10 @@ class MWSEO_Metabox {
 			'mwseo-metabox',
 			'mwseoBox',
 			array(
-				'postId'  => get_the_ID(),
-				'isPro'   => MWSEO_Pro::is_active(),
-				'hasGsc'  => MWSEO_Gsc::is_connected(),
-				'i18n'    => array(
+				'postId' => get_the_ID(),
+				'isPro'  => MWSEO_Pro::is_active(),
+				'hasGsc' => MWSEO_Gsc::is_connected(),
+				'i18n'   => array(
 					'seo'         => __( 'SEO', 'manny-wenas-seo' ),
 					'readability' => __( 'Readability', 'manny-wenas-seo' ),
 					'analysing'   => __( 'Analysing…', 'manny-wenas-seo' ),
@@ -79,6 +79,10 @@ class MWSEO_Metabox {
 		$review  = array_pad( $review, 3, '' );
 		?>
 		<div class="mwseo-box">
+			<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+				<img src="<?php echo esc_url( plugins_url( 'assets/images/mwseo-logo.svg', MWSEO_FILE ) ); ?>" alt="Manny Wenas SEO" height="28" width="28" style="display:block;">
+				<strong><?php esc_html_e( 'Manny Wenas SEO', 'manny-wenas-seo' ); ?></strong>
+			</div>
 			<div class="mwseo-score" id="mwseo-score" aria-live="polite">
 				<div class="mwseo-ring" id="mwseo-ring" data-state="none"><span id="mwseo-ring-num">–</span></div>
 				<div class="mwseo-score-text">

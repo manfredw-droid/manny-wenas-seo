@@ -73,12 +73,12 @@ class MWSEO_Sitemaps {
 			$types[] = $pt;
 		}
 		foreach ( array(
-			'news'   => 'sitemap_news',
-			'image'  => 'sitemap_images',
-			'video'  => 'sitemap_videos',
+			'news'     => 'sitemap_news',
+			'image'    => 'sitemap_images',
+			'video'    => 'sitemap_videos',
 			'category' => 'sitemap_categories',
-			'tag'    => 'sitemap_tags',
-			'author' => 'sitemap_authors',
+			'tag'      => 'sitemap_tags',
+			'author'   => 'sitemap_authors',
 		) as $type => $opt ) {
 			if ( MWSEO_Options::get( $opt ) ) {
 				$types[] = $type;
@@ -264,8 +264,8 @@ class MWSEO_Sitemaps {
 				'inclusive' => true,
 			),
 		);
-		$lang = strtolower( substr( get_bloginfo( 'language' ), 0, 2 ) );
-		$q    = new WP_Query( $args );
+		$lang               = strtolower( substr( get_bloginfo( 'language' ), 0, 2 ) );
+		$q                  = new WP_Query( $args );
 		foreach ( $q->posts as $id ) {
 			$inner = '<news:news><news:publication><news:name>' . esc_xml( MWSEO_Options::get( 'news_publication' ) ) . '</news:name><news:language>' . esc_xml( $lang ) . '</news:language></news:publication>'
 				. '<news:publication_date>' . esc_xml( get_post_time( 'c', true, $id ) ) . '</news:publication_date>'
@@ -282,7 +282,7 @@ class MWSEO_Sitemaps {
 	private static function images( $page ) {
 		$q = new WP_Query( self::post_args( MWSEO_Options::get( 'post_types' ), $page ) );
 		foreach ( $q->posts as $id ) {
-			$urls = array();
+			$urls  = array();
 			$thumb = get_the_post_thumbnail_url( $id, 'full' );
 			if ( $thumb ) {
 				$urls[] = $thumb;

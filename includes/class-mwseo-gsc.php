@@ -97,7 +97,7 @@ class MWSEO_Gsc {
 					'code'       => sanitize_text_field( wp_unslash( $_GET['code'] ) ),
 				)
 			);
-			$msg = 'error';
+			$msg    = 'error';
 			if ( ! is_wp_error( $result ) && ! empty( $result['refresh_token'] ) ) {
 				update_option(
 					self::TOKENS,

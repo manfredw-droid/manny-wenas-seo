@@ -1,6 +1,6 @@
 <?php
 /**
- * llms.txt generation.
+ * Generates the llms.txt output.
  *
  * @package MannyWenasSEO
  */

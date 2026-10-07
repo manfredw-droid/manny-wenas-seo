@@ -224,12 +224,12 @@ class MWSEO_Head {
 	private static function open_graph( $url, $desc ) {
 		$is_article = is_singular( 'post' );
 		$tags       = array(
-			'og:locale'    => str_replace( '-', '_', get_bloginfo( 'language' ) ),
-			'og:type'      => $is_article ? 'article' : 'website',
-			'og:title'     => self::social_title(),
+			'og:locale'      => str_replace( '-', '_', get_bloginfo( 'language' ) ),
+			'og:type'        => $is_article ? 'article' : 'website',
+			'og:title'       => self::social_title(),
 			'og:description' => $desc,
-			'og:url'       => $url,
-			'og:site_name' => get_bloginfo( 'name' ),
+			'og:url'         => $url,
+			'og:site_name'   => get_bloginfo( 'name' ),
 		);
 		foreach ( $tags as $prop => $val ) {
 			if ( '' !== (string) $val ) {

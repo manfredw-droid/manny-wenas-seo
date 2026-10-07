@@ -490,7 +490,7 @@ class MWSEO_Analyzer {
 	 */
 	private static function lang() {
 		static $cache = array();
-		$code = 0 === strpos( get_locale(), 'nl' ) ? 'nl' : 'en';
+		$code         = 0 === strpos( get_locale(), 'nl' ) ? 'nl' : 'en';
 		if ( isset( $cache[ $code ] ) ) {
 			return $cache[ $code ];
 		}
