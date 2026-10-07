@@ -134,6 +134,7 @@ class MWSEO_Settings {
 			),
 			'verify'   => array(
 				array( 'gsc_html_filename', 'text', __( 'Google Search Console HTML file', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'gsc_html_filename' ) ), array(), 'googleXXXXXXXXXXXXXXXX.html' ),
+				array( 'bing_verification_key', 'text', __( 'Bing Webmaster Tools verification code', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'bing_verification_key' ) ), array(), 'jouw Bing verificatiecode' ),
 			),
 			'pro'      => array(
 				array(
@@ -239,6 +240,9 @@ class MWSEO_Settings {
 		}
 		if ( array_key_exists( 'gsc_html_filename', $input ) ) {
 			$current['gsc_html_filename'] = MWSEO_Verification::sanitize_gsc_filename( $input['gsc_html_filename'] );
+		}
+		if ( array_key_exists( 'bing_verification_key', $input ) ) {
+			$current['bing_verification_key'] = MWSEO_Verification::sanitize_bing_key( $input['bing_verification_key'] );
 		}
 		// Non-UI keys set programmatically (kept when saving a tab).
 		if ( isset( $input['indexnow_key'] ) ) {

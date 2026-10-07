@@ -17,6 +17,7 @@ class MWSEO_Verification {
 	 */
 	public static function init() {
 		add_action( 'template_redirect', array( __CLASS__, 'serve_gsc' ), 0 );
+		add_action( 'template_redirect', array( __CLASS__, 'serve_bing' ), 0 );
 	}
 
 	/**
@@ -56,6 +57,30 @@ class MWSEO_Verification {
 		status_header( 200 );
 		header( 'Content-Type: text/html; charset=UTF-8' );
 		echo 'google-site-verification: ' . esc_html( $filename ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		exit;
+	}
+
+	/**
+	 * Sanitize a Bing verification code: [A-Za-z0-9], max 64 chars.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public static function sanitize_bing_key( $value ) {
+		return substr( preg_replace( '/[^A-Za-z0-9]/', '', is_scalar( $value ) ? (string) $value : '' ), 0, 64 );
+	}
+
+	/**
+	 * Serve /BingSiteAuth.xml.
+	 */
+	public static function serve_bing() {
+		$key = self::sanitize_bing_key( MWSEO_Options::get( 'bing_verification_key' ) );
+		if ( '' === $key || 'BingSiteAuth.xml' !== self::request_path() ) {
+			return;
+		}
+		status_header( 200 );
+		header( 'Content-Type: application/xml; charset=UTF-8' );
+		echo '<?xml version="1.0"?><users>  <user>' . esc_html( $key ) . '</user></users>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		exit;
 	}
 

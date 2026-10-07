@@ -64,6 +64,7 @@ class MWSEO_Options {
 			'sitemap_autosubmit' => 1,
 			'indexnow_key'       => '',
 			'gsc_html_filename'  => '',
+			'bing_verification_key' => '',
 		);
 	}
 
