@@ -76,6 +76,7 @@ class MWSEO_Settings {
 						'defer'  => __( 'Defer to Yoast completely', 'manny-wenas-seo' ),
 					),
 				),
+				array( 'trends_enabled', 'checkbox', __( 'Google Trends indicator', 'manny-wenas-seo' ), __( 'Send your focus keyphrase to Google Trends to show a search-interest score in the post editor.', 'manny-wenas-seo' ) ),
 			),
 			'social'   => array(
 				array( 'default_image', 'number', __( 'Default social image (attachment ID)', 'manny-wenas-seo' ), __( 'Used when a post has no featured image. Find the ID in the Media Library.', 'manny-wenas-seo' ) ),

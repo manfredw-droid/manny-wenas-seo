@@ -30,6 +30,9 @@ class MWSEO_Trends {
 	 * AJAX handler: returns the average interest for a keyphrase.
 	 */
 	public static function ajax() {
+		if ( ! MWSEO_Options::get( 'trends_enabled' ) ) {
+			wp_send_json_error( 'disabled' );
+		}
 		check_ajax_referer( self::ACTION, 'nonce' );
 		if ( ! current_user_can( 'edit_posts' ) ) {
 			wp_send_json_error( null, 403 );

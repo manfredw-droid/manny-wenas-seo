@@ -56,9 +56,9 @@
 	}
 
 	function ringState( score ) {
-		if ( score >= 80 ) {
+		if ( score >= 75 ) {
 			return 'good'; }
-		if ( score >= 50 ) {
+		if ( score >= 55 ) {
 			return 'ok'; }
 		return 'bad';
 	}

@@ -52,11 +52,11 @@ class MWSEO_Metabox {
 				'postId' => get_the_ID(),
 				'isPro'  => MWSEO_Pro::is_active(),
 				'hasGsc' => MWSEO_Gsc::is_connected(),
-				'ajax'   => array(
+				'ajax'   => MWSEO_Options::get( 'trends_enabled' ) ? array(
 					'url'    => admin_url( 'admin-ajax.php' ),
 					'action' => MWSEO_Trends::ACTION,
 					'nonce'  => wp_create_nonce( MWSEO_Trends::ACTION ),
-				),
+				) : null,
 				'i18n'   => array(
 					'seo'         => __( 'SEO', 'manny-wenas-seo' ),
 					'trends'      => __( 'Trends (7 days)', 'manny-wenas-seo' ),
