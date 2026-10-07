@@ -15,6 +15,9 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Imports SEO data from Yoast, Rank Math, AIOSEO and SEOPress.
+ */
 class MWSEO_Importer {
 
 	/**
@@ -46,15 +49,15 @@ class MWSEO_Importer {
 	 * @return array<string, array>
 	 */
 	private static function source_plugins(): array {
-		return [
+		return array(
 
 			// -----------------------------------------------------------------
 			// Yoast SEO (Free & Premium)
 			// -----------------------------------------------------------------
-			'yoast' => [
-				'label'  => 'Yoast SEO',
-				'detect' => static fn() => defined( 'WPSEO_VERSION' ),
-				'fields' => [
+			'yoast'    => array(
+				'label'     => 'Yoast SEO',
+				'detect'    => static fn() => defined( 'WPSEO_VERSION' ),
+				'fields'    => array(
 					'_yoast_wpseo_title'                 => 'title',
 					'_yoast_wpseo_metadesc'              => 'description',
 					'_yoast_wpseo_focuskw'               => 'focus_kw',
@@ -68,9 +71,9 @@ class MWSEO_Importer {
 					'_yoast_wpseo_is_cornerstone'        => 'cornerstone',
 					'_yoast_wpseo_schema_page_type'      => 'schema_page_type',
 					'_yoast_wpseo_schema_article_type'   => 'schema_article_type',
-				],
+				),
 				'robots_cb' => static function ( int $post_id ): array {
-					$directives = [];
+					$directives = array();
 					if ( (int) get_post_meta( $post_id, '_yoast_wpseo_meta-robots-noindex', true ) === 1 ) {
 						$directives[] = 'noindex';
 					}
@@ -79,7 +82,7 @@ class MWSEO_Importer {
 					}
 					// Yoast advanced robots stored as comma-separated in _yoast_wpseo_meta-robots-adv.
 					$adv = get_post_meta( $post_id, '_yoast_wpseo_meta-robots-adv', true );
-					if ( $adv && $adv !== 'none' ) {
+					if ( $adv && 'none' !== $adv ) {
 						foreach ( explode( ',', $adv ) as $d ) {
 							$d = trim( $d );
 							if ( $d ) {
@@ -89,18 +92,18 @@ class MWSEO_Importer {
 					}
 					return array_unique( $directives );
 				},
-			],
+			),
 
 			// -----------------------------------------------------------------
 			// RankMath SEO (Free & Pro)
 			// -----------------------------------------------------------------
-			'rankmath' => [
-				'label'  => 'RankMath SEO',
-				'detect' => static fn() => defined( 'RANK_MATH_VERSION' ),
-				'fields' => [
+			'rankmath' => array(
+				'label'     => 'RankMath SEO',
+				'detect'    => static fn() => defined( 'RANK_MATH_VERSION' ),
+				'fields'    => array(
 					'rank_math_title'                => 'title',
 					'rank_math_description'          => 'description',
-					'rank_math_focus_keyword'        => 'focus_kw',   // comma-separated; normalised below
+					'rank_math_focus_keyword'        => 'focus_kw',   // Comma-separated; normalised below.
 					'rank_math_canonical_url'        => 'canonical',
 					'rank_math_facebook_title'       => 'og_title',
 					'rank_math_facebook_description' => 'og_description',
@@ -109,41 +112,43 @@ class MWSEO_Importer {
 					'rank_math_twitter_description'  => 'twitter_description',
 					'rank_math_twitter_image_url'    => 'twitter_image',
 					'rank_math_pillar_content'       => 'cornerstone',
-				],
+				),
 				'robots_cb' => static function ( int $post_id ): array {
 					// RankMath stores robots as a serialised array.
 					$robots = get_post_meta( $post_id, 'rank_math_robots', true );
 					if ( ! is_array( $robots ) ) {
-						return [];
+						return array();
 					}
-					return array_values( array_intersect(
-						$robots,
-						[ 'noindex', 'nofollow', 'noarchive', 'noimageindex', 'nosnippet' ]
-					) );
+					return array_values(
+						array_intersect(
+							$robots,
+							array( 'noindex', 'nofollow', 'noarchive', 'noimageindex', 'nosnippet' )
+						)
+					);
 				},
-			],
+			),
 
 			// -----------------------------------------------------------------
 			// All in One SEO (AIOSEO) v4+
 			// Note: AIOSEO v4 stores most data in its own tables but mirrors
 			// the main fields back into post meta for compatibility.
 			// -----------------------------------------------------------------
-			'aioseo' => [
-				'label'  => 'All in One SEO',
-				'detect' => static fn() => defined( 'AIOSEO_VERSION' ),
-				'fields' => [
+			'aioseo'   => array(
+				'label'     => 'All in One SEO',
+				'detect'    => static fn() => defined( 'AIOSEO_VERSION' ),
+				'fields'    => array(
 					'_aioseo_title'               => 'title',
 					'_aioseo_description'         => 'description',
-					'_aioseo_keywords'            => 'focus_kw',   // comma-separated
+					'_aioseo_keywords'            => 'focus_kw',   // Comma-separated.
 					'_aioseo_og_title'            => 'og_title',
 					'_aioseo_og_description'      => 'og_description',
 					'_aioseo_og_image_custom_url' => 'og_image',
 					'_aioseo_twitter_title'       => 'twitter_title',
 					'_aioseo_twitter_description' => 'twitter_description',
 					'_aioseo_twitter_image_url'   => 'twitter_image',
-				],
+				),
 				'robots_cb' => static function ( int $post_id ): array {
-					$directives = [];
+					$directives = array();
 					if ( (int) get_post_meta( $post_id, '_aioseo_robots_noindex', true ) === 1 ) {
 						$directives[] = 'noindex';
 					}
@@ -161,28 +166,28 @@ class MWSEO_Importer {
 					}
 					return $directives;
 				},
-			],
+			),
 
 			// -----------------------------------------------------------------
 			// SEOPress (Free & Pro)
 			// -----------------------------------------------------------------
-			'seopress' => [
-				'label'  => 'SEOPress',
-				'detect' => static fn() => defined( 'SEOPRESS_VERSION' ),
-				'fields' => [
-					'_seopress_titles_title'         => 'title',
-					'_seopress_titles_desc'          => 'description',
-					'_seopress_analysis_target_kw'   => 'focus_kw',
+			'seopress' => array(
+				'label'     => 'SEOPress',
+				'detect'    => static fn() => defined( 'SEOPRESS_VERSION' ),
+				'fields'    => array(
+					'_seopress_titles_title'          => 'title',
+					'_seopress_titles_desc'           => 'description',
+					'_seopress_analysis_target_kw'    => 'focus_kw',
 					'_seopress_titles_canonical_urls' => 'canonical',
-					'_seopress_social_fb_title'      => 'og_title',
-					'_seopress_social_fb_desc'       => 'og_description',
-					'_seopress_social_fb_img'        => 'og_image',
-					'_seopress_social_twitter_title' => 'twitter_title',
-					'_seopress_social_twitter_desc'  => 'twitter_description',
-					'_seopress_social_twitter_img'   => 'twitter_image',
-				],
+					'_seopress_social_fb_title'       => 'og_title',
+					'_seopress_social_fb_desc'        => 'og_description',
+					'_seopress_social_fb_img'         => 'og_image',
+					'_seopress_social_twitter_title'  => 'twitter_title',
+					'_seopress_social_twitter_desc'   => 'twitter_description',
+					'_seopress_social_twitter_img'    => 'twitter_image',
+				),
 				'robots_cb' => static function ( int $post_id ): array {
-					$directives = [];
+					$directives = array();
 					// SEOPress stores these as 'yes' strings.
 					if ( get_post_meta( $post_id, '_seopress_robots_index', true ) === 'yes' ) {
 						$directives[] = 'noindex';
@@ -201,15 +206,15 @@ class MWSEO_Importer {
 					}
 					return $directives;
 				},
-			],
+			),
 
 			// -----------------------------------------------------------------
 			// The SEO Framework (TSF)
 			// -----------------------------------------------------------------
-			'tsf' => [
-				'label'  => 'The SEO Framework',
-				'detect' => static fn() => defined( 'THE_SEO_FRAMEWORK_VERSION' ),
-				'fields' => [
+			'tsf'      => array(
+				'label'     => 'The SEO Framework',
+				'detect'    => static fn() => defined( 'THE_SEO_FRAMEWORK_VERSION' ),
+				'fields'    => array(
 					// TSF uses _genesis_* keys on older versions; newer versions
 					// still write compatible meta for migration purposes.
 					'_genesis_title'          => 'title',
@@ -222,9 +227,9 @@ class MWSEO_Importer {
 					'_open_graph_description' => 'og_description',
 					'_twitter_title'          => 'twitter_title',
 					'_twitter_description'    => 'twitter_description',
-				],
+				),
 				'robots_cb' => static function ( int $post_id ): array {
-					$directives = [];
+					$directives = array();
 					if ( (int) get_post_meta( $post_id, '_genesis_noindex', true ) === 1 ) {
 						$directives[] = 'noindex';
 					}
@@ -236,8 +241,8 @@ class MWSEO_Importer {
 					}
 					return $directives;
 				},
-			],
-		];
+			),
+		);
 	}
 
 	// -------------------------------------------------------------------------
@@ -250,7 +255,7 @@ class MWSEO_Importer {
 	 * @return array<string, string>  slug => label
 	 */
 	public static function detect_active_plugins(): array {
-		$active = [];
+		$active = array();
 		foreach ( static::source_plugins() as $slug => $config ) {
 			if ( ( $config['detect'] )() ) {
 				$active[ $slug ] = $config['label'];
@@ -270,11 +275,11 @@ class MWSEO_Importer {
 	public static function register_admin_page(): void {
 		add_submenu_page(
 			'mwseo',
-			__( 'Import SEO Data', 'mw-seo' ),
-			__( 'Import', 'mw-seo' ),
+			__( 'Import SEO Data', 'manny-wenas-seo' ),
+			__( 'Import', 'manny-wenas-seo' ),
 			'manage_options',
 			'mw-seo-import',
-			[ static::class, 'render_admin_page' ]
+			array( static::class, 'render_admin_page' )
 		);
 	}
 
@@ -285,24 +290,28 @@ class MWSEO_Importer {
 		$active = static::detect_active_plugins();
 		?>
 		<div class="wrap" id="mw-seo-importer">
-			<h1><?php esc_html_e( 'Import SEO Data', 'mw-seo' ); ?></h1>
+			<h1><?php esc_html_e( 'Import SEO Data', 'manny-wenas-seo' ); ?></h1>
 
 			<?php if ( empty( $active ) ) : ?>
 
 				<div class="notice notice-info"><p>
-					<?php esc_html_e(
+					<?php
+					esc_html_e(
 						'No supported SEO plugins detected on this site. Supported sources: Yoast SEO, RankMath, All in One SEO, SEOPress, The SEO Framework.',
-						'mw-seo'
-					); ?>
+						'manny-wenas-seo'
+					);
+					?>
 				</p></div>
 
 			<?php else : ?>
 
 			<p class="description">
-				<?php esc_html_e(
+				<?php
+				esc_html_e(
 					'Import SEO titles, meta descriptions, focus keyphrases, robots directives, and social meta from a previously installed SEO plugin into Manny Wenas SEO. Existing MW SEO values are preserved unless you check "Overwrite".',
-					'mw-seo'
-				); ?>
+					'manny-wenas-seo'
+				);
+				?>
 			</p>
 
 			<form id="mw-seo-import-form" method="post" action="">
@@ -312,11 +321,11 @@ class MWSEO_Importer {
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row">
-							<label for="mw-import-source"><?php esc_html_e( 'Import from', 'mw-seo' ); ?></label>
+							<label for="mw-import-source"><?php esc_html_e( 'Import from', 'manny-wenas-seo' ); ?></label>
 						</th>
 						<td>
 							<select id="mw-import-source" name="source" required>
-								<option value=""><?php esc_html_e( '— select a plugin —', 'mw-seo' ); ?></option>
+								<option value=""><?php esc_html_e( '— select a plugin —', 'manny-wenas-seo' ); ?></option>
 								<?php foreach ( $active as $slug => $label ) : ?>
 									<option value="<?php echo esc_attr( $slug ); ?>">
 										<?php echo esc_html( $label ); ?>
@@ -327,15 +336,15 @@ class MWSEO_Importer {
 					</tr>
 
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Post types', 'mw-seo' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Post types', 'manny-wenas-seo' ); ?></th>
 						<td>
 							<?php
-							$post_types = get_post_types( [ 'public' => true ], 'objects' );
+							$post_types = get_post_types( array( 'public' => true ), 'objects' );
 							foreach ( $post_types as $pt ) :
-							?>
+								?>
 							<label style="margin-right:16px;display:inline-flex;align-items:center;gap:4px;">
 								<input type="checkbox" name="post_types[]" value="<?php echo esc_attr( $pt->name ); ?>"
-									<?php checked( in_array( $pt->name, [ 'post', 'page' ], true ) ); ?>>
+									<?php checked( in_array( $pt->name, array( 'post', 'page' ), true ) ); ?>>
 								<?php echo esc_html( $pt->label ); ?>
 							</label>
 							<?php endforeach; ?>
@@ -343,15 +352,15 @@ class MWSEO_Importer {
 					</tr>
 
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Options', 'mw-seo' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Options', 'manny-wenas-seo' ); ?></th>
 						<td>
 							<label style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
 								<input type="checkbox" name="overwrite" value="1">
-								<?php esc_html_e( 'Overwrite existing Manny Wenas SEO data', 'mw-seo' ); ?>
+								<?php esc_html_e( 'Overwrite existing Manny Wenas SEO data', 'manny-wenas-seo' ); ?>
 							</label>
 							<label style="display:flex;align-items:center;gap:6px;">
 								<input type="checkbox" name="dry_run" value="1" checked>
-								<?php esc_html_e( 'Dry run — preview only, no data written', 'mw-seo' ); ?>
+								<?php esc_html_e( 'Dry run — preview only, no data written', 'manny-wenas-seo' ); ?>
 							</label>
 						</td>
 					</tr>
@@ -359,24 +368,24 @@ class MWSEO_Importer {
 
 				<!-- Field-map preview (populated via JS on source change) -->
 				<div id="mw-import-field-map" style="display:none;margin-top:16px;">
-					<h3><?php esc_html_e( 'Field map', 'mw-seo' ); ?></h3>
+					<h3><?php esc_html_e( 'Field map', 'manny-wenas-seo' ); ?></h3>
 					<div id="mw-import-field-map-content"></div>
 				</div>
 
 				<p class="submit">
 					<button type="button" id="mw-import-preview-btn" class="button button-secondary">
-						<?php esc_html_e( 'Preview', 'mw-seo' ); ?>
+						<?php esc_html_e( 'Preview', 'manny-wenas-seo' ); ?>
 					</button>
 					&nbsp;
 					<button type="submit" id="mw-import-run-btn" class="button button-primary" disabled>
-						<?php esc_html_e( 'Run Import', 'mw-seo' ); ?>
+						<?php esc_html_e( 'Run Import', 'manny-wenas-seo' ); ?>
 					</button>
 				</p>
 			</form>
 
 			<!-- Progress bar -->
 			<div id="mw-import-progress" style="display:none;max-width:640px;">
-				<h3><?php esc_html_e( 'Progress', 'mw-seo' ); ?></h3>
+				<h3><?php esc_html_e( 'Progress', 'manny-wenas-seo' ); ?></h3>
 				<div style="background:#e0e0e0;border-radius:4px;height:22px;width:100%;overflow:hidden;">
 					<div id="mw-import-progress-bar"
 						style="background:#0073aa;height:100%;border-radius:4px;width:0;transition:width .25s;"></div>
@@ -386,7 +395,7 @@ class MWSEO_Importer {
 
 			<!-- Results -->
 			<div id="mw-import-results" style="display:none;max-width:640px;">
-				<h3><?php esc_html_e( 'Results', 'mw-seo' ); ?></h3>
+				<h3><?php esc_html_e( 'Results', 'manny-wenas-seo' ); ?></h3>
 				<div id="mw-import-results-content"></div>
 			</div>
 
@@ -399,20 +408,20 @@ class MWSEO_Importer {
 
 			/* Human-readable labels for destination field slugs */
 			const FIELD_LABELS = {
-				title:               '<?php echo esc_js( __( 'SEO title', 'mw-seo' ) ); ?>',
-				description:         '<?php echo esc_js( __( 'Meta description', 'mw-seo' ) ); ?>',
-				focus_kw:            '<?php echo esc_js( __( 'Focus keyphrase', 'mw-seo' ) ); ?>',
-				canonical:           '<?php echo esc_js( __( 'Canonical URL', 'mw-seo' ) ); ?>',
-				robots:              '<?php echo esc_js( __( 'Robots directives', 'mw-seo' ) ); ?>',
-				og_title:            '<?php echo esc_js( __( 'OG title', 'mw-seo' ) ); ?>',
-				og_description:      '<?php echo esc_js( __( 'OG description', 'mw-seo' ) ); ?>',
-				og_image:            '<?php echo esc_js( __( 'OG image URL', 'mw-seo' ) ); ?>',
-				twitter_title:       '<?php echo esc_js( __( 'Twitter title', 'mw-seo' ) ); ?>',
-				twitter_description: '<?php echo esc_js( __( 'Twitter description', 'mw-seo' ) ); ?>',
-				twitter_image:       '<?php echo esc_js( __( 'Twitter image URL', 'mw-seo' ) ); ?>',
-				cornerstone:         '<?php echo esc_js( __( 'Anchor post', 'mw-seo' ) ); ?>',
-				schema_page_type:    '<?php echo esc_js( __( 'Schema page type', 'mw-seo' ) ); ?>',
-				schema_article_type: '<?php echo esc_js( __( 'Schema article type', 'mw-seo' ) ); ?>',
+				title:               '<?php echo esc_js( __( 'SEO title', 'manny-wenas-seo' ) ); ?>',
+				description:         '<?php echo esc_js( __( 'Meta description', 'manny-wenas-seo' ) ); ?>',
+				focus_kw:            '<?php echo esc_js( __( 'Focus keyphrase', 'manny-wenas-seo' ) ); ?>',
+				canonical:           '<?php echo esc_js( __( 'Canonical URL', 'manny-wenas-seo' ) ); ?>',
+				robots:              '<?php echo esc_js( __( 'Robots directives', 'manny-wenas-seo' ) ); ?>',
+				og_title:            '<?php echo esc_js( __( 'OG title', 'manny-wenas-seo' ) ); ?>',
+				og_description:      '<?php echo esc_js( __( 'OG description', 'manny-wenas-seo' ) ); ?>',
+				og_image:            '<?php echo esc_js( __( 'OG image URL', 'manny-wenas-seo' ) ); ?>',
+				twitter_title:       '<?php echo esc_js( __( 'Twitter title', 'manny-wenas-seo' ) ); ?>',
+				twitter_description: '<?php echo esc_js( __( 'Twitter description', 'manny-wenas-seo' ) ); ?>',
+				twitter_image:       '<?php echo esc_js( __( 'Twitter image URL', 'manny-wenas-seo' ) ); ?>',
+				cornerstone:         '<?php echo esc_js( __( 'Anchor post', 'manny-wenas-seo' ) ); ?>',
+				schema_page_type:    '<?php echo esc_js( __( 'Schema page type', 'manny-wenas-seo' ) ); ?>',
+				schema_article_type: '<?php echo esc_js( __( 'Schema article type', 'manny-wenas-seo' ) ); ?>',
 			};
 
 			/* Field maps emitted server-side — avoids a separate AJAX round-trip */
@@ -434,7 +443,7 @@ class MWSEO_Importer {
 				}
 				// Add robots row — always present.
 				rows += `<tr>
-					<td><em style="font-size:12px"><?php echo esc_js( __( '(plugin-specific robots keys)', 'mw-seo' ) ); ?></em></td>
+					<td><em style="font-size:12px"><?php echo esc_js( __( '(plugin-specific robots keys)', 'manny-wenas-seo' ) ); ?></em></td>
 					<td style="text-align:center">→</td>
 					<td>${FIELD_LABELS.robots}</td>
 				</tr>`;
@@ -443,9 +452,9 @@ class MWSEO_Importer {
 					`<table class="wp-list-table widefat striped" style="max-width:580px;">
 						<thead>
 							<tr>
-								<th><?php echo esc_js( __( 'Source field (post meta key)', 'mw-seo' ) ); ?></th>
+								<th><?php echo esc_js( __( 'Source field (post meta key)', 'manny-wenas-seo' ) ); ?></th>
 								<th></th>
-								<th><?php echo esc_js( __( 'MW SEO field', 'mw-seo' ) ); ?></th>
+								<th><?php echo esc_js( __( 'MW SEO field', 'manny-wenas-seo' ) ); ?></th>
 							</tr>
 						</thead>
 						<tbody>${rows}</tbody>
@@ -472,8 +481,8 @@ class MWSEO_Importer {
 				const overwrite = $('input[name="overwrite"]').is(':checked');
 				const nonce     = $('#_mw_nonce').val();
 
-				if (!source)          { alert('<?php echo esc_js( __( 'Please select a source plugin.', 'mw-seo' ) ); ?>'); return; }
-				if (!postTypes.length){ alert('<?php echo esc_js( __( 'Please select at least one post type.', 'mw-seo' ) ); ?>'); return; }
+				if (!source)          { alert('<?php echo esc_js( __( 'Please select a source plugin.', 'manny-wenas-seo' ) ); ?>'); return; }
+				if (!postTypes.length){ alert('<?php echo esc_js( __( 'Please select at least one post type.', 'manny-wenas-seo' ) ); ?>'); return; }
 
 				$('#mw-import-progress').show();
 				$('#mw-import-results').hide();
@@ -512,16 +521,16 @@ class MWSEO_Importer {
 						$('#mw-import-progress-text').text(d.processed + ' / ' + d.total + ' posts');
 
 						if (d.done) {
-							const label = dryRun ? '<?php echo esc_js( __( 'Dry run complete — no data was written.', 'mw-seo' ) ); ?>'
-							                     : '<?php echo esc_js( __( 'Import complete.', 'mw-seo' ) ); ?>';
+							const label = dryRun ? '<?php echo esc_js( __( 'Dry run complete — no data was written.', 'manny-wenas-seo' ) ); ?>'
+												: '<?php echo esc_js( __( 'Import complete.', 'manny-wenas-seo' ) ); ?>';
 							let html = `<p><strong>${label}</strong></p><ul style="margin-left:1.5em;list-style:disc">
-								<li><?php echo esc_js( __( 'Imported:', 'mw-seo' ) ); ?> <strong>${totals.imported}</strong></li>
-								<li><?php echo esc_js( __( 'Skipped (MW SEO data already exists):', 'mw-seo' ) ); ?> <strong>${totals.skipped}</strong></li>
-								<li><?php echo esc_js( __( 'Unchanged (no source data found):', 'mw-seo' ) ); ?> <strong>${totals.unchanged}</strong></li>
-								<li><?php echo esc_js( __( 'Errors (see PHP error log):', 'mw-seo' ) ); ?> <strong>${totals.errors}</strong></li>
+								<li><?php echo esc_js( __( 'Imported:', 'manny-wenas-seo' ) ); ?> <strong>${totals.imported}</strong></li>
+								<li><?php echo esc_js( __( 'Skipped (MW SEO data already exists):', 'manny-wenas-seo' ) ); ?> <strong>${totals.skipped}</strong></li>
+								<li><?php echo esc_js( __( 'Unchanged (no source data found):', 'manny-wenas-seo' ) ); ?> <strong>${totals.unchanged}</strong></li>
+								<li><?php echo esc_js( __( 'Errors (see PHP error log):', 'manny-wenas-seo' ) ); ?> <strong>${totals.errors}</strong></li>
 							</ul>`;
 							if (dryRun) {
-								html += `<p><?php echo esc_js( __( 'Uncheck "Dry run" and click Run Import to apply changes.', 'mw-seo' ) ); ?></p>`;
+								html += `<p><?php echo esc_js( __( 'Uncheck "Dry run" and click Run Import to apply changes.', 'manny-wenas-seo' ) ); ?></p>`;
 							}
 							$('#mw-import-results-content').html(html);
 							$('#mw-import-results').show();
@@ -547,7 +556,7 @@ class MWSEO_Importer {
 	 * @return array<string, array<string, string>>
 	 */
 	private static function get_field_maps_for_js(): array {
-		$out = [];
+		$out = array();
 		foreach ( static::source_plugins() as $slug => $config ) {
 			$out[ $slug ] = $config['fields'];
 		}
@@ -562,7 +571,7 @@ class MWSEO_Importer {
 	 * Register AJAX handlers.
 	 */
 	public static function register_ajax(): void {
-		add_action( 'wp_ajax_mw_seo_import_batch', [ static::class, 'ajax_import_batch' ] );
+		add_action( 'wp_ajax_mw_seo_import_batch', array( static::class, 'ajax_import_batch' ) );
 	}
 
 	/**
@@ -575,12 +584,12 @@ class MWSEO_Importer {
 			wp_send_json_error( 'Insufficient permissions.', 403 );
 		}
 
-		$source     = sanitize_key( $_POST['source']     ?? '' );
-		$post_types = array_map( 'sanitize_key', (array) ( $_POST['post_types'] ?? [ 'post', 'page' ] ) );
-		$overwrite  = (bool) ( $_POST['overwrite']  ?? false );
-		$dry_run    = (bool) ( $_POST['dry_run']    ?? true  );
-		$offset     = (int)  ( $_POST['offset']     ?? 0     );
-		$batch_size = min( (int) ( $_POST['batch_size'] ?? static::BATCH_SIZE ), 200 );
+		$source     = sanitize_key( wp_unslash( $_POST['source'] ?? '' ) );
+		$post_types = array_map( 'sanitize_key', (array) wp_unslash( $_POST['post_types'] ?? array( 'post', 'page' ) ) );
+		$overwrite  = isset( $_POST['overwrite'] ) && rest_sanitize_boolean( sanitize_text_field( wp_unslash( $_POST['overwrite'] ) ) );
+		$dry_run    = ! isset( $_POST['dry_run'] ) || rest_sanitize_boolean( sanitize_text_field( wp_unslash( $_POST['dry_run'] ) ) );
+		$offset     = isset( $_POST['offset'] ) ? absint( sanitize_text_field( wp_unslash( $_POST['offset'] ) ) ) : 0;
+		$batch_size = min( isset( $_POST['batch_size'] ) ? absint( sanitize_text_field( wp_unslash( $_POST['batch_size'] ) ) ) : static::BATCH_SIZE, 200 );
 
 		$plugins = static::source_plugins();
 		if ( ! isset( $plugins[ $source ] ) ) {
@@ -590,22 +599,26 @@ class MWSEO_Importer {
 		$config = $plugins[ $source ];
 
 		// Total posts (approximate — for progress display only).
-		$total = (int) array_sum( array_map(
-			static fn( string $pt ) => (int) wp_count_posts( $pt )->publish,
-			$post_types
-		) );
+		$total = (int) array_sum(
+			array_map(
+				static fn( string $pt ) => (int) wp_count_posts( $pt )->publish,
+				$post_types
+			)
+		);
 
 		// Fetch one batch ordered by ID for stable pagination.
-		$query = new WP_Query( [
-			'post_type'      => $post_types,
-			'post_status'    => 'publish',
-			'posts_per_page' => $batch_size,
-			'offset'         => $offset,
-			'fields'         => 'ids',
-			'no_found_rows'  => true,
-			'orderby'        => 'ID',
-			'order'          => 'ASC',
-		] );
+		$query = new WP_Query(
+			array(
+				'post_type'      => $post_types,
+				'post_status'    => 'publish',
+				'posts_per_page' => $batch_size,
+				'offset'         => $offset,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				'orderby'        => 'ID',
+				'order'          => 'ASC',
+			)
+		);
 
 		$imported  = 0;
 		$skipped   = 0;
@@ -615,29 +628,36 @@ class MWSEO_Importer {
 		foreach ( $query->posts as $post_id ) {
 			try {
 				switch ( static::import_post( (int) $post_id, $config, $overwrite, $dry_run ) ) {
-					case 'imported':  $imported++;  break;
-					case 'skipped':   $skipped++;   break;
-					case 'unchanged': $unchanged++; break;
+					case 'imported':
+						++$imported;
+						break;
+					case 'skipped':
+						++$skipped;
+						break;
+					case 'unchanged':
+						++$unchanged;
+						break;
 				}
 			} catch ( \Throwable $e ) {
-				$errors++;
-				error_log( sprintf( '[MW SEO Importer] Post %d: %s', $post_id, $e->getMessage() ) );
+				++$errors;
 			}
 		}
 
 		$count     = count( $query->posts );
 		$processed = $offset + $count;
 
-		wp_send_json_success( [
-			'imported'    => $imported,
-			'skipped'     => $skipped,
-			'unchanged'   => $unchanged,
-			'errors'      => $errors,
-			'processed'   => $processed,
-			'total'       => $total,
-			'next_offset' => $processed,
-			'done'        => $count < $batch_size,
-		] );
+		wp_send_json_success(
+			array(
+				'imported'    => $imported,
+				'skipped'     => $skipped,
+				'unchanged'   => $unchanged,
+				'errors'      => $errors,
+				'processed'   => $processed,
+				'total'       => $total,
+				'next_offset' => $processed,
+				'done'        => $count < $batch_size,
+			)
+		);
 	}
 
 	// -------------------------------------------------------------------------
@@ -654,20 +674,20 @@ class MWSEO_Importer {
 	 * @return string  'imported' | 'skipped' | 'unchanged'
 	 */
 	private static function import_post(
-		int   $post_id,
+		int $post_id,
 		array $config,
-		bool  $overwrite,
-		bool  $dry_run
+		bool $overwrite,
+		bool $dry_run
 	): string {
 		$has_source_data = false;
-		$writes          = [];
+		$writes          = array();
 
 		// -- Standard fields -------------------------------------------------
 		foreach ( $config['fields'] as $src_key => $dest_field ) {
 			$raw = get_post_meta( $post_id, $src_key, true );
 
 			// Skip genuinely empty values.
-			if ( $raw === '' || $raw === false || $raw === null ) {
+			if ( '' === $raw || false === $raw || null === $raw ) {
 				continue;
 			}
 
@@ -675,23 +695,23 @@ class MWSEO_Importer {
 
 			// Normalise focus_kw — may arrive as a comma-separated string
 			// (RankMath, AIOSEO) or a single string (Yoast, SEOPress).
-			if ( $dest_field === 'focus_kw' ) {
+			if ( 'focus_kw' === $dest_field ) {
 				if ( is_string( $raw ) ) {
 					$raw = array_values( array_filter( array_map( 'trim', explode( ',', $raw ) ) ) );
 				}
-				// Already an array from some sources — keep as-is.
+				// Already an array from some sources; keep as-is.
 			}
 
 			// Normalise cornerstone — various sources use '1', 'yes', true.
-			if ( $dest_field === 'cornerstone' ) {
-				$raw = ( $raw && $raw !== '0' && $raw !== 'no' ) ? '1' : '0';
+			if ( 'cornerstone' === $dest_field ) {
+				$raw = ( $raw && '0' !== $raw && 'no' !== $raw ) ? '1' : '0';
 			}
 
 			$dest_key = static::PREFIX . $dest_field;
 			$existing = get_post_meta( $post_id, $dest_key, true );
 
 			// Skip if already set and not overwriting.
-			if ( ( $existing !== '' && $existing !== false ) && ! $overwrite ) {
+			if ( ( '' !== $existing && false !== $existing ) && ! $overwrite ) {
 				continue;
 			}
 
@@ -713,11 +733,11 @@ class MWSEO_Importer {
 
 		// -- Outcome ---------------------------------------------------------
 		if ( ! $has_source_data ) {
-			return 'unchanged'; // source plugin left no data on this post
+			return 'unchanged'; // Source plugin left no data on this post.
 		}
 
 		if ( empty( $writes ) ) {
-			return 'skipped'; // source had data, but all dest fields were populated and overwrite=false
+			return 'skipped'; // Source had data, but all dest fields were populated and overwrite=false.
 		}
 
 		if ( ! $dry_run ) {
@@ -743,7 +763,7 @@ class MWSEO_Importer {
 	 *   } );
 	 */
 	public static function init(): void {
-		add_action( 'admin_menu', [ static::class, 'register_admin_page' ], 20 );
+		add_action( 'admin_menu', array( static::class, 'register_admin_page' ), 20 );
 		static::register_ajax();
 	}
 }

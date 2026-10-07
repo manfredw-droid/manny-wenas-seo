@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<ruleset name="Manny Wenas SEO">
+	<description>PHPCS ruleset for Manny Wenas SEO plugin.</description>
+	<rule ref="WordPress"/>
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="manny-wenas-seo"/>
+			</property>
+		</properties>
+	</rule>
+	<arg name="extensions" value="php"/>
+	<exclude-pattern>vendor/*</exclude-pattern>
+	<exclude-pattern>node_modules/*</exclude-pattern>
+</ruleset>
