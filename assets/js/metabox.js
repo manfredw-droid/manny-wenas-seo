@@ -195,8 +195,49 @@
 		);
 	}
 
+	var trendsTimer = null;
+	var trendsReq   = null;
+
+	/**
+	 * Show the Google Trends indicator for the focus keyphrase. The widget stays
+	 * hidden unless data is available.
+	 */
+	function loadTrends() {
+		var $t     = $( '#mwseo-trends' );
+		var phrase = $.trim( $( '#mwseo_focus' ).val() || '' );
+		if ( trendsReq ) {
+			trendsReq.abort();
+			trendsReq = null;
+		}
+		$t.prop( 'hidden', true ).empty();
+		if ( ! phrase || ! cfg.ajax ) {
+			return;
+		}
+		trendsReq = $.post(
+			cfg.ajax.url,
+			{ action: cfg.ajax.action, nonce: cfg.ajax.nonce, keyphrase: phrase }
+		).done(
+			function ( res ) {
+				if ( ! res || ! res.success || ! res.data ) {
+					return;
+				}
+				$t.empty()
+					.append( $( '<span class="mwseo-trends-dot"/>' ).attr( 'data-level', res.data.level ) )
+					.append( document.createTextNode( cfg.i18n.trends + ': ' + cfg.i18n.average + ' ' + res.data.average + '/100' ) )
+					.prop( 'hidden', false );
+			}
+		);
+	}
+
+	function scheduleTrends() {
+		clearTimeout( trendsTimer );
+		trendsTimer = setTimeout( loadTrends, 800 );
+	}
+
 	$(
 		function () {
+			$( '#mwseo_focus' ).on( 'input', scheduleTrends );
+			loadTrends();
 			$( '.mwseo-box' ).on(
 				'input change',
 				'input, textarea',

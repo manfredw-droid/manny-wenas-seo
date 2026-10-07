@@ -52,8 +52,15 @@ class MWSEO_Metabox {
 				'postId' => get_the_ID(),
 				'isPro'  => MWSEO_Pro::is_active(),
 				'hasGsc' => MWSEO_Gsc::is_connected(),
+				'ajax'   => array(
+					'url'    => admin_url( 'admin-ajax.php' ),
+					'action' => MWSEO_Trends::ACTION,
+					'nonce'  => wp_create_nonce( MWSEO_Trends::ACTION ),
+				),
 				'i18n'   => array(
 					'seo'         => __( 'SEO', 'manny-wenas-seo' ),
+					'trends'      => __( 'Trends (7 days)', 'manny-wenas-seo' ),
+					'average'     => __( 'Average', 'manny-wenas-seo' ),
 					'readability' => __( 'Readability', 'manny-wenas-seo' ),
 					'analysing'   => __( 'Analysing…', 'manny-wenas-seo' ),
 					'noData'      => __( 'No Search Console data for this URL yet.', 'manny-wenas-seo' ),
@@ -101,6 +108,7 @@ class MWSEO_Metabox {
 				<label for="mwseo_focus"><strong><?php esc_html_e( 'Focus keyphrase', 'manny-wenas-seo' ); ?></strong></label>
 				<input type="text" id="mwseo_focus" name="mwseo_focus" class="widefat" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'focus' ) ); ?>" />
 				<span class="description"><?php esc_html_e( 'Matching is semantic: word order and common variants (plurals, verb forms) count.', 'manny-wenas-seo' ); ?></span>
+				<span class="mwseo-trends" id="mwseo-trends" hidden></span>
 			</p>
 
 			<div class="mwseo-related">
@@ -202,7 +210,12 @@ class MWSEO_Metabox {
 			$new_slug = sanitize_title( wp_unslash( $_POST['mwseo_slug'] ) );
 			if ( $new_slug && $new_slug !== $post->post_name ) {
 				remove_action( 'save_post', array( __CLASS__, 'save' ), 10 );
-				wp_update_post( array( 'ID' => $post_id, 'post_name' => $new_slug ) );
+				wp_update_post(
+					array(
+						'ID'        => $post_id,
+						'post_name' => $new_slug,
+					)
+				);
 				add_action( 'save_post', array( __CLASS__, 'save' ), 10, 2 );
 			}
 		}
