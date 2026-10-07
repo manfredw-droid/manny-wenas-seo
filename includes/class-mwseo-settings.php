@@ -304,7 +304,41 @@ class MWSEO_Settings {
 				</table>
 				<?php submit_button(); ?>
 			</form>
+			<?php self::indexnow_box( $tab ); ?>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Read-only IndexNow key with a nonce-protected "renew" button.
+	 *
+	 * @param string $tab Tab slug.
+	 */
+	private static function indexnow_box( $tab ) {
+		if ( 'verify' !== $tab ) {
+			return;
+		}
+		$key = MWSEO_Indexnow::ensure_key();
+		?>
+		<h2><?php esc_html_e( 'IndexNow', 'manny-wenas-seo' ); ?></h2>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="mwseo_indexnow_regenerate" />
+			<?php wp_nonce_field( 'mwseo_indexnow_regenerate', 'mwseo_indexnow_nonce' ); ?>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label for="mwseo_indexnow_key"><?php esc_html_e( 'IndexNow key', 'manny-wenas-seo' ); ?></label></th>
+					<td>
+						<input type="text" id="mwseo_indexnow_key" class="regular-text code" value="<?php echo esc_attr( $key ); ?>" readonly="readonly" />
+						<button type="submit" class="button"><?php esc_html_e( 'Vernieuw sleutel', 'manny-wenas-seo' ); ?></button>
+						<p class="description">
+							<?php esc_html_e( 'Key file:', 'manny-wenas-seo' ); ?>
+							<a href="<?php echo esc_url( home_url( '/' . $key . '.txt' ) ); ?>" target="_blank" rel="noopener"><?php echo esc_html( home_url( '/' . $key . '.txt' ) ); ?></a>
+							<?php esc_html_e( 'Published and updated posts and pages are sent to IndexNow automatically.', 'manny-wenas-seo' ); ?>
+						</p>
+					</td>
+				</tr>
+			</table>
+		</form>
 		<?php
 	}
 
@@ -317,6 +351,7 @@ class MWSEO_Settings {
 			'connected'    => array( 'success', __( 'Connected to Google Search Console.', 'manny-wenas-seo' ) ),
 			'disconnected' => array( 'info', __( 'Disconnected from Google Search Console.', 'manny-wenas-seo' ) ),
 			'error'        => array( 'error', __( 'Google did not return a refresh token. Check your client ID, secret and redirect URI, then try again.', 'manny-wenas-seo' ) ),
+			'indexnow_renewed' => array( 'success', __( 'A new IndexNow key has been generated.', 'manny-wenas-seo' ) ),
 			'no_client'    => array( 'error', __( 'Save your OAuth client ID and secret first.', 'manny-wenas-seo' ) ),
 		);
 		if ( isset( $map[ $msg ] ) ) {
