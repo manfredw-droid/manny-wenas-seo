@@ -50,8 +50,8 @@ class MWSEO_Meta {
 				$args = array(
 					'single'        => true,
 					'type'          => $def[0],
-					'auth_callback' => static function () {
-						return current_user_can( 'edit_posts' );
+					'auth_callback' => static function ( $allowed, $meta_key, $object_id ) {
+						return current_user_can( 'edit_post', $object_id );
 					},
 				);
 				if ( 'array' === $def[0] ) {
