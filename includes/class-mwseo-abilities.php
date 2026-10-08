@@ -184,7 +184,7 @@ class MWSEO_Abilities {
 				),
 				'output_schema'       => array( 'type' => 'array' ),
 				'permission_callback' => static function () {
-					return current_user_can( 'edit_posts' );
+					return current_user_can( 'edit_others_posts' );
 				},
 				'execute_callback'    => static function ( $input ) {
 					$threshold = isset( $input['threshold'] ) ? (int) $input['threshold'] : 60;

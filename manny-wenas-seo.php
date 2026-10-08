@@ -37,6 +37,20 @@ function mwseo_autoload( $class_name ) {
 }
 spl_autoload_register( 'mwseo_autoload' );
 
+// Register the weekly interval before it is used by wp_schedule_event() on activation.
+add_filter(
+	'cron_schedules',
+	static function ( $schedules ) {
+		if ( ! isset( $schedules['weekly'] ) ) {
+			$schedules['weekly'] = array(
+				'interval' => WEEK_IN_SECONDS,
+				'display'  => __( 'Once Weekly', 'manny-wenas-seo' ),
+			);
+		}
+		return $schedules;
+	}
+);
+
 register_activation_hook( __FILE__, array( 'MWSEO_Plugin', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'MWSEO_Plugin', 'deactivate' ) );
 

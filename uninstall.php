@@ -9,6 +9,8 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
 global $wpdb;
 
+wp_clear_scheduled_hook( 'mwseo_weekly' );
+
 delete_option( 'mwseo_options' );
 delete_option( 'mwseo_gsc' );
 delete_option( 'mwseo_llms_txt' );
