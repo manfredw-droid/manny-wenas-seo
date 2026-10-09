@@ -45,17 +45,7 @@ class MWSEO_Rest {
 				'callback'            => array( __CLASS__, 'rest_gsc' ),
 				'permission_callback' => $can_edit,
 			)
-		);
-		register_rest_route(
-			'mwseo/v1',
-			'/ai/generate',
-			array(
-				'methods'             => 'POST',
-				'callback'            => array( __CLASS__, 'rest_ai' ),
-				'permission_callback' => $can_edit,
-			)
-		);
-	}
+		);  }
 
 	/**
 	 * POST /analyze: live analysis of unsaved editor state.
@@ -110,22 +100,5 @@ class MWSEO_Rest {
 			return $rows;
 		}
 		return array( 'rows' => $rows );
-	}
-
-	/**
-	 * POST /ai/generate (Pro): generate title and description.
-	 *
-	 * @param WP_REST_Request $req Request.
-	 * @return array|WP_Error
-	 */
-	public static function rest_ai( WP_REST_Request $req ) {
-		if ( ! MWSEO_Pro::is_active() ) {
-			return new WP_Error( 'mwseo_pro', __( 'This feature requires Manny Wenas SEO Pro.', 'manny-wenas-seo' ), array( 'status' => 403 ) );
-		}
-		$post_id = (int) $req->get_param( 'post_id' );
-		if ( ! $post_id || ! get_post( $post_id ) ) {
-			return new WP_Error( 'mwseo_post', __( 'Invalid post.', 'manny-wenas-seo' ), array( 'status' => 400 ) );
-		}
-		return MWSEO_Pro::generate_for_post( $post_id, (bool) $req->get_param( 'overwrite' ) );
 	}
 }

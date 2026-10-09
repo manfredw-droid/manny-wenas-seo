@@ -269,11 +269,231 @@ class MWSEO_Importer {
 	// -------------------------------------------------------------------------
 
 	/**
+	 * Hook suffix of the import page (set when the submenu is registered).
+	 *
+	 * @var string|false
+	 */
+	private static $page_hook = false;
+
+	/**
+	 * Enqueue the importer script on the import page only. Hooked to
+	 * 'admin_enqueue_scripts'.
+	 *
+	 * @param string $hook Current admin page hook suffix.
+	 */
+	public static function enqueue_assets( $hook ): void {
+		if ( ! static::$page_hook || $hook !== static::$page_hook ) {
+			return;
+		}
+		// Handle without a file: it only carries the inline script.
+		wp_register_script( 'mwseo-importer', false, array( 'jquery' ), MWSEO_VERSION, true );
+		wp_enqueue_script( 'mwseo-importer' );
+		wp_add_inline_script(
+			'mwseo-importer',
+			'const cfg = ' . wp_json_encode( static::script_data() ) . ';' . "\n" . static::script_body()
+		);
+	}
+
+	/**
+	 * Data handed to the importer script.
+	 *
+	 * @return array
+	 */
+	private static function script_data(): array {
+		return array(
+			'fieldMaps' => static::get_field_maps_for_js(),
+			'batchSize' => (int) static::BATCH_SIZE,
+			'i18n'      => array(
+				'seo_title'                                => __( 'SEO title', 'manny-wenas-seo' ),
+				'meta_description'                         => __( 'Meta description', 'manny-wenas-seo' ),
+				'focus_keyphrase'                          => __( 'Focus keyphrase', 'manny-wenas-seo' ),
+				'canonical_url'                            => __( 'Canonical URL', 'manny-wenas-seo' ),
+				'robots_directives'                        => __( 'Robots directives', 'manny-wenas-seo' ),
+				'og_title'                                 => __( 'OG title', 'manny-wenas-seo' ),
+				'og_description'                           => __( 'OG description', 'manny-wenas-seo' ),
+				'og_image_url'                             => __( 'OG image URL', 'manny-wenas-seo' ),
+				'twitter_title'                            => __( 'Twitter title', 'manny-wenas-seo' ),
+				'twitter_description'                      => __( 'Twitter description', 'manny-wenas-seo' ),
+				'twitter_image_url'                        => __( 'Twitter image URL', 'manny-wenas-seo' ),
+				'anchor_post'                              => __( 'Anchor post', 'manny-wenas-seo' ),
+				'schema_page_type'                         => __( 'Schema page type', 'manny-wenas-seo' ),
+				'schema_article_type'                      => __( 'Schema article type', 'manny-wenas-seo' ),
+				'please_select_a_source_plugin'            => __( 'Please select a source plugin.', 'manny-wenas-seo' ),
+				'please_select_at_least_one_post_type'     => __( 'Please select at least one post type.', 'manny-wenas-seo' ),
+				'dry_run_complete_no_data_was_written'     => __( 'Dry run complete — no data was written.', 'manny-wenas-seo' ),
+				'import_complete'                          => __( 'Import complete.', 'manny-wenas-seo' ),
+				'plugin_specific_robots_keys'              => __( '(plugin-specific robots keys)', 'manny-wenas-seo' ),
+				'source_field_post_meta_key'               => __( 'Source field (post meta key)', 'manny-wenas-seo' ),
+				'mw_seo_field'                             => __( 'MW SEO field', 'manny-wenas-seo' ),
+				'imported'                                 => __( 'Imported:', 'manny-wenas-seo' ),
+				'skipped_mw_seo_data_already_exists'       => __( 'Skipped (MW SEO data already exists):', 'manny-wenas-seo' ),
+				'unchanged_no_source_data_found'           => __( 'Unchanged (no source data found):', 'manny-wenas-seo' ),
+				'errors_see_php_error_log'                 => __( 'Errors:', 'manny-wenas-seo' ),
+				'uncheck_dry_run_and_click_run_import_to_' => __( 'Uncheck "Dry run" and click Run Import to apply changes.', 'manny-wenas-seo' ),
+			),
+		);
+	}
+
+	/**
+	 * Importer script (reads its data from the `cfg` constant defined before it).
+	 *
+	 * @return string
+	 */
+	private static function script_body(): string {
+		return <<<'JS'
+(function($){
+	'use strict';
+
+	/* Human-readable labels for destination field slugs */
+	const FIELD_LABELS = {
+		title:               cfg.i18n.seo_title,
+		description:         cfg.i18n.meta_description,
+		focus_kw:            cfg.i18n.focus_keyphrase,
+		canonical:           cfg.i18n.canonical_url,
+		robots:              cfg.i18n.robots_directives,
+		og_title:            cfg.i18n.og_title,
+		og_description:      cfg.i18n.og_description,
+		og_image:            cfg.i18n.og_image_url,
+		twitter_title:       cfg.i18n.twitter_title,
+		twitter_description: cfg.i18n.twitter_description,
+		twitter_image:       cfg.i18n.twitter_image_url,
+		cornerstone:         cfg.i18n.anchor_post,
+		schema_page_type:    cfg.i18n.schema_page_type,
+		schema_article_type: cfg.i18n.schema_article_type,
+	};
+
+	/* Field maps emitted server-side — avoids a separate AJAX round-trip */
+	const FIELD_MAPS = cfg.fieldMaps;
+
+	/* ---- Field-map preview ---------------------------------------- */
+	$('#mw-import-source').on('change', function(){
+		const source = $(this).val();
+		const map    = FIELD_MAPS[source];
+		if (!source || !map) { $('#mw-import-field-map').hide(); return; }
+
+		let rows = '';
+		for (const [src, dest] of Object.entries(map)) {
+			rows += `<tr>
+				<td><code style="font-size:12px">${src}</code></td>
+				<td style="text-align:center">→</td>
+				<td>${FIELD_LABELS[dest] || dest}</td>
+			</tr>`;
+		}
+		// Add robots row — always present.
+		rows += `<tr>
+			<td><em style="font-size:12px">${cfg.i18n.plugin_specific_robots_keys}</em></td>
+			<td style="text-align:center">→</td>
+			<td>${FIELD_LABELS.robots}</td>
+		</tr>`;
+
+		$('#mw-import-field-map-content').html(
+			`<table class="wp-list-table widefat striped" style="max-width:580px;">
+				<thead>
+					<tr>
+						<th>${cfg.i18n.source_field_post_meta_key}</th>
+						<th></th>
+						<th>${cfg.i18n.mw_seo_field}</th>
+					</tr>
+				</thead>
+				<tbody>${rows}</tbody>
+			</table>`
+		);
+		$('#mw-import-field-map').show();
+		$('#mw-import-run-btn').prop('disabled', false);
+	});
+
+	/* ---- Trigger handlers ----------------------------------------- */
+	$('#mw-import-preview-btn').on('click', function(){
+		runImport(true);
+	});
+
+	$('#mw-seo-import-form').on('submit', function(e){
+		e.preventDefault();
+		runImport(false);
+	});
+
+	/* ---- Core import runner --------------------------------------- */
+	function runImport(dryRun){
+		const source    = $('#mw-import-source').val();
+		const postTypes = $('input[name="post_types[]"]:checked').map((i, el) => el.value).get();
+		const overwrite = $('input[name="overwrite"]').is(':checked');
+		const nonce     = $('#_mw_nonce').val();
+
+		if (!source)          { alert(cfg.i18n.please_select_a_source_plugin); return; }
+		if (!postTypes.length){ alert(cfg.i18n.please_select_at_least_one_post_type); return; }
+
+		$('#mw-import-progress').show();
+		$('#mw-import-results').hide();
+		$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', true);
+		$('#mw-import-progress-bar').css('width', '0');
+		$('#mw-import-progress-text').text('');
+
+		const totals = { imported:0, skipped:0, unchanged:0, errors:0 };
+		let offset   = 0;
+
+		(function batch(){
+			$.post(ajaxurl, {
+				action:     'mw_seo_import_batch',
+				nonce,
+				source,
+				post_types: postTypes,
+				overwrite:  overwrite ? 1 : 0,
+				dry_run:    dryRun    ? 1 : 0,
+				offset,
+				batch_size: cfg.batchSize,
+			}).done(function(res){
+				if (!res.success) {
+					$('#mw-import-progress-text').text('Error: ' + (res.data || 'unknown error'));
+					$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', false);
+					return;
+				}
+
+				const d = res.data;
+				totals.imported  += d.imported;
+				totals.skipped   += d.skipped;
+				totals.unchanged += d.unchanged;
+				totals.errors    += d.errors;
+
+				const pct = d.total > 0 ? Math.min(100, Math.round((d.processed / d.total) * 100)) : 100;
+				$('#mw-import-progress-bar').css('width', pct + '%');
+				$('#mw-import-progress-text').text(d.processed + ' / ' + d.total + ' posts');
+
+				if (d.done) {
+					const label = dryRun ? cfg.i18n.dry_run_complete_no_data_was_written
+										: cfg.i18n.import_complete;
+					let html = `<p><strong>${label}</strong></p><ul style="margin-left:1.5em;list-style:disc">
+						<li>${cfg.i18n.imported} <strong>${totals.imported}</strong></li>
+						<li>${cfg.i18n.skipped_mw_seo_data_already_exists} <strong>${totals.skipped}</strong></li>
+						<li>${cfg.i18n.unchanged_no_source_data_found} <strong>${totals.unchanged}</strong></li>
+						<li>${cfg.i18n.errors_see_php_error_log} <strong>${totals.errors}</strong></li>
+					</ul>`;
+					if (dryRun) {
+						html += `<p>${cfg.i18n.uncheck_dry_run_and_click_run_import_to_}</p>`;
+					}
+					$('#mw-import-results-content').html(html);
+					$('#mw-import-results').show();
+					$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', false);
+				} else {
+					offset = d.next_offset;
+					batch();
+				}
+			}).fail(function(){
+				$('#mw-import-progress-text').text('Request failed. Check your network connection.');
+				$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', false);
+			});
+		}());
+	}
+}(jQuery));
+
+JS;
+	}
+
+	/**
 	 * Register the Import submenu page under the MW SEO top-level menu.
 	 * Hooked to 'admin_menu'.
 	 */
 	public static function register_admin_page(): void {
-		add_submenu_page(
+		static::$page_hook = add_submenu_page(
 			'mwseo',
 			__( 'Import SEO Data', 'manny-wenas-seo' ),
 			__( 'Import', 'manny-wenas-seo' ),
@@ -401,152 +621,6 @@ class MWSEO_Importer {
 
 			<?php endif; ?>
 		</div><!-- .wrap -->
-
-		<script>
-		(function($){
-			'use strict';
-
-			/* Human-readable labels for destination field slugs */
-			const FIELD_LABELS = {
-				title:               '<?php echo esc_js( __( 'SEO title', 'manny-wenas-seo' ) ); ?>',
-				description:         '<?php echo esc_js( __( 'Meta description', 'manny-wenas-seo' ) ); ?>',
-				focus_kw:            '<?php echo esc_js( __( 'Focus keyphrase', 'manny-wenas-seo' ) ); ?>',
-				canonical:           '<?php echo esc_js( __( 'Canonical URL', 'manny-wenas-seo' ) ); ?>',
-				robots:              '<?php echo esc_js( __( 'Robots directives', 'manny-wenas-seo' ) ); ?>',
-				og_title:            '<?php echo esc_js( __( 'OG title', 'manny-wenas-seo' ) ); ?>',
-				og_description:      '<?php echo esc_js( __( 'OG description', 'manny-wenas-seo' ) ); ?>',
-				og_image:            '<?php echo esc_js( __( 'OG image URL', 'manny-wenas-seo' ) ); ?>',
-				twitter_title:       '<?php echo esc_js( __( 'Twitter title', 'manny-wenas-seo' ) ); ?>',
-				twitter_description: '<?php echo esc_js( __( 'Twitter description', 'manny-wenas-seo' ) ); ?>',
-				twitter_image:       '<?php echo esc_js( __( 'Twitter image URL', 'manny-wenas-seo' ) ); ?>',
-				cornerstone:         '<?php echo esc_js( __( 'Anchor post', 'manny-wenas-seo' ) ); ?>',
-				schema_page_type:    '<?php echo esc_js( __( 'Schema page type', 'manny-wenas-seo' ) ); ?>',
-				schema_article_type: '<?php echo esc_js( __( 'Schema article type', 'manny-wenas-seo' ) ); ?>',
-			};
-
-			/* Field maps emitted server-side — avoids a separate AJAX round-trip */
-			const FIELD_MAPS = <?php echo wp_json_encode( static::get_field_maps_for_js() ); ?>;
-
-			/* ---- Field-map preview ---------------------------------------- */
-			$('#mw-import-source').on('change', function(){
-				const source = $(this).val();
-				const map    = FIELD_MAPS[source];
-				if (!source || !map) { $('#mw-import-field-map').hide(); return; }
-
-				let rows = '';
-				for (const [src, dest] of Object.entries(map)) {
-					rows += `<tr>
-						<td><code style="font-size:12px">${src}</code></td>
-						<td style="text-align:center">→</td>
-						<td>${FIELD_LABELS[dest] || dest}</td>
-					</tr>`;
-				}
-				// Add robots row — always present.
-				rows += `<tr>
-					<td><em style="font-size:12px"><?php echo esc_js( __( '(plugin-specific robots keys)', 'manny-wenas-seo' ) ); ?></em></td>
-					<td style="text-align:center">→</td>
-					<td>${FIELD_LABELS.robots}</td>
-				</tr>`;
-
-				$('#mw-import-field-map-content').html(
-					`<table class="wp-list-table widefat striped" style="max-width:580px;">
-						<thead>
-							<tr>
-								<th><?php echo esc_js( __( 'Source field (post meta key)', 'manny-wenas-seo' ) ); ?></th>
-								<th></th>
-								<th><?php echo esc_js( __( 'MW SEO field', 'manny-wenas-seo' ) ); ?></th>
-							</tr>
-						</thead>
-						<tbody>${rows}</tbody>
-					</table>`
-				);
-				$('#mw-import-field-map').show();
-				$('#mw-import-run-btn').prop('disabled', false);
-			});
-
-			/* ---- Trigger handlers ----------------------------------------- */
-			$('#mw-import-preview-btn').on('click', function(){
-				runImport(true);
-			});
-
-			$('#mw-seo-import-form').on('submit', function(e){
-				e.preventDefault();
-				runImport(false);
-			});
-
-			/* ---- Core import runner --------------------------------------- */
-			function runImport(dryRun){
-				const source    = $('#mw-import-source').val();
-				const postTypes = $('input[name="post_types[]"]:checked').map((i, el) => el.value).get();
-				const overwrite = $('input[name="overwrite"]').is(':checked');
-				const nonce     = $('#_mw_nonce').val();
-
-				if (!source)          { alert('<?php echo esc_js( __( 'Please select a source plugin.', 'manny-wenas-seo' ) ); ?>'); return; }
-				if (!postTypes.length){ alert('<?php echo esc_js( __( 'Please select at least one post type.', 'manny-wenas-seo' ) ); ?>'); return; }
-
-				$('#mw-import-progress').show();
-				$('#mw-import-results').hide();
-				$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', true);
-				$('#mw-import-progress-bar').css('width', '0');
-				$('#mw-import-progress-text').text('');
-
-				const totals = { imported:0, skipped:0, unchanged:0, errors:0 };
-				let offset   = 0;
-
-				(function batch(){
-					$.post(ajaxurl, {
-						action:     'mw_seo_import_batch',
-						nonce,
-						source,
-						post_types: postTypes,
-						overwrite:  overwrite ? 1 : 0,
-						dry_run:    dryRun    ? 1 : 0,
-						offset,
-						batch_size: <?php echo (int) static::BATCH_SIZE; ?>,
-					}).done(function(res){
-						if (!res.success) {
-							$('#mw-import-progress-text').text('Error: ' + (res.data || 'unknown error'));
-							$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', false);
-							return;
-						}
-
-						const d = res.data;
-						totals.imported  += d.imported;
-						totals.skipped   += d.skipped;
-						totals.unchanged += d.unchanged;
-						totals.errors    += d.errors;
-
-						const pct = d.total > 0 ? Math.min(100, Math.round((d.processed / d.total) * 100)) : 100;
-						$('#mw-import-progress-bar').css('width', pct + '%');
-						$('#mw-import-progress-text').text(d.processed + ' / ' + d.total + ' posts');
-
-						if (d.done) {
-							const label = dryRun ? '<?php echo esc_js( __( 'Dry run complete — no data was written.', 'manny-wenas-seo' ) ); ?>'
-												: '<?php echo esc_js( __( 'Import complete.', 'manny-wenas-seo' ) ); ?>';
-							let html = `<p><strong>${label}</strong></p><ul style="margin-left:1.5em;list-style:disc">
-								<li><?php echo esc_js( __( 'Imported:', 'manny-wenas-seo' ) ); ?> <strong>${totals.imported}</strong></li>
-								<li><?php echo esc_js( __( 'Skipped (MW SEO data already exists):', 'manny-wenas-seo' ) ); ?> <strong>${totals.skipped}</strong></li>
-								<li><?php echo esc_js( __( 'Unchanged (no source data found):', 'manny-wenas-seo' ) ); ?> <strong>${totals.unchanged}</strong></li>
-								<li><?php echo esc_js( __( 'Errors (see PHP error log):', 'manny-wenas-seo' ) ); ?> <strong>${totals.errors}</strong></li>
-							</ul>`;
-							if (dryRun) {
-								html += `<p><?php echo esc_js( __( 'Uncheck "Dry run" and click Run Import to apply changes.', 'manny-wenas-seo' ) ); ?></p>`;
-							}
-							$('#mw-import-results-content').html(html);
-							$('#mw-import-results').show();
-							$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', false);
-						} else {
-							offset = d.next_offset;
-							batch();
-						}
-					}).fail(function(){
-						$('#mw-import-progress-text').text('Request failed. Check your network connection.');
-						$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', false);
-					});
-				}());
-			}
-		}(jQuery));
-		</script>
 		<?php
 	}
 
@@ -765,6 +839,7 @@ class MWSEO_Importer {
 	 */
 	public static function init(): void {
 		add_action( 'admin_menu', array( static::class, 'register_admin_page' ), 20 );
+		add_action( 'admin_enqueue_scripts', array( static::class, 'enqueue_assets' ) );
 		static::register_ajax();
 	}
 }

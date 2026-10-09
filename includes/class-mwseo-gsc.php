@@ -67,7 +67,7 @@ class MWSEO_Gsc {
 				wp_safe_redirect( admin_url( 'admin.php?page=mwseo&tab=gsc&mwseo_msg=no_client' ) );
 				exit;
 			}
-			$scope = MWSEO_Pro::is_active() ? 'https://www.googleapis.com/auth/webmasters' : 'https://www.googleapis.com/auth/webmasters.readonly';
+			$scope = 'https://www.googleapis.com/auth/webmasters.readonly';
 			$url   = add_query_arg(
 				array(
 					'client_id'     => $client_id,
@@ -287,16 +287,5 @@ class MWSEO_Gsc {
 			);
 		}
 		return $out;
-	}
-
-	/**
-	 * Submit a sitemap (needs the read/write scope, so the Pro scope at connect time).
-	 *
-	 * @param string $sitemap_url Sitemap URL.
-	 * @return true|WP_Error
-	 */
-	public static function submit_sitemap( $sitemap_url ) {
-		$res = self::request( 'PUT', 'sitemaps/' . rawurlencode( $sitemap_url ) );
-		return is_wp_error( $res ) ? $res : true;
 	}
 }

@@ -92,11 +92,6 @@ class MWSEO_Indexnow {
 		if ( 'publish' !== $new_status || 'publish' === $old_status ) {
 			return;
 		}
-		// Pro auto-submit already pings IndexNow on first publication; avoid a double ping.
-		if ( MWSEO_Pro::is_active() && MWSEO_Options::get( 'sitemap_autosubmit' ) ) {
-			self::$pinged[] = (int) $post->ID; // Also stops the save_post hook in this request.
-			return;
-		}
 		self::ping( $post );
 	}
 
@@ -119,6 +114,10 @@ class MWSEO_Indexnow {
 	 * @param WP_Post $post Post.
 	 */
 	private static function ping( $post ) {
+		// Opt-in: nothing leaves the site unless the administrator enabled IndexNow.
+		if ( ! MWSEO_Options::get( 'indexnow_enabled' ) ) {
+			return;
+		}
 		if ( ! in_array( $post->post_type, array( 'post', 'page' ), true ) || in_array( (int) $post->ID, self::$pinged, true ) ) {
 			return;
 		}

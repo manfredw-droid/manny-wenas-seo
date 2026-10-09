@@ -53,7 +53,8 @@ class MWSEO_Schema {
 	 * @return string
 	 */
 	public static function person_id( $user_id ) {
-		return self::id( 'Person', md5( wp_salt( 'auth' ) . (int) $user_id ) );
+		$seed = hash( 'sha256', get_home_url() );
+		return self::id( 'Person', md5( $seed . (int) $user_id ) );
 	}
 
 	/**
@@ -138,12 +139,6 @@ class MWSEO_Schema {
 			$page['mainEntity'] = array( '@id' => $article['@id'] );
 		}
 		self::add( $page );
-
-		if ( is_singular() && MWSEO_Pro::is_active() ) {
-			foreach ( self::advanced_nodes( get_queried_object_id(), $page_id ) as $node ) {
-				self::add( $node );
-			}
-		}
 
 		return apply_filters( 'mwseo_schema_graph', array_values( self::$nodes ) );
 	}
@@ -429,92 +424,5 @@ class MWSEO_Schema {
 			$node['caption'] = $alt;
 		}
 		return $node;
-	}
-
-	/**
-	 * Pro nodes: FAQPage, VideoObject, Review.
-	 *
-	 * @param int    $post_id Post ID.
-	 * @param string $page_id WebPage @id to attach to.
-	 * @return array[]
-	 */
-	public static function advanced_nodes( $post_id, $page_id ) {
-		$nodes = array();
-		$post  = get_post( $post_id );
-		if ( ! $post ) {
-			return $nodes;
-		}
-
-		$faq = array();
-		foreach ( preg_split( '/\R+/', MWSEO_Meta::get( $post_id, 'faq' ) ) as $line ) {
-			$parts = array_map( 'trim', explode( '|', $line, 2 ) );
-			if ( 2 === count( $parts ) && $parts[0] && $parts[1] ) {
-				$faq[] = array(
-					'@type'          => 'Question',
-					'name'           => $parts[0],
-					'acceptedAnswer' => array(
-						'@type' => 'Answer',
-						'text'  => $parts[1],
-					),
-				);
-			}
-		}
-		if ( $faq ) {
-			$nodes[] = array(
-				'@type'            => 'FAQPage',
-				'@id'              => self::id( 'FAQPage', $post_id ),
-				'mainEntityOfPage' => array( '@id' => $page_id ),
-				'mainEntity'       => $faq,
-			);
-		}
-
-		$video = MWSEO_Meta::get( $post_id, 'video' );
-		if ( $video ) {
-			$node  = array(
-				'@type'            => 'VideoObject',
-				'@id'              => self::id( 'VideoObject', $post_id ),
-				'name'             => get_the_title( $post ),
-				'description'      => MWSEO_Head::description() ? MWSEO_Head::description() : get_the_title( $post ),
-				'uploadDate'       => get_post_time( 'c', true, $post ),
-				'mainEntityOfPage' => array( '@id' => $page_id ),
-			);
-			$thumb = get_the_post_thumbnail_url( $post_id, 'full' );
-			$yt    = MWSEO_Sitemaps::youtube_id( $video );
-			if ( ! $thumb && $yt ) {
-				$thumb = 'https://i.ytimg.com/vi/' . $yt . '/hqdefault.jpg';
-			}
-			if ( $thumb ) {
-				$node['thumbnailUrl'] = array( $thumb );
-			}
-			if ( $yt ) {
-				$node['embedUrl'] = 'https://www.youtube.com/embed/' . $yt;
-			} else {
-				$node['contentUrl'] = $video;
-			}
-			$nodes[] = $node;
-		}
-
-		$review = MWSEO_Meta::get( $post_id, 'review' );
-		if ( ! empty( $review[0] ) && ! empty( $review[1] ) ) {
-			$nodes[] = array(
-				'@type'            => 'Review',
-				'@id'              => self::id( 'Review', $post_id ),
-				'mainEntityOfPage' => array( '@id' => $page_id ),
-				'itemReviewed'     => array(
-					'@type' => 'Thing',
-					'name'  => $review[0],
-				),
-				'reviewRating'     => array(
-					'@type'       => 'Rating',
-					'ratingValue' => (float) $review[1],
-					'bestRating'  => 5,
-					'worstRating' => 1,
-				),
-				'author'           => self::author_ref( (int) $post->post_author ),
-				'reviewBody'       => isset( $review[2] ) ? $review[2] : '',
-				'datePublished'    => get_post_time( 'c', true, $post ),
-			);
-		}
-		return $nodes;
 	}
 }

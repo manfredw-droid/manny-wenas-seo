@@ -27,9 +27,6 @@ class MWSEO_Meta {
 			'nofollow'    => array( 'boolean', '' ),
 			'cornerstone' => array( 'boolean', '_yoast_wpseo_is_cornerstone', 'rank_math_pillar_content' ),
 			'score'       => array( 'integer', '' ),
-			'faq'         => array( 'string', '' ),
-			'video'       => array( 'string', '' ),
-			'review'      => array( 'array', '' ),
 		);
 	}
 

@@ -303,14 +303,14 @@ class MWSEO_Sitemaps {
 	}
 
 	/**
-	 * Video sitemap: YouTube/Vimeo/file videos detected in content or set as Pro video.
+	 * Video sitemap: YouTube/Vimeo/file videos detected in content.
 	 *
 	 * @param int $page Page.
 	 */
 	private static function videos( $page ) {
 		$q = new WP_Query( self::post_args( MWSEO_Options::get( 'post_types' ), $page ) );
 		foreach ( $q->posts as $id ) {
-			$content = (string) get_post_field( 'post_content', $id ) . ' ' . MWSEO_Meta::get( $id, 'video' );
+			$content = (string) get_post_field( 'post_content', $id );
 			$videos  = array();
 			preg_match_all( '#(?:youtube\.com/(?:embed/|watch\?v=)|youtu\.be/)([\w-]{11})#', $content, $yt );
 			foreach ( array_unique( $yt[1] ) as $vid ) {

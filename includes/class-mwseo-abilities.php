@@ -184,7 +184,8 @@ class MWSEO_Abilities {
 				),
 				'output_schema'       => array( 'type' => 'array' ),
 				'permission_callback' => static function () {
-					return current_user_can( 'edit_others_posts' );
+					// Intentionally broad: editors (edit_others_posts) and administrators (manage_options) may list scores across all authors and post types.
+					return current_user_can( 'edit_others_posts' ) || current_user_can( 'manage_options' );
 				},
 				'execute_callback'    => static function ( $input ) {
 					$threshold = isset( $input['threshold'] ) ? (int) $input['threshold'] : 60;
