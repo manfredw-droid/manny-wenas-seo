@@ -56,14 +56,15 @@ class MWSEO_Metabox {
 					'nonce'  => wp_create_nonce( MWSEO_Trends::ACTION ),
 				) : null,
 				'i18n'   => array(
-					'na'        => __( 'N/A', 'manny-wenas-seo' ),
-					'trends'    => __( 'Trends (7 days)', 'manny-wenas-seo' ),
-					'average'   => __( 'Average', 'manny-wenas-seo' ),
-					'analysing' => __( 'Analysing…', 'manny-wenas-seo' ),
-					'noData'    => __( 'No Search Console data for this URL yet.', 'manny-wenas-seo' ),
-					'chars'     => __( 'characters', 'manny-wenas-seo' ),
-					'use'       => __( 'Use', 'manny-wenas-seo' ),
-					'error'     => __( 'Something went wrong.', 'manny-wenas-seo' ),
+					'na'           => __( 'N/A', 'manny-wenas-seo' ),
+					'trends'       => __( 'Trends (7 days)', 'manny-wenas-seo' ),
+					'average'      => __( 'Average', 'manny-wenas-seo' ),
+					'analysing'    => __( 'Analysing…', 'manny-wenas-seo' ),
+					'noData'       => __( 'No Search Console data for this URL yet.', 'manny-wenas-seo' ),
+					'notConnected' => __( 'Search Console is not connected. Go to Manny Wenas SEO → Search Console to connect.', 'manny-wenas-seo' ),
+					'chars'        => __( 'characters', 'manny-wenas-seo' ),
+					'use'          => __( 'Use', 'manny-wenas-seo' ),
+					'error'        => __( 'Something went wrong.', 'manny-wenas-seo' ),
 				),
 			)
 		);

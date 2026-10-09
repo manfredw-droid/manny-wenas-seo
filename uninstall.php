@@ -20,4 +20,6 @@ delete_transient( 'mwseo_gsc_sitemap_sent' );
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}mwseo_rank" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 $wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE '\_mwseo\_%'" );
 $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_mwseo\_gsc\_%' OR option_name LIKE '\_transient\_timeout\_mwseo\_gsc\_%'" );
+// Clean up Trends transients.
+$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_mwseo\_trends\_%' OR option_name LIKE '\_transient\_timeout\_mwseo\_trends\_%'" );
 // phpcs:enable WordPress.DB.DirectDatabaseQuery
