@@ -114,6 +114,10 @@ class MWSEO_Indexnow {
 	 * @param WP_Post $post Post.
 	 */
 	private static function ping( $post ) {
+		// Opt-in: nothing leaves the site unless the administrator enabled IndexNow.
+		if ( ! MWSEO_Options::get( 'indexnow_enabled' ) ) {
+			return;
+		}
 		if ( ! in_array( $post->post_type, array( 'post', 'page' ), true ) || in_array( (int) $post->ID, self::$pinged, true ) ) {
 			return;
 		}

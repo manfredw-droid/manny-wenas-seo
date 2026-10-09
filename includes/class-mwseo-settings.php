@@ -66,7 +66,7 @@ class MWSEO_Settings {
 				array( 'title_template', 'text', __( 'Default title template', 'manny-wenas-seo' ), __( 'Variables: %%title%%, %%sitename%%, %%tagline%%, %%sep%%.', 'manny-wenas-seo' ) ),
 				array( 'title_separator', 'text', __( 'Title separator', 'manny-wenas-seo' ), '' ),
 				array( 'post_types', 'multicheck', __( 'Post types with SEO controls', 'manny-wenas-seo' ), '', $post_types ),
-				array( 'trends_enabled', 'checkbox', __( 'Google Trends indicator', 'manny-wenas-seo' ), __( 'Send your focus keyphrase to Google Trends to show a search-interest score in the post editor.', 'manny-wenas-seo' ) ),
+				array( 'trends_enabled', 'checkbox', __( 'Google Trends indicator', 'manny-wenas-seo' ), __( 'Off by default. When enabled, your focus keyphrase is sent to Google Trends (an external service run by Google) to show a search-interest score in the post editor.', 'manny-wenas-seo' ) ),
 			),
 			'social'   => array(
 				array( 'default_image', 'number', __( 'Default social image (attachment ID)', 'manny-wenas-seo' ), __( 'Used when a post has no featured image. Find the ID in the Media Library.', 'manny-wenas-seo' ) ),
@@ -123,6 +123,7 @@ class MWSEO_Settings {
 				array( 'gsc_property', 'text', __( 'Search Console property', 'manny-wenas-seo' ), __( 'For example https://example.com/ or sc-domain:example.com. Defaults to the home URL.', 'manny-wenas-seo' ) ),
 			),
 			'verify'   => array(
+				array( 'indexnow_enabled', 'checkbox', __( 'IndexNow notifications', 'manny-wenas-seo' ), __( 'Off by default. When enabled, the URL of every post or page you publish or update, plus your IndexNow key, is sent to IndexNow (api.indexnow.org, an external service run by Microsoft/Bing) so search engines can crawl it sooner.', 'manny-wenas-seo' ) ),
 				array( 'gsc_html_filename', 'text', __( 'Google Search Console HTML file', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'gsc_html_filename' ) ), array(), 'googleXXXXXXXXXXXXXXXX.html' ),
 				array( 'bing_verification_key', 'text', __( 'Bing Webmaster Tools verification code', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'bing_verification_key' ) ), array(), 'jouw Bing verificatiecode' ),
 			),

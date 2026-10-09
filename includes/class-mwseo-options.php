@@ -58,7 +58,8 @@ class MWSEO_Options {
 			'indexnow_key'          => '',
 			'gsc_html_filename'     => '',
 			'bing_verification_key' => '',
-			'trends_enabled'        => 1,
+			'trends_enabled'        => 0,
+			'indexnow_enabled'      => 0,
 		);
 	}
 

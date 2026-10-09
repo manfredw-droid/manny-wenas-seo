@@ -73,6 +73,10 @@ class MWSEO_Trends {
 	 * @return int|null 0-100, or null when unavailable.
 	 */
 	public static function average( $keyphrase ) {
+		// Opt-in: no request to Google unless the administrator enabled the indicator.
+		if ( ! MWSEO_Options::get( 'trends_enabled' ) ) {
+			return null;
+		}
 		$key    = 'mwseo_trends_' . md5( $keyphrase );
 		$cached = get_transient( $key );
 		if ( is_array( $cached ) ) {
