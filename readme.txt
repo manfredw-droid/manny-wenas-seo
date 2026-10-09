@@ -11,7 +11,6 @@ Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.t
 
 == Description ==
 
-Free:
 * Focus keyphrase (semantic matching) plus up to two related keyphrases
 * SEO title, meta description, noindex/nofollow per post
 * Open Graph and X/Twitter cards
@@ -25,35 +24,39 @@ Free:
 
 Deliberately excluded: redirects, 404 monitor, analytics dashboard, AI writer.
 
-== External services ==
+== External Services ==
 
-This plugin communicates with the following external services under the conditions described below.
+This plugin optionally connects to the following third-party services. All external 
+connections are disabled by default and must be explicitly enabled by the site administrator.
 
-= Google Trends (optional) =
+**IndexNow** (optional, disabled by default)
+When enabled, notifies search engines of new or updated content via the IndexNow protocol.
+Sends: the URL of the published/updated post, plus the site's IndexNow API key.
+Triggered: when a post is published or updated, if the feature is enabled (Manny Wenas SEO > Verification & IndexNow).
+Service provider: IndexNow (Microsoft/Bing)
+Terms of use: https://www.indexnow.org/documentation
+Privacy policy: https://privacy.microsoft.com/en-us/privacystatement
 
-When the Google Trends indicator is enabled in Settings → Manny Wenas SEO → General, your focus keyphrase is sent to trends.google.com to retrieve a relative search-interest score. This happens in the post editor, approximately 800 milliseconds after you finish typing your keyphrase. Results are cached for 24 hours; failed requests are cached for 1 hour.
+**Google Trends** (optional, disabled by default)
+When enabled, shows a search-interest score for your focus keyphrase in the post editor.
+Sends: the focus keyphrase you typed, to trends.google.com (unofficial endpoint, no account or API key).
+Triggered: about 800 milliseconds after you stop typing the focus keyphrase in the SEO metabox, if the feature is enabled (Manny Wenas SEO > General). Results are cached for 24 hours, failed requests for 1 hour.
+Service provider: Google LLC
+Terms of use: https://policies.google.com/terms
+Privacy policy: https://policies.google.com/privacy
 
-No personally identifiable information is sent. You can disable this feature at any time under Settings → Manny Wenas SEO → General → Google Trends indicator.
+**Google Search Console** (optional, OAuth-based)
+When enabled, connects to your GSC account to display search query data for a post.
+Sends: OAuth tokens managed by the site administrator and, when the metabox asks for query data, the URL of the post. No post content is sent.
+Triggered: only after the GSC integration is manually authorized by the administrator.
+Service provider: Google LLC
+Terms of use: https://policies.google.com/terms
+Privacy policy: https://policies.google.com/privacy
 
-Google Terms of Service: https://policies.google.com/terms
-Google Privacy Policy: https://policies.google.com/privacy
-
-= IndexNow =
-
-When you publish or update a post, the post URL is sent to api.indexnow.org to notify IndexNow-compatible search engines (including Bing and Yandex) of the new content. No post content is transmitted — only the URL and your IndexNow key.
-
-IndexNow protocol: https://www.indexnow.org/documentation
-Microsoft Privacy Statement: https://privacy.microsoft.com/privacystatement
-
-= Google Search Console =
-
-If you connect Google Search Console via OAuth, this plugin exchanges an authorisation token with Google's OAuth 2.0 endpoint. No content is stored or transmitted beyond what is required for the OAuth flow.
-
-Google OAuth Terms: https://developers.google.com/terms
-
-= Bing Webmaster Tools =
-
-If you use the Bing verification feature, a verification meta tag is output on your site's homepage. No data is actively sent to Microsoft.
+**OpenAI / Anthropic** (pro tier only, not included in this plugin)
+The pro version of this plugin (distributed separately, not through WordPress.org) 
+optionally connects to OpenAI or Anthropic APIs for AI-assisted meta generation.
+This functionality is not present in the version hosted on WordPress.org.
 
 == Changelog ==
 
