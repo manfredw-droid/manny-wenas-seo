@@ -4,7 +4,7 @@ Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 
 Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
@@ -63,6 +63,15 @@ Google OAuth Terms: https://developers.google.com/terms
 If you use the Bing verification feature, a verification meta tag is output on your site's homepage. No data is actively sent to Microsoft.
 
 == Changelog ==
+
+= 1.0.1 =
+* New 100-point scoring system (Text & Content 45, Placement 30, Technical 15, Optional 10)
+* Optional keyphrases field: shows N/A instead of 0 when empty
+* Alt text check is now accessibility-based (any non-empty alt passes)
+* Word count under 300 words is now a notice, not a score deduction
+* External links: advisory notice only, no point deduction
+* Rank Math / Yoast title templates rendered before scoring
+* All user-facing strings are now i18n-ready (.pot included)
 
 = 1.0.0 =
 * Initial release.

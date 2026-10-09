@@ -55,10 +55,11 @@
 		};
 	}
 
+	// Traffic light: 80+ green, 50-79 orange, below 50 red (mirrors MWSEO_Scorer).
 	function ringState( score ) {
-		if ( score >= 75 ) {
+		if ( score >= 80 ) {
 			return 'good'; }
-		if ( score >= 55 ) {
+		if ( score >= 50 ) {
 			return 'ok'; }
 		return 'bad';
 	}
@@ -68,8 +69,12 @@
 		$( '#mwseo-ring-num' ).text( res.score );
 		$( '#mwseo-verdict' ).text( res.verdict );
 		$( '#mwseo-subscores' ).text(
-			cfg.i18n.seo + ' ' + res.seo.points + '/' + res.seo.max + ' · ' +
-			cfg.i18n.readability + ' ' + res.readability.points + '/' + res.readability.max
+			Object.keys( res.sections || {} ).map(
+				function ( key ) {
+					var s = res.sections[ key ];
+					return s.label + ' ' + ( s.na ? cfg.i18n.na : s.points + '/' + s.max );
+				}
+			).join( ' · ' )
 		);
 		var $list = $( '#mwseo-checks' ).empty();
 		res.checks.forEach(
@@ -79,13 +84,13 @@
 				}
 				$( '<li/>' )
 				.addClass( 'mwseo-' + c.status )
-				.append( $( '<span class="mwseo-pts"/>' ).text( c.points + '/' + c.max ) )
+				.append( $( '<span class="mwseo-pts"/>' ).text( c.na ? cfg.i18n.na : c.points + '/' + c.max ) )
 				.append( document.createTextNode( ' ' + c.message ) )
 				.appendTo( $list );
 			}
 		);
 		var $tips = $( '#mwseo-tips' ).empty();
-		( res.tips || [] ).forEach(
+		( res.notices || [] ).forEach(
 			function ( t ) {
 				$( '<li/>' ).text( t ).appendTo( $tips );
 			}
