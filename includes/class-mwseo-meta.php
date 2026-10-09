@@ -133,6 +133,16 @@ class MWSEO_Meta {
 	}
 
 	/**
+	 * Did a renderer return a usable title (non-blank and without leftover variables)?
+	 *
+	 * @param mixed $title Rendered title.
+	 * @return bool
+	 */
+	private static function is_rendered( $title ) {
+		return is_string( $title ) && '' !== trim( $title ) && false === strpos( $title, '%' );
+	}
+
+	/**
 	 * Turn a stored title template ("%title% %sep% %sitename%") into the rendered title.
 	 *
 	 * Falls back to the raw template when no renderer is available for this post.
@@ -149,13 +159,13 @@ class MWSEO_Meta {
 		if ( 2 === $slot ) {
 			if ( $is_queried && class_exists( 'RankMath\\Paper\\Paper' ) ) {
 				$title = \RankMath\Paper\Paper::get()->get_title();
-				if ( is_string( $title ) && '' !== $title ) {
+				if ( self::is_rendered( $title ) ) {
 					return $title;
 				}
 			}
 			if ( class_exists( 'RankMath\\Helper' ) && method_exists( 'RankMath\\Helper', 'replace_vars' ) ) {
 				$title = \RankMath\Helper::replace_vars( $template, get_post( $post_id ) );
-				if ( is_string( $title ) && '' !== $title ) {
+				if ( self::is_rendered( $title ) ) {
 					return $title;
 				}
 			}
@@ -163,15 +173,15 @@ class MWSEO_Meta {
 			$yoast = YoastSEO();
 			if ( isset( $yoast->meta ) && method_exists( $yoast->meta, 'for_post' ) ) {
 				$meta = $yoast->meta->for_post( $post_id );
-				if ( $meta && ! empty( $meta->title ) ) {
-					return (string) $meta->title;
+				if ( $meta && self::is_rendered( $meta->title ) ) {
+					return trim( $meta->title );
 				}
 			}
 		}
 
 		if ( $is_queried ) {
 			$title = wp_get_document_title();
-			if ( '' !== $title ) {
+			if ( self::is_rendered( $title ) ) {
 				return $title;
 			}
 		}

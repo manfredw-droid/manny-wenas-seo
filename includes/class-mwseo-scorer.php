@@ -467,7 +467,7 @@ class MWSEO_Scorer {
 	 */
 	public static function check_word_count( array $ctx ) {
 		if ( $ctx['word_count'] < self::MIN_WORDS ) {
-			return self::not_applicable( 'word_count', 'technical', 4, '' );
+			return self::not_applicable( 'word_count', 'technical', 4, __( 'Word count is not scored for texts under 300 words.', 'manny-wenas-seo' ) );
 		}
 		return self::result(
 			'word_count',
