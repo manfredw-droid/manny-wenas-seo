@@ -124,9 +124,58 @@ class MWSEO_Meta {
 				// Rank Math stores several focus keywords comma-separated; the first is primary.
 				$value = trim( strtok( $value, ',' ) );
 			}
+			if ( 'title' === $key && is_string( $value ) && false !== strpos( $value, '%' ) ) {
+				$value = self::render_title( $value, $post_id, $slot );
+			}
 			return $value;
 		}
 		return '';
+	}
+
+	/**
+	 * Turn a stored title template ("%title% %sep% %sitename%") into the rendered title.
+	 *
+	 * Falls back to the raw template when no renderer is available for this post.
+	 *
+	 * @param string $template Stored value containing template variables.
+	 * @param int    $post_id  Post ID.
+	 * @param int    $slot     Definition slot (1 = Yoast, 2 = Rank Math).
+	 * @return string
+	 */
+	private static function render_title( $template, $post_id, $slot ) {
+		// Rank Math's Paper and the document title describe the queried page, so they only apply to this post.
+		$is_queried = is_singular() && (int) get_queried_object_id() === (int) $post_id;
+
+		if ( 2 === $slot ) {
+			if ( $is_queried && class_exists( 'RankMath\\Paper\\Paper' ) ) {
+				$title = \RankMath\Paper\Paper::get()->get_title();
+				if ( is_string( $title ) && '' !== $title ) {
+					return $title;
+				}
+			}
+			if ( class_exists( 'RankMath\\Helper' ) && method_exists( 'RankMath\\Helper', 'replace_vars' ) ) {
+				$title = \RankMath\Helper::replace_vars( $template, get_post( $post_id ) );
+				if ( is_string( $title ) && '' !== $title ) {
+					return $title;
+				}
+			}
+		} elseif ( 1 === $slot && function_exists( 'YoastSEO' ) ) {
+			$yoast = YoastSEO();
+			if ( isset( $yoast->meta ) && method_exists( $yoast->meta, 'for_post' ) ) {
+				$meta = $yoast->meta->for_post( $post_id );
+				if ( $meta && ! empty( $meta->title ) ) {
+					return (string) $meta->title;
+				}
+			}
+		}
+
+		if ( $is_queried ) {
+			$title = wp_get_document_title();
+			if ( '' !== $title ) {
+				return $title;
+			}
+		}
+		return $template;
 	}
 
 	/**
