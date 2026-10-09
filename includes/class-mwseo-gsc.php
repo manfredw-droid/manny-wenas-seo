@@ -66,7 +66,20 @@ class MWSEO_Gsc {
 				wp_safe_redirect( admin_url( 'admin.php?page=mwseo&tab=gsc&mwseo_msg=no_client' ) );
 				exit;
 			}
-			$scope = 'https://www.googleapis.com/auth/webmasters.readonly';
+			/**
+			 * Filters the Google OAuth scopes requested when connecting Search Console.
+			 *
+			 * Companion plugins can add scopes, for example the read/write
+			 * https://www.googleapis.com/auth/webmasters scope to submit sitemaps.
+			 *
+			 * @param string[] $scopes Scope URLs.
+			 */
+			$scopes = apply_filters(
+				'mwseo_gsc_scope',
+				array( 'https://www.googleapis.com/auth/webmasters.readonly' )
+			);
+			// Google expects the scopes as one space-separated string.
+			$scope = implode( ' ', array_unique( array_filter( array_map( 'esc_url_raw', (array) $scopes ) ) ) );
 			$url   = add_query_arg(
 				array(
 					'client_id'     => $client_id,
