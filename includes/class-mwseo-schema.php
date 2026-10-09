@@ -53,7 +53,8 @@ class MWSEO_Schema {
 	 * @return string
 	 */
 	public static function person_id( $user_id ) {
-		return self::id( 'Person', md5( wp_salt( 'auth' ) . (int) $user_id ) );
+		$seed = hash( 'sha256', get_home_url() );
+		return self::id( 'Person', md5( $seed . (int) $user_id ) );
 	}
 
 	/**
