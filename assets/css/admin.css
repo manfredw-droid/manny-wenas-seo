@@ -12,7 +12,8 @@
 .mwseo-checks li.mwseo-ok::before { background: #dba617; }
 .mwseo-checks li.mwseo-bad::before { background: #d63638; }
 .mwseo-pts { display: inline-block; min-width: 34px; color: #646970; font-variant-numeric: tabular-nums; }
-.mwseo-tips li { color: #646970; font-style: italic; }
+.mwseo-tips { margin: 0 0 12px; }
+.mwseo-tips li { margin: 4px 0; padding: 4px 8px; color: #50575e; background: #fcf9e8; border-left: 3px solid #dba617; }
 .mwseo-counter-ok { color: #00a32a; }
 .mwseo-robots { margin: 12px 0; }
 .mwseo-gsc table { margin-top: 6px; }

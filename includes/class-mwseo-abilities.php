@@ -49,7 +49,7 @@ class MWSEO_Abilities {
 			'properties' => array(
 				'post_id' => array(
 					'type'        => 'integer',
-					'description' => 'Post or page ID.',
+					'description' => __( 'Post or page ID.', 'manny-wenas-seo' ),
 				),
 			),
 			'required'   => array( 'post_id' ),
@@ -71,7 +71,7 @@ class MWSEO_Abilities {
 				'permission_callback' => $can_edit,
 				'execute_callback'    => static function ( $input ) {
 					$post = get_post( (int) $input['post_id'] );
-					return $post ? MWSEO_Rest::analyze_post( $post ) : new WP_Error( 'mwseo_not_found', 'Post not found.' );
+					return $post ? MWSEO_Rest::analyze_post( $post ) : new WP_Error( 'mwseo_not_found', __( 'Post not found.', 'manny-wenas-seo' ) );
 				},
 				'meta'                => array(
 					'show_in_rest' => true,
@@ -137,7 +137,7 @@ class MWSEO_Abilities {
 				'execute_callback'    => static function ( $input ) {
 					$post = get_post( (int) $input['post_id'] );
 					if ( ! $post ) {
-						return new WP_Error( 'mwseo_not_found', 'Post not found.' );
+						return new WP_Error( 'mwseo_not_found', __( 'Post not found.', 'manny-wenas-seo' ) );
 					}
 					foreach ( array( 'focus', 'title' ) as $k ) {
 						if ( isset( $input[ $k ] ) ) {

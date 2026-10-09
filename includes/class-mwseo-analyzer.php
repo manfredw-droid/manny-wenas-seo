@@ -1,6 +1,6 @@
 <?php
 /**
- * SEO and readability scoring (100 points).
+ * Text analysis helpers.
  *
  * @package MannyWenasSEO
  */
@@ -8,45 +8,12 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Scores a piece of content against the Manny Wenas rubric.
+ * Text analysis helpers (parsing, semantic keyphrase matching, language data).
  *
- * Rubric: SEO 63 points, readability 37 points (100 in total). There are no
- * "present" checks: an SEO title and meta description are requirements, not
- * achievements. Meeting a check's threshold earns 80% of its points; the last
- * 20% needs a stretch result (see graded() and the PASS ratio), so a very good
- * article lands around 70-85 and 90+ is close to unreachable.
+ * The scoring itself lives in MWSEO_Scorer; analyze() is kept as the entry point
+ * used by the REST API and the Abilities API.
  */
 class MWSEO_Analyzer {
-
-	/**
-	 * Share of a check's points earned by just meeting its threshold.
-	 */
-	const PASS = 0.8;
-
-	/**
-	 * Point weights per check (SEO block 63, readability block 37).
-	 *
-	 * @var array
-	 */
-	const MAX = array(
-		'title_length'    => 3,
-		'title_keyphrase' => 10,
-		'desc_length'     => 3,
-		'desc_keyphrase'  => 9,
-		'intro_keyphrase' => 8,
-		'subheading_kp'   => 6,
-		'slug_keyphrase'  => 5,
-		'content_length'  => 6,
-		'internal_links'  => 3,
-		'related_body'    => 6,
-		'image_kp'        => 4,
-		'sentence_length' => 10,
-		'paragraph_len'   => 7,
-		'passive_voice'   => 6,
-		'transition'      => 5,
-		'subheading_dist' => 5,
-		'image_alt'       => 4,
-	);
 
 	/**
 	 * Run the analysis.
@@ -64,351 +31,7 @@ class MWSEO_Analyzer {
 	 * @return array Score, verdict and per-check results.
 	 */
 	public static function analyze( array $in ) {
-		$in = wp_parse_args(
-			$in,
-			array(
-				'title'   => '',
-				'desc'    => '',
-				'slug'    => '',
-				'focus'   => '',
-				'related' => array(),
-				'content' => '',
-			)
-		);
-
-		$focus   = trim( (string) $in['focus'] );
-		$related = array_slice( array_filter( array_map( 'trim', (array) $in['related'] ) ), 0, 2 );
-
-		$html = (string) $in['content'];
-		$html = strip_shortcodes( $html );
-		$html = preg_replace( '/<!--.*?-->/s', '', $html );
-		if ( false === stripos( $html, '<p' ) ) {
-			$html = wpautop( $html );
-		}
-
-		$text       = self::plain( $html );
-		$paragraphs = self::paragraphs( $html );
-		$sentences  = self::sentences( $text );
-		$words      = self::words( $text );
-		$word_count = count( $words );
-		$headings   = self::headings( $html );
-
-		$r    = array();
-		$imgs = self::images( $html );
-
-		// ---- SEO -----------------------------------------------------------------
-		$title_len = self::len( $in['title'] );
-		$desc_len  = self::len( $in['desc'] );
-
-		$r[] = self::check(
-			'title_length',
-			'seo',
-			self::length_tier( $title_len, 50, 60, 55, 30, 70 ),
-			/* translators: %d: length */
-			sprintf( __( 'SEO title length is %d characters (target 50–60; 55+ is ideal).', 'manny-wenas-seo' ), $title_len ),
-			/* translators: %d: length */
-			sprintf( __( 'SEO title is %d characters; aim for 50–60.', 'manny-wenas-seo' ), $title_len )
-		);
-		$r[] = self::kp_check( 'title_keyphrase', $focus, $in['title'], __( 'The focus keyphrase appears in the SEO title.', 'manny-wenas-seo' ), __( 'Use the focus keyphrase (or close variants) in the SEO title.', 'manny-wenas-seo' ) );
-		$r[] = self::check(
-			'desc_length',
-			'seo',
-			self::length_tier( $desc_len, 120, 155, 140, 70, 200 ),
-			/* translators: %d: length */
-			sprintf( __( 'Meta description length is %d characters (target 120–155).', 'manny-wenas-seo' ), $desc_len ),
-			/* translators: %d: length */
-			sprintf( __( 'Meta description is %d characters; aim for 120–155.', 'manny-wenas-seo' ), $desc_len )
-		);
-		$r[] = self::kp_check( 'desc_keyphrase', $focus, $in['desc'], __( 'The focus keyphrase appears in the meta description.', 'manny-wenas-seo' ), __( 'Mention the focus keyphrase in the meta description.', 'manny-wenas-seo' ) );
-		$r[] = self::kp_check( 'intro_keyphrase', $focus, implode( ' ', array_slice( $words, 0, 100 ) ), __( 'The focus keyphrase appears within the first 100 words.', 'manny-wenas-seo' ), __( 'Use the focus keyphrase within the first 100 words.', 'manny-wenas-seo' ) );
-		$r[] = self::kp_check( 'subheading_kp', $focus, implode( ' ', array_column( $headings, 'text' ) ), __( 'The focus keyphrase appears in a subheading.', 'manny-wenas-seo' ), __( 'Use the focus keyphrase in at least one subheading.', 'manny-wenas-seo' ) );
-		$r[] = self::kp_check( 'slug_keyphrase', $focus, str_replace( '-', ' ', (string) $in['slug'] ), __( 'The focus keyphrase appears in the URL slug.', 'manny-wenas-seo' ), __( 'Put the focus keyphrase in the URL slug.', 'manny-wenas-seo' ) );
-		$r[] = self::check(
-			'content_length',
-			'seo',
-			self::graded( $word_count, 0, 300, 900 ),
-			/* translators: %d: word count */
-			sprintf( __( 'The text has %d words, which is enough (900+ earns full points).', 'manny-wenas-seo' ), $word_count ),
-			/* translators: %d: word count */
-			sprintf( __( 'The text has %d words; 300 or more is recommended.', 'manny-wenas-seo' ), $word_count )
-		);
-
-		$links = self::links( $html );
-		$r[]   = self::check( 'internal_links', 'seo', self::graded( $links['internal'], 0, 1, 3 ), __( 'The text links internally (3+ links earn full points).', 'manny-wenas-seo' ), __( 'Add at least one internal link.', 'manny-wenas-seo' ) );
-
-		if ( empty( $related ) ) {
-			$r[] = self::check( 'related_body', 'seo', 0, '', __( 'Add a related keyphrase and use it in the body.', 'manny-wenas-seo' ) );
-		} else {
-			$found = 0;
-			foreach ( $related as $phrase ) {
-				if ( self::match( $phrase, $text ) >= 1 ) {
-					++$found;
-				}
-			}
-			$r[] = self::check(
-				'related_body',
-				'seo',
-				$found / count( $related ),
-				/* translators: 1: found, 2: total */
-				sprintf( __( '%1$d of %2$d related keyphrases appear in the text.', 'manny-wenas-seo' ), $found, count( $related ) ),
-				/* translators: 1: found, 2: total */
-				sprintf( __( '%1$d of %2$d related keyphrases appear in the text.', 'manny-wenas-seo' ), $found, count( $related ) )
-			);
-		}
-
-		$alt_haystack = implode( ' ', $imgs['alts'] );
-		$r[]          = self::kp_check(
-			'image_kp',
-			$focus,
-			$alt_haystack,
-			__( 'The focus keyphrase appears in an image alt text.', 'manny-wenas-seo' ),
-			__( 'Use the focus keyphrase in the alt text of at least one image.', 'manny-wenas-seo' )
-		);
-
-		// ---- Readability ---------------------------------------------------------
-		$lang = self::lang();
-
-		$long = 0;
-		foreach ( $sentences as $s ) {
-			if ( count( self::words( $s ) ) > 20 ) {
-				++$long;
-			}
-		}
-		$long_pct = $sentences ? 100 * $long / count( $sentences ) : 0;
-		$r[]      = self::check(
-			'sentence_length',
-			'readability',
-			self::graded( $long_pct, 50, 20, 10 ),
-			/* translators: %d: percentage */
-			sprintf( __( '%d%% of sentences are longer than 20 words.', 'manny-wenas-seo' ), round( $long_pct ) ),
-			/* translators: %d: percentage */
-			sprintf( __( '%d%% of sentences are longer than 20 words; keep it at 20%% or less.', 'manny-wenas-seo' ), round( $long_pct ) )
-		);
-
-		$longest_p = 0;
-		$long_p    = 0;
-		foreach ( $paragraphs as $p ) {
-			$n         = count( self::words( $p ) );
-			$longest_p = max( $longest_p, $n );
-			if ( $n > 150 ) {
-				++$long_p;
-			}
-		}
-		$r[] = self::check(
-			'paragraph_len',
-			'readability',
-			$paragraphs ? self::graded( $longest_p, 300, 150, 100 ) : 0,
-			__( 'Paragraphs are a comfortable length.', 'manny-wenas-seo' ),
-			/* translators: %d: count */
-			sprintf( _n( '%d paragraph is longer than 150 words.', '%d paragraphs are longer than 150 words.', $long_p, 'manny-wenas-seo' ), $long_p )
-		);
-
-		$passive = 0;
-		foreach ( $sentences as $s ) {
-			if ( preg_match( $lang['passive'], $s ) ) {
-				++$passive;
-			}
-		}
-		$trans = 0;
-		foreach ( $paragraphs as $p ) {
-			if ( preg_match( $lang['transition'], implode( ' ', array_slice( self::words( $p ), 0, 3 ) ) ) ) {
-				++$trans;
-			}
-		}
-		$passive_pct = $sentences ? 100 * $passive / count( $sentences ) : 0;
-		$trans_pct   = $paragraphs ? 100 * $trans / count( $paragraphs ) : 0;
-
-		$r[] = self::check(
-			'passive_voice',
-			'readability',
-			self::graded( $passive_pct, 30, 8, 5 ),
-			/* translators: %d: percentage */
-			sprintf( __( '%d%% of sentences use passive voice.', 'manny-wenas-seo' ), round( $passive_pct ) ),
-			/* translators: %d: percentage */
-			sprintf( __( '%d%% of sentences use passive voice; keep it at 8%% or less (5%% earns full points).', 'manny-wenas-seo' ), round( $passive_pct ) )
-		);
-		$r[] = self::check(
-			'transition',
-			'readability',
-			$paragraphs ? self::graded( $trans_pct, 0, 35, 50 ) : 0,
-			/* translators: %d: percentage */
-			sprintf( __( '%d%% of paragraphs begin with a transition word.', 'manny-wenas-seo' ), round( $trans_pct ) ),
-			/* translators: %d: percentage */
-			sprintf( __( 'Only %d%% of paragraphs begin with a transition word; aim for at least 35%%.', 'manny-wenas-seo' ), round( $trans_pct ) )
-		);
-
-		$longest = self::longest_section( $html );
-		$r[]     = self::check(
-			'subheading_dist',
-			'readability',
-			$word_count > 0 ? self::graded( $longest, 600, 300, 200 ) : 0,
-			__( 'Subheadings are well distributed.', 'manny-wenas-seo' ),
-			/* translators: %d: word count */
-			sprintf( __( 'One section runs %d words without a subheading; break it up (max 300; 200 or less earns full points).', 'manny-wenas-seo' ), $longest )
-		);
-
-		$r[] = self::check(
-			'image_alt',
-			'readability',
-			0 === $imgs['total'] ? 1 : $imgs['with_alt'] / $imgs['total'],
-			0 === $imgs['total'] ? __( 'No images to check.', 'manny-wenas-seo' ) : __( 'All images have alt text.', 'manny-wenas-seo' ),
-			/* translators: 1: missing, 2: total */
-			sprintf( __( '%1$d of %2$d images lack alt text.', 'manny-wenas-seo' ), $imgs['total'] - $imgs['with_alt'], $imgs['total'] )
-		);
-
-		// With no text there is nothing to read: readability cannot earn points.
-		if ( 0 === $word_count ) {
-			foreach ( $r as $i => $c ) {
-				if ( 'readability' === $c['group'] ) {
-					$r[ $i ]['points']  = 0;
-					$r[ $i ]['status']  = 'bad';
-					$r[ $i ]['message'] = __( 'Add some content to assess readability.', 'manny-wenas-seo' );
-				}
-			}
-		}
-
-		// ---- Totals --------------------------------------------------------------
-		$raw_total = 0;
-		$earned    = 0;
-		$seo       = 0;
-		$read      = 0;
-		$seo_max   = 0;
-		$read_max  = 0;
-		foreach ( $r as $c ) {
-			$raw_total += $c['max'];
-			$earned    += $c['points'];
-			if ( 'seo' === $c['group'] ) {
-				$seo     += $c['points'];
-				$seo_max += $c['max'];
-			} else {
-				$read     += $c['points'];
-				$read_max += $c['max'];
-			}
-		}
-		$score = (int) round( 100 * $earned / $raw_total );
-
-		$tips = array();
-		if ( 0 === $links['external'] && $word_count > 0 ) {
-			$tips[] = __( 'Tip: consider linking to a reputable external source (not scored).', 'manny-wenas-seo' );
-		}
-
-		return array(
-			'score'       => $score,
-			'seo'         => array(
-				'points' => round( $seo, 1 ),
-				'max'    => round( $seo_max ),
-			),
-			'readability' => array(
-				'points' => round( $read, 1 ),
-				'max'    => round( $read_max ),
-			),
-			'verdict'     => self::verdict( $score, $r, '' !== $focus ),
-			'checks'      => $r,
-			'tips'        => $tips,
-			'words'       => $word_count,
-		);
-	}
-
-	/**
-	 * Build the written verdict.
-	 *
-	 * @param int   $score     Score out of 100.
-	 * @param array $checks    Results.
-	 * @param bool  $has_focus Whether a focus keyphrase exists.
-	 * @return string
-	 */
-	private static function verdict( $score, array $checks, $has_focus ) {
-		if ( $score >= 75 ) {
-			$text = __( 'Excellent. This content is well optimised and easy to read.', 'manny-wenas-seo' );
-		} elseif ( $score >= 55 ) {
-			$text = __( 'Good. A few tweaks would make this stronger.', 'manny-wenas-seo' );
-		} elseif ( $score >= 35 ) {
-			$text = __( 'Needs work. Several important checks are failing.', 'manny-wenas-seo' );
-		} else {
-			$text = __( 'Poor. Start with the keyphrase, title and description.', 'manny-wenas-seo' );
-		}
-		if ( ! $has_focus ) {
-			$text .= ' ' . __( 'Set a focus keyphrase to unlock the keyphrase checks.', 'manny-wenas-seo' );
-			return $text;
-		}
-		$misses = array_filter(
-			$checks,
-			static function ( $c ) {
-				return $c['points'] < $c['max'] * 0.6;
-			}
-		);
-		usort(
-			$misses,
-			static function ( $a, $b ) {
-				return ( $b['max'] - $b['points'] ) <=> ( $a['max'] - $a['points'] );
-			}
-		);
-		$top = array_slice( $misses, 0, 2 );
-		if ( $top ) {
-			$text .= ' ' . sprintf(
-				/* translators: %s: list of fixes */
-				__( 'Biggest wins: %s', 'manny-wenas-seo' ),
-				implode( ' ', array_column( $top, 'message' ) )
-			);
-		}
-		return $text;
-	}
-
-	/**
-	 * Build one check result.
-	 *
-	 * @param string    $id    Check ID.
-	 * @param string    $group seo|readability.
-	 * @param float|int $ratio 0..1 fraction of the maximum.
-	 * @param string    $good  Message when passing.
-	 * @param string    $bad   Message when not passing.
-	 * @return array
-	 */
-	private static function check( $id, $group, $ratio, $good, $bad ) {
-		$ratio  = max( 0, min( 1, (float) $ratio ) );
-		$max    = self::MAX[ $id ];
-		$points = round( $max * $ratio, 2 );
-		$max    = round( $max, 2 );
-		if ( $ratio >= self::PASS - 0.01 ) {
-			$status = 'good';
-		} elseif ( $ratio >= 0.4 ) {
-			$status = 'ok';
-		} else {
-			$status = 'bad';
-		}
-		return array(
-			'id'      => $id,
-			'group'   => $group,
-			'points'  => $points,
-			'max'     => $max,
-			'status'  => $status,
-			'message' => 'good' === $status ? $good : $bad,
-		);
-	}
-
-	/**
-	 * Keyphrase check wrapper: the exact phrase earns full points, a semantic
-	 * match (stems, synonyms, any order) 80%, a partial match 40%.
-	 *
-	 * @param string $id       Check ID.
-	 * @param string $focus    Focus keyphrase.
-	 * @param string $haystack Text to search.
-	 * @param string $good     Pass message.
-	 * @param string $bad      Fail message.
-	 * @return array
-	 */
-	private static function kp_check( $id, $focus, $haystack, $good, $bad ) {
-		if ( '' === $focus ) {
-			return self::check( $id, 'seo', 0, '', __( 'Set a focus keyphrase.', 'manny-wenas-seo' ) );
-		}
-		$m = self::match( $focus, $haystack );
-		if ( $m >= 1 ) {
-			$exact = false !== strpos( self::lower( $haystack ), self::lower( $focus ) );
-			$ratio = $exact ? 1 : self::PASS;
-		} else {
-			$ratio = $m >= 0.6 ? 0.4 : 0;
-		}
-		return self::check( $id, 'seo', $ratio, $good, $bad );
+		return MWSEO_Scorer::score( $in );
 	}
 
 	/**
@@ -488,7 +111,7 @@ class MWSEO_Analyzer {
 	 *
 	 * @return array
 	 */
-	private static function lang() {
+	public static function lang() {
 		static $cache = array();
 		$code         = 0 === strpos( get_locale(), 'nl' ) ? 'nl' : 'en';
 		if ( isset( $cache[ $code ] ) ) {
@@ -513,75 +136,13 @@ class MWSEO_Analyzer {
 	}
 
 	/**
-	 * Score 1 inside [lo, hi], falling linearly to 0 at floor/ceil.
-	 *
-	 * @param int $v     Value.
-	 * @param int $lo    Lower target bound.
-	 * @param int $hi    Upper target bound.
-	 * @param int $floor Value at which the score reaches 0 (low side).
-	 * @param int $ceil  Value at which the score reaches 0 (high side).
-	 * @return float
-	 */
-	private static function range_score( $v, $lo, $hi, $floor, $ceil ) {
-		if ( $v >= $lo && $v <= $hi ) {
-			return 1;
-		}
-		if ( $v <= 0 ) {
-			return 0;
-		}
-		if ( $v < $lo ) {
-			return max( 0, ( $v - $floor ) / ( $lo - $floor ) );
-		}
-		return max( 0, ( $ceil - $v ) / ( $ceil - $hi ) );
-	}
-
-	/**
-	 * Graded score: 0 at $zero, PASS (0.8) at $pass, 1 at $excel. Works for
-	 * "lower is better" and "higher is better" alike; $pass lies between the
-	 * other two values.
-	 *
-	 * @param float $v     Measured value.
-	 * @param float $zero  Value that earns nothing.
-	 * @param float $pass  Value that meets the threshold.
-	 * @param float $excel Value that earns full points.
-	 * @return float 0..1
-	 */
-	private static function graded( $v, $zero, $pass, $excel ) {
-		$p = ( $v - $zero ) / ( $pass - $zero );
-		if ( $p <= 1 ) {
-			return max( 0, $p ) * self::PASS;
-		}
-		return min( 1, self::PASS + ( 1 - self::PASS ) * ( $v - $pass ) / ( $excel - $pass ) );
-	}
-
-	/**
-	 * Length score: PASS inside [lo, hi], full from $ideal to $hi, falling to 0
-	 * at floor/ceil.
-	 *
-	 * @param int $v     Length.
-	 * @param int $lo    Lower target bound.
-	 * @param int $hi    Upper target bound.
-	 * @param int $ideal Start of the ideal range.
-	 * @param int $floor Length at which the score reaches 0 (low side).
-	 * @param int $ceil  Length at which the score reaches 0 (high side).
-	 * @return float
-	 */
-	private static function length_tier( $v, $lo, $hi, $ideal, $floor, $ceil ) {
-		$r = self::range_score( $v, $lo, $hi, $floor, $ceil );
-		if ( $r < 1 ) {
-			return $r * self::PASS;
-		}
-		return $v >= $ideal ? 1 : self::PASS;
-	}
-
-	/**
 	 * Lower-case a string. WordPress polyfills mb_strlen/mb_substr but not
 	 * mb_strtolower, so fall back to strtolower when mbstring is missing.
 	 *
 	 * @param string $s String.
 	 * @return string
 	 */
-	private static function lower( $s ) {
+	public static function lower( $s ) {
 		return function_exists( 'mb_strtolower' ) ? mb_strtolower( (string) $s, 'UTF-8' ) : strtolower( (string) $s );
 	}
 
@@ -591,7 +152,7 @@ class MWSEO_Analyzer {
 	 * @param string $s String.
 	 * @return int
 	 */
-	private static function len( $s ) {
+	public static function len( $s ) {
 		return mb_strlen( trim( (string) $s ) );
 	}
 
@@ -601,7 +162,7 @@ class MWSEO_Analyzer {
 	 * @param string $html HTML.
 	 * @return string
 	 */
-	private static function plain( $html ) {
+	public static function plain( $html ) {
 		$html = preg_replace( '#<(script|style)[^>]*>.*?</\1>#is', '', $html );
 		$html = preg_replace( '#</(p|h[1-6]|li|div|blockquote)>#i', "$0\n", $html );
 		return trim( html_entity_decode( wp_strip_all_tags( $html ), ENT_QUOTES, 'UTF-8' ) );
@@ -613,7 +174,7 @@ class MWSEO_Analyzer {
 	 * @param string $html HTML.
 	 * @return string[]
 	 */
-	private static function paragraphs( $html ) {
+	public static function paragraphs( $html ) {
 		preg_match_all( '#<p[^>]*>(.*?)</p>#is', $html, $m );
 		$out = array();
 		foreach ( $m[1] as $p ) {
@@ -631,7 +192,7 @@ class MWSEO_Analyzer {
 	 * @param string $text Plain text.
 	 * @return string[]
 	 */
-	private static function sentences( $text ) {
+	public static function sentences( $text ) {
 		$parts = preg_split( '/(?<=[.!?])\s+|\n+/u', $text, -1, PREG_SPLIT_NO_EMPTY );
 		return array_values(
 			array_filter(
@@ -659,7 +220,7 @@ class MWSEO_Analyzer {
 	 * @param string $html HTML.
 	 * @return array[] Each with level and text.
 	 */
-	private static function headings( $html ) {
+	public static function headings( $html ) {
 		preg_match_all( '#<h([2-6])[^>]*>(.*?)</h\1>#is', $html, $m, PREG_SET_ORDER );
 		$out = array();
 		foreach ( $m as $h ) {
@@ -672,27 +233,12 @@ class MWSEO_Analyzer {
 	}
 
 	/**
-	 * Word count of the longest stretch without a subheading.
-	 *
-	 * @param string $html HTML.
-	 * @return int
-	 */
-	private static function longest_section( $html ) {
-		$chunks  = preg_split( '#<h[1-6][^>]*>.*?</h[1-6]>#is', $html );
-		$longest = 0;
-		foreach ( $chunks as $chunk ) {
-			$longest = max( $longest, count( self::words( self::plain( $chunk ) ) ) );
-		}
-		return $longest;
-	}
-
-	/**
 	 * Count internal and external links.
 	 *
 	 * @param string $html HTML.
 	 * @return array
 	 */
-	private static function links( $html ) {
+	public static function links( $html ) {
 		preg_match_all( '#<a\s[^>]*href=["\']([^"\']+)["\']#i', $html, $m );
 		$host = wp_parse_url( home_url(), PHP_URL_HOST );
 		$out  = array(
@@ -719,7 +265,7 @@ class MWSEO_Analyzer {
 	 * @param string $html HTML.
 	 * @return array
 	 */
-	private static function images( $html ) {
+	public static function images( $html ) {
 		preg_match_all( '#<img\b[^>]*>#i', $html, $m );
 		$with = 0;
 		$alts = array();
