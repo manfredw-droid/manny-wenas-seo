@@ -3,7 +3,7 @@
  * Plugin Name:       Manny Wenas SEO
  * Plugin URI:        https://mannywenas.com
  * Description:       Lean SEO for WordPress: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            Manny Wenas
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'MWSEO_VERSION', '1.0.1' );
+define( 'MWSEO_VERSION', '1.0.2' );
 define( 'MWSEO_FILE', __FILE__ );
 define( 'MWSEO_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MWSEO_URL', plugin_dir_url( __FILE__ ) );

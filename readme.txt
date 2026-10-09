@@ -4,7 +4,7 @@ Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 
 Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
@@ -59,6 +59,15 @@ optionally connects to OpenAI or Anthropic APIs for AI-assisted meta generation.
 This functionality is not present in the version hosted on WordPress.org.
 
 == Changelog ==
+
+= 1.0.2 =
+* Compliance: removed pro-tier licence gate; all included features are now fully functional
+* Security: replaced wp_salt('auth') with a neutral site-specific hash seed in schema output
+* Code quality: replaced inline script tag in importer with wp_add_inline_script()
+* Privacy: IndexNow and Google Trends integrations are now disabled by default and require explicit opt-in
+* Docs: added External Services section to readme.txt disclosing all third-party connections
+* Hardening: tightened REST API permission callback for low-scoring posts endpoint
+* Branding: updated Plugin URI to mannywenas.com
 
 = 1.0.1 =
 * New 100-point scoring system (Text & Content 45, Placement 30, Technical 15, Optional 10)
