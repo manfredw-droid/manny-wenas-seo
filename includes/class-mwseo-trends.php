@@ -5,7 +5,9 @@
  * @package MannyWenasSEO
  */
 
-defined( 'ABSPATH' ) || exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Looks up the 7-day Google Trends interest of the focus keyphrase (unofficial

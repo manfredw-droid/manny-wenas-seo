@@ -5,7 +5,9 @@
  * @package MannyWenasSEO
  */
 
-defined( 'ABSPATH' ) || exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Serves /mwseo-sitemap.xml and its children:

@@ -5,7 +5,9 @@
  * @package MannyWenasSEO
  */
 
-defined( 'ABSPATH' ) || exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * When Yoast is active we defer to it: we never double-output meta, OG, sitemaps or schema.

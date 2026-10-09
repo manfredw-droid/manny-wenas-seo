@@ -5,7 +5,9 @@
  * @package MannyWenasSEO
  */
 
-defined( 'ABSPATH' ) || exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Renders and saves the SEO metabox.

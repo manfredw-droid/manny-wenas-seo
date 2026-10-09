@@ -5,7 +5,9 @@
  * @package MannyWenasSEO
  */
 
-defined( 'ABSPATH' ) || exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Wires all modules together and handles activation/deactivation.

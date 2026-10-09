@@ -13,7 +13,9 @@
  * @since   1.0.0
  */
 
-defined( 'ABSPATH' ) || exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Imports SEO data from Yoast, Rank Math, AIOSEO and SEOPress.
