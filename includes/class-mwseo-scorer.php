@@ -1,13 +1,10 @@
 <?php
+defined( 'ABSPATH' ) || exit;
 /**
  * 100-point content score.
  *
  * @package MannyWenasSEO
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
 
 /**
  * Scores a post against the Manny Wenas rubric.

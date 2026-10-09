@@ -1,13 +1,10 @@
 <?php
+defined( 'ABSPATH' ) || exit;
 /**
  * Plugin bootstrap.
  *
  * @package MannyWenasSEO
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
 
 /**
  * Wires all modules together and handles activation/deactivation.

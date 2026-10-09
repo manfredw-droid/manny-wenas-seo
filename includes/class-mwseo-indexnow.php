@@ -1,13 +1,10 @@
 <?php
+defined( 'ABSPATH' ) || exit;
 /**
  * IndexNow key file and publish/update pings.
  *
  * @package MannyWenasSEO
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
 
 /**
  * Notifies IndexNow (Bing, Yandex, …) when a post or page is published or updated.

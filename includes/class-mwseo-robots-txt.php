@@ -1,13 +1,10 @@
 <?php
+defined( 'ABSPATH' ) || exit;
 /**
  * Virtual robots.txt management.
  *
  * @package MannyWenasSEO
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
 
 /**
  * Appends custom rules and sitemap/llms references to WordPress's virtual robots.txt.

@@ -1,13 +1,10 @@
 <?php
+defined( 'ABSPATH' ) || exit;
 /**
  * Coexistence with other SEO plugins.
  *
  * @package MannyWenasSEO
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
 
 /**
  * Detects other SEO plugins that own front-end output.

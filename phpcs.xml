@@ -9,6 +9,10 @@
 			</property>
 		</properties>
 	</rule>
+	<!-- The ABSPATH guard must be the first statement, ahead of the file docblock. -->
+	<rule ref="Squiz.Commenting.FileComment.Missing">
+		<exclude-pattern>/includes/*</exclude-pattern>
+	</rule>
 	<arg name="extensions" value="php"/>
 	<exclude-pattern>vendor/*</exclude-pattern>
 	<exclude-pattern>node_modules/*</exclude-pattern>

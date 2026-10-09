@@ -1,4 +1,5 @@
 <?php
+defined( 'ABSPATH' ) || exit;
 /**
  * Manny Wenas SEO — Importer
  *
@@ -12,10 +13,6 @@
  * @package MannyWenasSEO
  * @since   1.0.0
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
 
 /**
  * Imports SEO data from Yoast, Rank Math, AIOSEO and SEOPress.
