@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Manny Wenas SEO 1.0.4\n"
+"Project-Id-Version: Manny Wenas SEO 1.0.5\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/manny-wenas-seo\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-09T14:39:58+00:00\n"
+"POT-Creation-Date: 2026-10-09T17:25:47+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: manny-wenas-seo\n"
@@ -17,7 +17,7 @@ msgstr ""
 #. Plugin Name of the plugin
 #: manny-wenas-seo.php
 #: includes/class-mwseo-metabox.php:32
-#: includes/class-mwseo-metabox.php:85
+#: includes/class-mwseo-metabox.php:86
 #: includes/class-mwseo-settings.php:136
 #: includes/class-mwseo-settings.php:250
 msgid "Manny Wenas SEO"
@@ -39,7 +39,7 @@ msgid "Manny Wenas"
 msgstr ""
 
 #: includes/class-mwseo-abilities.php:32
-#: includes/class-mwseo-metabox.php:214
+#: includes/class-mwseo-metabox.php:215
 msgid "SEO"
 msgstr ""
 
@@ -105,17 +105,17 @@ msgid "Search Console request failed."
 msgstr ""
 
 #: includes/class-mwseo-importer.php:306
-#: includes/class-mwseo-metabox.php:128
+#: includes/class-mwseo-metabox.php:129
 msgid "SEO title"
 msgstr ""
 
 #: includes/class-mwseo-importer.php:307
-#: includes/class-mwseo-metabox.php:133
+#: includes/class-mwseo-metabox.php:134
 msgid "Meta description"
 msgstr ""
 
 #: includes/class-mwseo-importer.php:308
-#: includes/class-mwseo-metabox.php:102
+#: includes/class-mwseo-metabox.php:103
 msgid "Focus keyphrase"
 msgstr ""
 
@@ -304,7 +304,7 @@ msgid "Average"
 msgstr ""
 
 #: includes/class-mwseo-metabox.php:62
-#: includes/class-mwseo-metabox.php:90
+#: includes/class-mwseo-metabox.php:91
 msgid "Analysing…"
 msgstr ""
 
@@ -313,70 +313,74 @@ msgid "No Search Console data for this URL yet."
 msgstr ""
 
 #: includes/class-mwseo-metabox.php:64
-msgid "characters"
+msgid "Search Console is not connected. Go to Manny Wenas SEO → Search Console to connect."
 msgstr ""
 
 #: includes/class-mwseo-metabox.php:65
-msgid "Use"
+msgid "characters"
 msgstr ""
 
 #: includes/class-mwseo-metabox.php:66
+msgid "Use"
+msgstr ""
+
+#: includes/class-mwseo-metabox.php:67
 msgid "Something went wrong."
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:96
+#: includes/class-mwseo-metabox.php:97
 msgid "URL slug"
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:98
+#: includes/class-mwseo-metabox.php:99
 msgid "The URL-friendly part of this post's address. Put the focus keyphrase here."
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:104
+#: includes/class-mwseo-metabox.php:105
 msgid "Matching is semantic: word order and common variants (plurals, verb forms) count."
 msgstr ""
 
 #. translators: %d: number
-#: includes/class-mwseo-metabox.php:111
+#: includes/class-mwseo-metabox.php:112
 #, php-format
 msgid "Related keyphrase %d (optional)"
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:116
+#: includes/class-mwseo-metabox.php:117
 msgid "Suggest from Search Console"
 msgstr ""
 
 #. translators: %s: SEO plugin name
-#: includes/class-mwseo-metabox.php:123
+#: includes/class-mwseo-metabox.php:124
 #, php-format
 msgid "%s is active — title and description are managed there."
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:140
+#: includes/class-mwseo-metabox.php:141
 msgid "Search engine visibility"
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:141
+#: includes/class-mwseo-metabox.php:142
 msgid "noindex: keep this out of search results"
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:142
+#: includes/class-mwseo-metabox.php:143
 msgid "nofollow: do not follow links on this page"
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:143
+#: includes/class-mwseo-metabox.php:144
 msgid "Anchor post (prioritised in llms.txt)"
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:146
+#: includes/class-mwseo-metabox.php:147
 msgid "Analysis"
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:151
+#: includes/class-mwseo-metabox.php:152
 msgid "Search Console queries (last 28 days)"
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:154
+#: includes/class-mwseo-metabox.php:155
 msgid "Connect Google Search Console in the plugin settings."
 msgstr ""
 
@@ -864,11 +868,11 @@ msgstr ""
 msgid "•••••••• (saved; leave blank to keep)"
 msgstr ""
 
-#: includes/class-mwseo-sitemaps.php:384
+#: includes/class-mwseo-sitemaps.php:374
 msgid "Pages"
 msgstr ""
 
-#: includes/class-mwseo-sitemaps.php:415
+#: includes/class-mwseo-sitemaps.php:405
 msgid "Authors"
 msgstr ""
 

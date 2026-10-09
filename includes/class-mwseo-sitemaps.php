@@ -361,16 +361,6 @@ class MWSEO_Sitemaps {
 	}
 
 	/**
-	 * Extract a YouTube video ID.
-	 *
-	 * @param string $url URL.
-	 * @return string Empty when not YouTube.
-	 */
-	public static function youtube_id( $url ) {
-		return preg_match( '#(?:youtube\.com/(?:embed/|watch\?v=)|youtu\.be/)([\w-]{11})#', (string) $url, $m ) ? $m[1] : '';
-	}
-
-	/**
 	 * [mwseo_html_sitemap] shortcode.
 	 *
 	 * @return string

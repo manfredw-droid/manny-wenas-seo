@@ -178,6 +178,10 @@
 			}
 		).slice( 0, 6 );
 		var $ul   = $( '#mwseo-suggestions' ).empty();
+		if ( ! cfg.hasGsc ) {
+			$( '<li/>' ).text( cfg.i18n.notConnected ).appendTo( $ul );
+			return;
+		}
 		if ( ! rows.length ) {
 			$( '<li/>' ).text( cfg.i18n.noData ).appendTo( $ul );
 			return;

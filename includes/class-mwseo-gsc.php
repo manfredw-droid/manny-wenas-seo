@@ -257,34 +257,4 @@ class MWSEO_Gsc {
 		set_transient( $key, $rows, 6 * HOUR_IN_SECONDS );
 		return $rows;
 	}
-
-	/**
-	 * Per-page totals for the last 7 days (used by rank tracking).
-	 *
-	 * @return array[]|WP_Error Rows keyed by page URL.
-	 */
-	public static function pages_report() {
-		$res = self::request(
-			'POST',
-			'searchAnalytics/query',
-			array(
-				'startDate'  => gmdate( 'Y-m-d', strtotime( '-10 days' ) ),
-				'endDate'    => gmdate( 'Y-m-d', strtotime( '-3 days' ) ),
-				'dimensions' => array( 'page' ),
-				'rowLimit'   => 1000,
-			)
-		);
-		if ( is_wp_error( $res ) ) {
-			return $res;
-		}
-		$out = array();
-		foreach ( isset( $res['rows'] ) ? $res['rows'] : array() as $r ) {
-			$out[ $r['keys'][0] ] = array(
-				'clicks'      => (int) $r['clicks'],
-				'impressions' => (int) $r['impressions'],
-				'position'    => round( $r['position'], 2 ),
-			);
-		}
-		return $out;
-	}
 }

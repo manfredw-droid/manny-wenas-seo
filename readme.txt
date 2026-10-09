@@ -4,7 +4,7 @@ Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 License: GPLv2 or later
 
 Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
@@ -59,6 +59,11 @@ optionally connects to OpenAI or Anthropic APIs for AI-assisted meta generation.
 This functionality is not present in the version hosted on WordPress.org.
 
 == Changelog ==
+
+= 1.0.5 =
+* Fixed: Search Console "Suggest" button now shows a clear "not connected" message when GSC is not linked
+* Removed: Dead internal methods pages_report() and youtube_id()
+* Fixed: Uninstall now cleans up Trends transients (mwseo_trends_*)
 
 = 1.0.4 =
 * Compliance: the ABSPATH direct-access guard (`defined( 'ABSPATH' ) || exit;`) is now the first statement of every file in includes/
