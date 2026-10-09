@@ -581,7 +581,7 @@ class MWSEO_Importer {
 		check_ajax_referer( 'mw_seo_import', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( 'Insufficient permissions.', 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'manny-wenas-seo' ), 403 );
 		}
 
 		$source     = sanitize_key( wp_unslash( $_POST['source'] ?? '' ) );
@@ -593,7 +593,8 @@ class MWSEO_Importer {
 
 		$plugins = static::source_plugins();
 		if ( ! isset( $plugins[ $source ] ) ) {
-			wp_send_json_error( 'Unknown source plugin: ' . esc_html( $source ) );
+			/* translators: %s: source plugin identifier */
+			wp_send_json_error( sprintf( __( 'Unknown source plugin: %s', 'manny-wenas-seo' ), esc_html( $source ) ) );
 		}
 
 		$config = $plugins[ $source ];
