@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Detects other SEO plugins that own front-end output.
  *
- * - Yoast SEO: handled by MWSEO_Yoast (stitch or defer mode).
+ * - Yoast SEO: handled by MWSEO_Yoast (we defer to it).
  * - Rank Math: we always defer. Our meta tags, schema graph and sitemaps are disabled.
  */
 class MWSEO_Compat {

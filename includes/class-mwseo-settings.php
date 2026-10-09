@@ -36,7 +36,6 @@ class MWSEO_Settings {
 			'robots'   => __( 'Robots & llms.txt', 'manny-wenas-seo' ),
 			'gsc'      => __( 'Search Console', 'manny-wenas-seo' ),
 			'verify'   => __( 'Verification & IndexNow', 'manny-wenas-seo' ),
-			'pro'      => __( 'Pro', 'manny-wenas-seo' ),
 		);
 	}
 
@@ -67,16 +66,6 @@ class MWSEO_Settings {
 				array( 'title_template', 'text', __( 'Default title template', 'manny-wenas-seo' ), __( 'Variables: %%title%%, %%sitename%%, %%tagline%%, %%sep%%.', 'manny-wenas-seo' ) ),
 				array( 'title_separator', 'text', __( 'Title separator', 'manny-wenas-seo' ), '' ),
 				array( 'post_types', 'multicheck', __( 'Post types with SEO controls', 'manny-wenas-seo' ), '', $post_types ),
-				array(
-					'yoast_mode',
-					'select',
-					__( 'When Yoast SEO is active', 'manny-wenas-seo' ),
-					__( 'Stitch: Yoast renders the graph and we add our Pro nodes. Defer: we output nothing Yoast also outputs.', 'manny-wenas-seo' ),
-					array(
-						'stitch' => __( 'Stitch into Yoast’s schema graph', 'manny-wenas-seo' ),
-						'defer'  => __( 'Defer to Yoast completely', 'manny-wenas-seo' ),
-					),
-				),
 				array( 'trends_enabled', 'checkbox', __( 'Google Trends indicator', 'manny-wenas-seo' ), __( 'Send your focus keyphrase to Google Trends to show a search-interest score in the post editor.', 'manny-wenas-seo' ) ),
 			),
 			'social'   => array(
@@ -136,23 +125,6 @@ class MWSEO_Settings {
 			'verify'   => array(
 				array( 'gsc_html_filename', 'text', __( 'Google Search Console HTML file', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'gsc_html_filename' ) ), array(), 'googleXXXXXXXXXXXXXXXX.html' ),
 				array( 'bing_verification_key', 'text', __( 'Bing Webmaster Tools verification code', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'bing_verification_key' ) ), array(), 'jouw Bing verificatiecode' ),
-			),
-			'pro'      => array(
-				array(
-					'ai_provider',
-					'select',
-					__( 'AI provider (your own API key)', 'manny-wenas-seo' ),
-					'',
-					array(
-						'anthropic' => 'Anthropic',
-						'openai'    => 'OpenAI',
-					),
-				),
-				array( 'ai_api_key', 'password', __( 'API key', 'manny-wenas-seo' ), __( 'Stored in the database; used only for requests you trigger.', 'manny-wenas-seo' ) ),
-				array( 'ai_model', 'text', __( 'Model ID', 'manny-wenas-seo' ), '' ),
-				array( 'report_enabled', 'checkbox', __( 'Weekly rank report email', 'manny-wenas-seo' ), '' ),
-				array( 'report_email', 'text', __( 'Report recipient', 'manny-wenas-seo' ), __( 'Defaults to the admin email.', 'manny-wenas-seo' ) ),
-				array( 'sitemap_autosubmit', 'checkbox', __( 'Auto-submit sitemap to Google and Bing', 'manny-wenas-seo' ), __( 'Google via the Search Console API; Bing via IndexNow.', 'manny-wenas-seo' ) ),
 			),
 		);
 	}
@@ -381,9 +353,6 @@ class MWSEO_Settings {
 				$url = wp_nonce_url( admin_url( 'admin.php?page=mwseo&mwseo_gsc_connect=1' ), 'mwseo_gsc_connect' );
 				echo '<p><strong>' . esc_html__( 'Status: not connected.', 'manny-wenas-seo' ) . '</strong> <a class="button button-primary" href="' . esc_url( $url ) . '">' . esc_html__( 'Connect Search Console', 'manny-wenas-seo' ) . '</a> <span class="description">' . esc_html__( 'Save your client ID and secret first.', 'manny-wenas-seo' ) . '</span></p>';
 			}
-		}
-		if ( 'pro' === $tab && ! MWSEO_Pro::is_active() ) {
-			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Pro features are inactive. You can configure them here; they switch on when a Pro licence is active.', 'manny-wenas-seo' ) . '</p></div>';
 		}
 	}
 

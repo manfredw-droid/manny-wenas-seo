@@ -51,24 +51,21 @@ final class MWSEO_Plugin {
 		MWSEO_Llms_Txt::init();
 		MWSEO_Gsc::init();
 		MWSEO_Abilities::init();
-		MWSEO_Pro::init();
 		MWSEO_Importer::init();
 		MWSEO_Trends::init();
 	}
 
 	/**
-	 * Activation: defaults, rewrite rules, cron, rank table.
+	 * Activation: defaults, rewrite rules and cron.
 	 */
 	public static function activate() {
 		if ( false === get_option( MWSEO_Options::KEY ) ) {
 			add_option( MWSEO_Options::KEY, MWSEO_Options::defaults(), '', false );
 		}
-		MWSEO_Pro::create_table();
 		MWSEO_Options::flush();
 		MWSEO_Indexnow::ensure_key();
 		MWSEO_Sitemaps::add_rewrites();
 		MWSEO_Llms_Txt::add_rewrites();
-		MWSEO_Pro::add_rewrites();
 		flush_rewrite_rules();
 		if ( ! wp_next_scheduled( 'mwseo_weekly' ) ) {
 			wp_schedule_event( time() + HOUR_IN_SECONDS, 'weekly', 'mwseo_weekly' );
@@ -81,7 +78,6 @@ final class MWSEO_Plugin {
 	 */
 	public static function deactivate() {
 		wp_clear_scheduled_hook( 'mwseo_weekly' );
-		wp_clear_scheduled_hook( 'mwseo_pro_submit' );
 		flush_rewrite_rules();
 	}
 }

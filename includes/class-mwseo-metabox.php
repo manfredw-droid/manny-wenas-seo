@@ -50,7 +50,6 @@ class MWSEO_Metabox {
 			'mwseoBox',
 			array(
 				'postId' => get_the_ID(),
-				'isPro'  => MWSEO_Pro::is_active(),
 				'hasGsc' => MWSEO_Gsc::is_connected(),
 				'ajax'   => MWSEO_Options::get( 'trends_enabled' ) ? array(
 					'url'    => admin_url( 'admin-ajax.php' ),
@@ -80,9 +79,6 @@ class MWSEO_Metabox {
 		wp_nonce_field( 'mwseo_save', 'mwseo_nonce' );
 		$id      = $post->ID;
 		$related = MWSEO_Meta::get( $id, 'related' );
-		$is_pro  = MWSEO_Pro::is_active();
-		$review  = MWSEO_Meta::get( $id, 'review' );
-		$review  = array_pad( $review, 3, '' );
 		?>
 		<div class="mwseo-box">
 			<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
@@ -118,10 +114,7 @@ class MWSEO_Metabox {
 					</p>
 				<?php endfor; ?>
 				<p>
-					<button type="button" class="button" id="mwseo-suggest" <?php disabled( ! $is_pro ); ?>><?php esc_html_e( 'Suggest from Search Console', 'manny-wenas-seo' ); ?></button>
-					<?php if ( ! $is_pro ) : ?>
-						<span class="description"><?php esc_html_e( 'Pro feature.', 'manny-wenas-seo' ); ?></span>
-					<?php endif; ?>
+					<button type="button" class="button" id="mwseo-suggest"><?php esc_html_e( 'Suggest from Search Console', 'manny-wenas-seo' ); ?></button>
 				</p>
 				<ul id="mwseo-suggestions"></ul>
 			</div>
@@ -163,29 +156,6 @@ class MWSEO_Metabox {
 					<?php endif; ?>
 				</div>
 			</div>
-
-			<details class="mwseo-pro" <?php echo $is_pro ? '' : 'aria-disabled="true"'; ?>>
-				<summary><?php esc_html_e( 'Advanced schema (Pro)', 'manny-wenas-seo' ); ?></summary>
-				<?php if ( ! $is_pro ) : ?>
-					<p class="description"><?php esc_html_e( 'FAQPage, VideoObject and Review schema are part of Pro.', 'manny-wenas-seo' ); ?></p>
-				<?php endif; ?>
-				<fieldset <?php disabled( ! $is_pro ); ?>>
-					<p>
-						<label for="mwseo_faq"><strong><?php esc_html_e( 'FAQ (one per line: Question | Answer)', 'manny-wenas-seo' ); ?></strong></label>
-						<textarea id="mwseo_faq" name="mwseo_faq" class="widefat" rows="4"><?php echo esc_textarea( MWSEO_Meta::get( $id, 'faq' ) ); ?></textarea>
-					</p>
-					<p>
-						<label for="mwseo_video"><strong><?php esc_html_e( 'Video URL (YouTube, Vimeo or file)', 'manny-wenas-seo' ); ?></strong></label>
-						<input type="url" id="mwseo_video" name="mwseo_video" class="widefat" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'video' ) ); ?>" />
-					</p>
-					<p>
-						<strong><?php esc_html_e( 'Review', 'manny-wenas-seo' ); ?></strong><br />
-						<input type="text" name="mwseo_review[]" placeholder="<?php esc_attr_e( 'Item reviewed', 'manny-wenas-seo' ); ?>" value="<?php echo esc_attr( $review[0] ); ?>" />
-						<input type="number" min="1" max="5" step="0.5" name="mwseo_review[]" placeholder="<?php esc_attr_e( 'Rating 1–5', 'manny-wenas-seo' ); ?>" value="<?php echo esc_attr( $review[1] ); ?>" />
-						<input type="text" name="mwseo_review[]" class="widefat" placeholder="<?php esc_attr_e( 'Review summary', 'manny-wenas-seo' ); ?>" value="<?php echo esc_attr( $review[2] ); ?>" />
-					</p>
-				</fieldset>
-			</details>
 		</div>
 		<?php
 	}
@@ -229,13 +199,6 @@ class MWSEO_Metabox {
 		}
 		foreach ( array( 'noindex', 'nofollow', 'cornerstone' ) as $flag ) {
 			MWSEO_Meta::set( $post_id, $flag, ! empty( $_POST[ 'mwseo_' . $flag ] ) );
-		}
-
-		if ( MWSEO_Pro::is_active() ) {
-			MWSEO_Meta::set( $post_id, 'faq', isset( $_POST['mwseo_faq'] ) ? sanitize_textarea_field( wp_unslash( $_POST['mwseo_faq'] ) ) : '' );
-			MWSEO_Meta::set( $post_id, 'video', isset( $_POST['mwseo_video'] ) ? esc_url_raw( wp_unslash( $_POST['mwseo_video'] ) ) : '' );
-			$review = isset( $_POST['mwseo_review'] ) ? array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['mwseo_review'] ) ) : array();
-			MWSEO_Meta::set( $post_id, 'review', $review && '' !== $review[0] ? $review : array() );
 		}
 
 		$result = MWSEO_Rest::analyze_post( $post );
