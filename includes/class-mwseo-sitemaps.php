@@ -124,7 +124,7 @@ class MWSEO_Sitemaps {
 			$pages = self::page_count( $type );
 			for ( $i = 1; $i <= $pages; $i++ ) {
 				$suffix = $i > 1 ? $i : '';
-				echo '<sitemap><loc>' . esc_url( home_url( "/mwseo-{$type}-sitemap{$suffix}.xml" ) ) . "</loc></sitemap>\n";
+				echo '<sitemap>' . self::loc_tag( 'loc', home_url( "/mwseo-{$type}-sitemap{$suffix}.xml" ) ) . "</sitemap>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in loc_tag().
 			}
 		}
 		echo '</sitemapindex>';
@@ -235,6 +235,21 @@ class MWSEO_Sitemaps {
 	}
 
 	/**
+	 * Build a URL element (<loc>, <image:loc>, ...) on a single line.
+	 *
+	 * The value is trimmed and stripped of line breaks and tabs before escaping,
+	 * so no whitespace can end up inside the tag.
+	 *
+	 * @param string $name Tag name.
+	 * @param string $url  URL.
+	 * @return string Escaped XML.
+	 */
+	private static function loc_tag( $name, $url ) {
+		$url = preg_replace( '/[\r\n\t]+/', '', trim( (string) $url ) );
+		return '<' . $name . '>' . esc_url( $url ) . '</' . $name . '>';
+	}
+
+	/**
 	 * Print a <url> entry.
 	 *
 	 * @param string $loc     URL.
@@ -245,7 +260,7 @@ class MWSEO_Sitemaps {
 		if ( ! $loc || is_wp_error( $loc ) ) {
 			return;
 		}
-		echo '<url><loc>' . esc_url( $loc ) . '</loc>';
+		echo '<url>' . self::loc_tag( 'loc', $loc ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in loc_tag().
 		if ( $lastmod ) {
 			echo '<lastmod>' . esc_xml( $lastmod ) . '</lastmod>';
 		}
@@ -293,7 +308,7 @@ class MWSEO_Sitemaps {
 			$urls  = array_slice( array_unique( $urls ), 0, 1000 );
 			$inner = '';
 			foreach ( $urls as $src ) {
-				$inner .= '<image:image><image:loc>' . esc_url( $src ) . '</image:loc></image:image>';
+				$inner .= '<image:image>' . self::loc_tag( 'image:loc', $src ) . '</image:image>';
 			}
 			if ( $inner ) {
 				self::url( get_permalink( $id ), get_post_modified_time( 'c', true, $id ), $inner );
@@ -343,14 +358,14 @@ class MWSEO_Sitemaps {
 			$desc  = wp_trim_words( MWSEO_Head::description_for_post( $id ), 40 );
 			$inner = '';
 			foreach ( $videos as $v ) {
-				$inner .= '<video:video><video:thumbnail_loc>' . esc_url( $v['thumb'] ) . '</video:thumbnail_loc>'
+				$inner .= '<video:video>' . self::loc_tag( 'video:thumbnail_loc', $v['thumb'] )
 					. '<video:title>' . esc_xml( get_the_title( $id ) ) . '</video:title>'
 					. '<video:description>' . esc_xml( $desc ? $desc : get_the_title( $id ) ) . '</video:description>';
 				if ( $v['file'] ) {
-					$inner .= '<video:content_loc>' . esc_url( $v['file'] ) . '</video:content_loc>';
+					$inner .= self::loc_tag( 'video:content_loc', $v['file'] );
 				}
 				if ( $v['player'] ) {
-					$inner .= '<video:player_loc>' . esc_url( $v['player'] ) . '</video:player_loc>';
+					$inner .= self::loc_tag( 'video:player_loc', $v['player'] );
 				}
 				$inner .= '<video:publication_date>' . esc_xml( get_post_time( 'c', true, $id ) ) . '</video:publication_date></video:video>';
 			}
