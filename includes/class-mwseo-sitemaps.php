@@ -103,6 +103,12 @@ class MWSEO_Sitemaps {
 			return;
 		}
 
+		// Discard anything other plugins or the theme buffered so far: any character
+		// before the XML declaration makes the sitemap invalid.
+		while ( ob_get_level() > 0 ) {
+			ob_end_clean();
+		}
+
 		nocache_headers();
 		header( 'Content-Type: application/xml; charset=UTF-8' );
 		header( 'X-Robots-Tag: noindex, follow' );
