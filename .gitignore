@@ -49,3 +49,4 @@ wp-config.php
 # PHP development dependencies
 /vendor/
 composer.lock
+.phpunit.result.cache
