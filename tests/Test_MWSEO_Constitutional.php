@@ -515,21 +515,18 @@ final class Test_MWSEO_Constitutional extends TestCase {
 		);
 	}
 
-	// ── 9. Markup edge case: no <p> tags → N/A, not 0 ───────────────────────
+	// ── 9. Markup edge case: <div>-only content is scored ───────────────────
 
 	/**
-	 * When the post content contains no <p> elements the opening-paragraph check
-	 * must be marked N/A, not 0.
+	 * When the post content contains no <p> elements, the first non-empty <div>
+	 * block is treated as the opening paragraph. The check must run (not N/A) and
+	 * must award full credit when the keyphrase is present in that block.
 	 *
-	 * This distinction matters for the score calculation: an N/A check is excluded
-	 * from both the numerator and the denominator, so it cannot lower the score.
-	 * A 0-point check would reduce the score even when no measurement was possible.
-	 *
-	 * The content is wrapped only in a <div>. The scorer normalises via wpautop()
-	 * only when no <p substring is present; the stub returns the input unchanged,
-	 * so the absence of <p> tags is preserved and the check must fall through to N/A.
+	 * The scorer normalises via wpautop() only when no <p substring is present;
+	 * the stub returns the input unchanged, and wpautop preserves <div> blocks in
+	 * WordPress as well, so MWSEO_Analyzer::paragraphs() falls back to the div.
 	 */
-	public function test_opening_paragraph_check_is_not_applicable_when_content_has_no_paragraph_tags(): void {
+	public function test_keyphrase_in_div_block_is_scored_as_opening_paragraph(): void {
 		$result = MWSEO_Scorer::score( [
 			'focus'   => 'natural writing',
 			'content' => '<div>Natural writing is found here but not inside any paragraph tag.</div>',
@@ -544,11 +541,51 @@ final class Test_MWSEO_Constitutional extends TestCase {
 		}
 
 		$this->assertNotNull( $check, 'intro_keyphrase check must always be present in the output.' );
-		$this->assertTrue(
+		$this->assertFalse(
 			$check['na'],
-			'The opening-paragraph check must be N/A — not 0 — when the content contains '
-			. 'no <p> elements. An N/A check is excluded from scoring; a 0 penalises '
-			. 'content that simply uses different markup.'
+			'When the content has a <div> block and no <p> elements the opening-paragraph '
+			. 'check must run, not be marked N/A.'
+		);
+		$this->assertSame(
+			(float) $check['max'],
+			(float) $check['points'],
+			'A keyphrase present in the first <div> block must earn full opening-paragraph credit.'
+		);
+	}
+
+	/**
+	 * A div-only post where the keyphrase is absent must score 0 on the
+	 * opening-paragraph check, not N/A. The check now runs on div content;
+	 * absence of the keyphrase is a genuine miss, not a measurement gap.
+	 */
+	public function test_missing_keyphrase_in_div_block_scores_zero_not_na(): void {
+		$result = MWSEO_Scorer::score( [
+			'focus'   => 'natural writing',
+			'content' => '<div>This paragraph does not contain the focus keyphrase at all.</div>',
+		] );
+
+		$check = null;
+		foreach ( $result['checks'] as $c ) {
+			if ( 'intro_keyphrase' === $c['id'] ) {
+				$check = $c;
+				break;
+			}
+		}
+
+		$this->assertNotNull( $check, 'intro_keyphrase check must always be present.' );
+		$this->assertFalse(
+			$check['na'],
+			'When div content is present the check must run, not be marked N/A.'
+		);
+		$this->assertSame(
+			0.0,
+			(float) $check['points'],
+			'A div block without the keyphrase must score 0, not partial credit.'
+		);
+		$this->assertSame(
+			'none',
+			$check['classification'],
+			'A div block without the keyphrase must be classified "none".'
 		);
 	}
 
