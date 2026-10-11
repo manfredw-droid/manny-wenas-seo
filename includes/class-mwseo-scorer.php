@@ -24,7 +24,7 @@ final class MWSEO_Scorer {
 	 * version) whenever a scoring rule changes intentionally, so constitutional
 	 * tests have a defined contract to verify against.
 	 */
-	const SCORING_VERSION = '1.0';
+	const SCORING_VERSION = '1.1';
 
 	/**
 	 * Points per section.
@@ -441,6 +441,10 @@ final class MWSEO_Scorer {
 			);
 		}
 
+		if ( '' === $ctx['focus'] ) {
+			return self::not_applicable( 'subheading_keyphrase', 'placement', 4, __( 'No focus keyphrase set.', 'manny-wenas-seo' ) );
+		}
+
 		// Evaluate each heading independently and award the best single match.
 		//
 		// Concatenating all heading text before matching would let a keyphrase
@@ -476,7 +480,6 @@ final class MWSEO_Scorer {
 		return array(
 			self::check_alt_text( $ctx ),
 			self::check_clean_slug( $ctx ),
-			self::check_word_count( $ctx ),
 		);
 	}
 
@@ -722,7 +725,7 @@ final class MWSEO_Scorer {
 	 */
 	private static function keyphrase_check( $id, $group, $max, $focus, $haystack, $good, $bad ) {
 		if ( '' === $focus ) {
-			return self::result( $id, $group, $max, 0, '', __( 'No focus keyphrase set.', 'manny-wenas-seo' ) );
+			return self::not_applicable( $id, $group, $max, __( 'No focus keyphrase set.', 'manny-wenas-seo' ) );
 		}
 		$m     = MWSEO_Analyzer::match( $focus, $haystack );
 		$ratio = $m >= 1 ? 1 : ( $m >= 0.6 ? 0.5 : 0 );

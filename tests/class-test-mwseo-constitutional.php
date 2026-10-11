@@ -18,6 +18,7 @@
 
 use Brain\Monkey;
 use Brain\Monkey\Functions;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 require_once dirname( __DIR__ ) . '/includes/class-mwseo-analyzer.php';
@@ -309,8 +310,8 @@ final class Test_MWSEO_Constitutional extends TestCase {
 	 * If the team decides to reject invalid input with a defined exception instead,
 	 * update this test and the PHILOSOPHY.md amendment record accordingly.
 	 *
-	 * @dataProvider malformed_input_provider
 	 */
+	#[DataProvider( 'malformed_input_provider' )]
 	public function test_score_is_always_bounded_between_0_and_100( array $input, string $description ): void {
 		$result = MWSEO_Scorer::score( $input );
 		$score  = $result['score'];
@@ -574,7 +575,7 @@ final class Test_MWSEO_Constitutional extends TestCase {
 			'content' => '<h2>Natural Writing in Practice</h2>'
 				. '<p>Natural writing is the foundation of all good prose. '
 				. str_repeat( 'Good prose connects with readers through clarity and purpose. ', 15 )
-				. '</p>',
+				. 'Read more in our <a href="https://example.com/internal">editing guide</a>.</p>',
 		] );
 		$verdict = $result['verdict'];
 
@@ -719,6 +720,84 @@ final class Test_MWSEO_Constitutional extends TestCase {
 			'Focus keyphrase not set',
 			$verdict['summary'],
 			'The verdict must mention the missing focus keyphrase, not report counts.'
+		);
+	}
+
+	// ── 11. Missing focus is N/A, never a failure ─────────────────────────────
+
+	/**
+	 * Without a focus keyphrase no keyphrase check can be performed. Every
+	 * keyphrase-related check must be N/A; none may be classified as 'none'.
+	 */
+	public function test_missing_focus_produces_no_failed_checks(): void {
+		$result = MWSEO_Scorer::score( [
+			'focus'   => '',
+			'title'   => 'An article about effective communication',
+			'desc'    => 'How to communicate clearly and connect with your audience.',
+			'slug'    => 'effective-communication-guide',
+			'content' => '<h2>The Power of Clarity</h2>'
+				. '<p>' . str_repeat( 'Good prose connects readers with ideas through clear expression. ', 15 ) . '</p>',
+		] );
+
+		$keyphrase_ids = [
+			'body_keyphrase',
+			'title_keyphrase',
+			'desc_keyphrase',
+			'slug_keyphrase',
+			'intro_keyphrase',
+			'subheading_keyphrase',
+			'related_body',
+		];
+
+		$seen = [];
+		foreach ( $result['checks'] as $check ) {
+			if ( ! in_array( $check['id'], $keyphrase_ids, true ) ) {
+				continue;
+			}
+			$seen[] = $check['id'];
+			$this->assertNotSame(
+				'none',
+				$check['classification'],
+				"Check '{$check['id']}' must not be classified 'none' when no focus keyphrase is set."
+			);
+			$this->assertSame( 'na', $check['classification'], "Check '{$check['id']}' must be classified 'na'." );
+			$this->assertTrue( $check['na'], "Check '{$check['id']}' must have na === true." );
+		}
+
+		$this->assertEqualsCanonicalizing(
+			$keyphrase_ids,
+			$seen,
+			'Every keyphrase-related check must be present in the output.'
+		);
+	}
+
+	// ── 12. Word count is advisory only ───────────────────────────────────────
+
+	/**
+	 * Word count appears only in notices(). Two texts that differ only in length
+	 * (one under, one over 300 words) must receive the same numeric score.
+	 */
+	public function test_word_count_does_not_affect_score(): void {
+		$sentence = 'Good prose connects readers with ideas through clear expression. ';
+		$make     = fn( int $repeats ): array => [
+			'focus'   => 'natural writing',
+			'title'   => 'Natural writing for working writers',
+			'desc'    => 'Natural writing improves reader engagement.',
+			'slug'    => 'natural-writing-guide',
+			'content' => '<h2>Natural Writing in Practice</h2>'
+				. '<p>Natural writing is the foundation of effective prose. '
+				. str_repeat( $sentence, $repeats ) . '</p>',
+		];
+
+		$short = MWSEO_Scorer::score( $make( 5 ) );
+		$long  = MWSEO_Scorer::score( $make( 60 ) );
+
+		$this->assertLessThan( MWSEO_Scorer::MIN_WORDS, $short['words'], 'Short fixture must be under 300 words.' );
+		$this->assertGreaterThan( MWSEO_Scorer::MIN_WORDS, $long['words'], 'Long fixture must be over 300 words.' );
+		$this->assertSame(
+			$short['score'],
+			$long['score'],
+			'Word count must not change the numeric score; it is an advisory notice only.'
 		);
 	}
 
