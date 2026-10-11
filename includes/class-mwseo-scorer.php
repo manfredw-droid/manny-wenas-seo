@@ -9,7 +9,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Scores a post against the Manny Wenas rubric.
  *
- * Sections: Text & Content 45, Keyphrase placement 30, Technical 15, Optional
+ * Sections: Text & Content 45, Keyphrase placement 30, Technical 11, Optional
  * keyphrases 10. Checks that cannot apply to a post (no related keyphrases, no
  * images, under 300 words) are marked N/A: they are left out of the maximum and
  * the score is rescaled, so they neither add nor remove points. Advisory notices
@@ -32,7 +32,7 @@ final class MWSEO_Scorer {
 	const SECTIONS = array(
 		'content'   => 45,
 		'placement' => 30,
-		'technical' => 15,
+		'technical' => 11,
 		'optional'  => 10,
 	);
 
@@ -529,28 +529,6 @@ final class MWSEO_Scorer {
 			$clean ? 1 : 0,
 			__( 'The URL slug is clean.', 'manny-wenas-seo' ),
 			__( 'URL slug contains double hyphens or consists only of stop words.', 'manny-wenas-seo' )
-		);
-	}
-
-	/**
-	 * Word count (4). Under 300 words is an advisory notice only and takes no
-	 * points: the check is N/A, so the score is not affected either way.
-	 *
-	 * @param array $ctx Context.
-	 * @return array
-	 */
-	public static function check_word_count( array $ctx ) {
-		if ( $ctx['word_count'] < self::MIN_WORDS ) {
-			return self::not_applicable( 'word_count', 'technical', 4, __( 'Word count is not scored for texts under 300 words.', 'manny-wenas-seo' ) );
-		}
-		return self::result(
-			'word_count',
-			'technical',
-			4,
-			1,
-			/* translators: %d: word count */
-			sprintf( __( 'The text has %d words.', 'manny-wenas-seo' ), $ctx['word_count'] ),
-			''
 		);
 	}
 
