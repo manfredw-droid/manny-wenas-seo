@@ -1,0 +1,17 @@
+{
+    "name": "manfredw-droid/manny-wenas-seo",
+    "description": "Manny Wenas SEO – constitutional enforcement test suite",
+    "type": "wordpress-plugin",
+    "require-dev": {
+        "phpunit/phpunit": "^10.0 || ^11.0 || ^12.0",
+        "brain/monkey": "^2.6"
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

@@ -16,4 +16,8 @@
 	<arg name="extensions" value="php"/>
 	<exclude-pattern>vendor/*</exclude-pattern>
 	<exclude-pattern>node_modules/*</exclude-pattern>
+	<!-- Test files use PHPUnit class-name conventions, not WordPress file-name conventions. -->
+	<rule ref="WordPress.Files.FileName">
+		<exclude-pattern>tests/*</exclude-pattern>
+	</rule>
 </ruleset>
