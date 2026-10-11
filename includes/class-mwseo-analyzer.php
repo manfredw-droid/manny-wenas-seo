@@ -186,7 +186,7 @@ class MWSEO_Analyzer {
 			preg_match_all( '#<div[^>]*>(.*?)</div>#is', $html, $dm );
 			foreach ( $dm[1] as $d ) {
 				$d = trim( html_entity_decode( wp_strip_all_tags( $d ), ENT_QUOTES, 'UTF-8' ) );
-				if ( '' !== $d ) {
+				if ( '' !== $d && count( self::words( $d ) ) >= 10 ) {
 					$out[] = $d;
 					break;
 				}

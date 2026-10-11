@@ -589,6 +589,41 @@ final class Test_MWSEO_Constitutional extends TestCase {
 		);
 	}
 
+	/**
+	 * A short <div> (a nav or hero element, under 10 words) is not an opening
+	 * paragraph. The check must be N/A, not a keyphrase miss.
+	 */
+	public function test_short_div_nav_block_produces_na_not_a_miss(): void {
+		$result = MWSEO_Scorer::score( [
+			'focus'   => 'natural writing',
+			'content' => '<div>Home About Contact</div>',
+		] );
+
+		$check = null;
+		foreach ( $result['checks'] as $c ) {
+			if ( 'intro_keyphrase' === $c['id'] ) {
+				$check = $c;
+				break;
+			}
+		}
+
+		$this->assertNotNull(
+			$check,
+			'intro_keyphrase check must always be present in the output.'
+		);
+		$this->assertTrue(
+			$check['na'],
+			'A <div> block with fewer than 10 words is a nav/hero element, not an opening '
+			. 'paragraph; the check must be N/A.'
+		);
+		$this->assertSame(
+			'na',
+			$check['classification'],
+			'A <div> block with fewer than 10 words is a nav/hero element, not an opening '
+			. 'paragraph; the check must be N/A.'
+		);
+	}
+
 	// ── 10. Verdict classification contract ───────────────────────────────────
 	//
 	// §4.5 requires factual observations. The verdict must report the precise

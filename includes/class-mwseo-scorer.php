@@ -388,11 +388,11 @@ final class MWSEO_Scorer {
 	 * Keyphrase appears in the opening paragraph (6).
 	 *
 	 * Uses the first non-empty block extracted by MWSEO_Analyzer::paragraphs(): a
-	 * <p> element, or the first non-empty <div> if no <p> is present.
+	 * <p> element, or the first <div> with at least 10 words if no <p> is present.
 	 * This is explicit and body-length-independent: an article's opening paragraph
 	 * is what it is regardless of total word count.
 	 *
-	 * N/A only when the content contains no extractable text block at all.
+	 * N/A only when the content contains no qualifying text block at all.
 	 *
 	 * @param array $ctx Context.
 	 * @return array
