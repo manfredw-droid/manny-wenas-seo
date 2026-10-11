@@ -4,7 +4,7 @@ Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License: GPLv2 or later
 
 Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
@@ -59,6 +59,13 @@ optionally connects to OpenAI or Anthropic APIs for AI-assisted meta generation.
 This functionality is not present in the version hosted on WordPress.org.
 
 == Changelog ==
+
+= 1.0.6 =
+* Scoring: word count below 300 words is now an advisory notice only — it no longer deducts points from the Technical section
+* Scoring: Technical section corrected to 11 points (image alt text 8 + clean slug 3); was incorrectly documented as 15
+* Scoring: when no focus keyphrase is set, all keyphrase checks now show N/A instead of scoring 0
+* Scoring: opening paragraph check now falls back to the first block of body text when post content uses div elements instead of paragraph tags, provided the block contains at least 10 words
+* Docs: added PHILOSOPHY.md (scoring rubric and founding principles) and AMENDMENTS.md (intentional change record) to the repository
 
 = 1.0.5 =
 * Fixed: Search Console "Suggest" button now shows a clear "not connected" message when GSC is not linked
