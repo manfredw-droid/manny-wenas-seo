@@ -873,6 +873,36 @@ final class Test_MWSEO_Constitutional extends TestCase {
 		);
 	}
 
+	// ── 13. Body keyphrase check works on div-only content ──────────────────
+
+	/**
+	 * The body keyphrase check reads the plain-text representation of the content
+	 * (all tags stripped), not the extracted paragraphs, so it must find the
+	 * keyphrase in a post that uses <div> blocks and no <p> elements.
+	 */
+	public function test_keyphrase_in_body_is_found_in_div_only_content(): void {
+		$result = MWSEO_Scorer::score( [
+			'focus'   => 'natural writing',
+			'content' => '<div>Natural writing is the primary theme of this article and it appears exclusively inside a div element.</div>',
+		] );
+
+		$check = null;
+		foreach ( $result['checks'] as $c ) {
+			if ( 'body_keyphrase' === $c['id'] ) {
+				$check = $c;
+				break;
+			}
+		}
+
+		$contract = 'check_keyphrase_in_body() reads the plain-text representation of the content '
+			. '(all tags stripped), so the keyphrase must be found in div-only posts.';
+
+		$this->assertNotNull( $check, $contract );
+		$this->assertFalse( $check['na'], $contract );
+		$this->assertSame( 'full', $check['classification'], $contract );
+		$this->assertSame( (float) $check['max'], (float) $check['points'], $contract );
+	}
+
 	// ── Fixtures and helpers ──────────────────────────────────────────────────
 
 	/**
