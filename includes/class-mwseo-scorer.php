@@ -17,7 +17,14 @@ defined( 'ABSPATH' ) || exit;
  *
  * Every sub-score is its own method so it can be tested or overridden alone.
  */
-class MWSEO_Scorer {
+final class MWSEO_Scorer {
+
+	/**
+	 * Behavioral baseline. Increment this (independently of the plugin release
+	 * version) whenever a scoring rule changes intentionally, so constitutional
+	 * tests have a defined contract to verify against.
+	 */
+	const SCORING_VERSION = '1.0';
 
 	/**
 	 * Points per section.
@@ -117,7 +124,7 @@ class MWSEO_Scorer {
 			'score'    => $score,
 			'state'    => self::state( $score ),
 			'sections' => $sections,
-			'verdict'  => self::verdict( $score, $checks, '' !== $ctx['focus'] ),
+			'verdict'  => self::verdict( $checks, '' !== $ctx['focus'] ),
 			'checks'   => $checks,
 			'notices'  => self::notices( $ctx ),
 			'words'    => $ctx['word_count'],
@@ -177,6 +184,7 @@ class MWSEO_Scorer {
 			'words'      => $words,
 			'word_count' => count( $words ),
 			'sentences'  => MWSEO_Analyzer::sentences( $text ),
+			'paragraphs' => MWSEO_Analyzer::paragraphs( $html ),
 			'headings'   => MWSEO_Analyzer::headings( $html ),
 			'links'      => MWSEO_Analyzer::links( $html ),
 			'images'     => MWSEO_Analyzer::images( $html ),
@@ -214,7 +222,7 @@ class MWSEO_Scorer {
 			$ctx['focus'],
 			$ctx['text'],
 			__( 'The focus keyphrase appears in the body text.', 'manny-wenas-seo' ),
-			__( 'Use the focus keyphrase in the body text.', 'manny-wenas-seo' )
+			__( 'Focus keyphrase not found in the body text.', 'manny-wenas-seo' )
 		);
 	}
 
@@ -240,9 +248,9 @@ class MWSEO_Scorer {
 		$ratio = ( $has_h2 ? 0.6 : 0 ) + ( $has_h2 && $logical ? 0.4 : 0 );
 
 		if ( ! $has_h2 ) {
-			$bad = __( 'Add at least one H2 subheading.', 'manny-wenas-seo' );
+			$bad = __( 'No H2 subheading detected.', 'manny-wenas-seo' );
 		} else {
-			$bad = __( 'Heading levels skip a step (for example an H4 straight after an H2).', 'manny-wenas-seo' );
+			$bad = __( 'Heading levels are not sequential (for example H4 follows H2 with no H3).', 'manny-wenas-seo' );
 		}
 		return self::result( 'headings', 'content', 10, $ratio, __( 'The heading structure is logical.', 'manny-wenas-seo' ), $bad );
 	}
@@ -257,7 +265,7 @@ class MWSEO_Scorer {
 	public static function check_readability( array $ctx ) {
 		$count = count( $ctx['sentences'] );
 		if ( 0 === $count ) {
-			return self::result( 'readability', 'content', 10, 0, '', __( 'Add some text to assess readability.', 'manny-wenas-seo' ) );
+			return self::result( 'readability', 'content', 10, 0, '', __( 'No text available for readability analysis.', 'manny-wenas-seo' ) );
 		}
 
 		$sentence_words = 0;
@@ -280,7 +288,7 @@ class MWSEO_Scorer {
 			/* translators: %d: average words per sentence */
 			sprintf( __( 'Sentences are easy to read (about %d words on average).', 'manny-wenas-seo' ), round( $avg ) ),
 			/* translators: %d: average words per sentence */
-			sprintf( __( 'Sentences average %d words; aim for 25 or fewer.', 'manny-wenas-seo' ), round( $avg ) )
+			sprintf( __( 'Sentences average %d words.', 'manny-wenas-seo' ), round( $avg ) )
 		);
 	}
 
@@ -297,7 +305,7 @@ class MWSEO_Scorer {
 			10,
 			$ctx['links']['internal'] >= 1 ? 1 : 0,
 			__( 'The text links to other pages on this site.', 'manny-wenas-seo' ),
-			__( 'Add at least one internal link.', 'manny-wenas-seo' )
+			__( 'No internal links detected.', 'manny-wenas-seo' )
 		);
 	}
 
@@ -305,6 +313,9 @@ class MWSEO_Scorer {
 
 	/**
 	 * Keyphrase placement section.
+	 *
+	 * Five constitutional locations: SEO title, meta description, URL slug,
+	 * opening paragraph, and a subheading (H2–H6).
 	 *
 	 * @param array $ctx Context.
 	 * @return array[]
@@ -314,7 +325,8 @@ class MWSEO_Scorer {
 			self::check_title( $ctx ),
 			self::check_description( $ctx ),
 			self::check_slug( $ctx ),
-			self::check_first_tenth( $ctx ),
+			self::check_keyphrase_in_opening_paragraph( $ctx ),
+			self::check_keyphrase_in_subheading( $ctx ),
 		);
 	}
 
@@ -332,12 +344,12 @@ class MWSEO_Scorer {
 			$ctx['focus'],
 			$ctx['title'],
 			__( 'The focus keyphrase appears in the SEO title.', 'manny-wenas-seo' ),
-			__( 'Use the focus keyphrase (or close variants) in the SEO title.', 'manny-wenas-seo' )
+			__( 'Focus keyphrase not found in the SEO title.', 'manny-wenas-seo' )
 		);
 	}
 
 	/**
-	 * Meta description contains the keyphrase (7).
+	 * Meta description contains the keyphrase (6).
 	 *
 	 * @param array $ctx Context.
 	 * @return array
@@ -346,16 +358,16 @@ class MWSEO_Scorer {
 		return self::keyphrase_check(
 			'desc_keyphrase',
 			'placement',
-			7,
+			6,
 			$ctx['focus'],
 			$ctx['desc'],
 			__( 'The focus keyphrase appears in the meta description.', 'manny-wenas-seo' ),
-			__( 'Mention the focus keyphrase in the meta description.', 'manny-wenas-seo' )
+			__( 'Focus keyphrase not found in the meta description.', 'manny-wenas-seo' )
 		);
 	}
 
 	/**
-	 * URL slug contains the keyphrase (7).
+	 * URL slug contains the keyphrase (6).
 	 *
 	 * @param array $ctx Context.
 	 * @return array
@@ -364,31 +376,91 @@ class MWSEO_Scorer {
 		return self::keyphrase_check(
 			'slug_keyphrase',
 			'placement',
-			7,
+			6,
 			$ctx['focus'],
 			str_replace( '-', ' ', $ctx['slug'] ),
 			__( 'The focus keyphrase appears in the URL slug.', 'manny-wenas-seo' ),
-			__( 'Put the focus keyphrase in the URL slug.', 'manny-wenas-seo' )
+			__( 'Focus keyphrase not found in the URL slug.', 'manny-wenas-seo' )
 		);
 	}
 
 	/**
-	 * Keyphrase appears in the first 10% of the body text (8). Very short texts
-	 * use at least their first 20 words, so a multi-word keyphrase can fit.
+	 * Keyphrase appears in the opening paragraph (6).
+	 *
+	 * Uses the first non-empty <p> extracted by MWSEO_Analyzer::paragraphs().
+	 * This is explicit and body-length-independent: an article's opening paragraph
+	 * is what it is regardless of total word count.
+	 *
+	 * N/A when the content contains no paragraph tags after shortcode removal and
+	 * wpautop. This prevents posts structured with <div> blocks from inadvertently
+	 * receiving a zero where a genuine measurement was impossible.
 	 *
 	 * @param array $ctx Context.
 	 * @return array
 	 */
-	public static function check_first_tenth( array $ctx ) {
-		$length = max( 20, (int) ceil( $ctx['word_count'] * 0.1 ) );
+	public static function check_keyphrase_in_opening_paragraph( array $ctx ) {
+		if ( empty( $ctx['paragraphs'] ) ) {
+			return self::not_applicable(
+				'intro_keyphrase',
+				'placement',
+				6,
+				__( 'No paragraph detected in the content.', 'manny-wenas-seo' )
+			);
+		}
 		return self::keyphrase_check(
 			'intro_keyphrase',
 			'placement',
-			8,
+			6,
 			$ctx['focus'],
-			implode( ' ', array_slice( $ctx['words'], 0, $length ) ),
-			__( 'The focus keyphrase appears in the first 10% of the text.', 'manny-wenas-seo' ),
-			__( 'Use the focus keyphrase in the first 10% of the text.', 'manny-wenas-seo' )
+			$ctx['paragraphs'][0],
+			__( 'The focus keyphrase appears in the opening paragraph.', 'manny-wenas-seo' ),
+			__( 'Focus keyphrase not found in the opening paragraph.', 'manny-wenas-seo' )
+		);
+	}
+
+	/**
+	 * Keyphrase appears in at least one subheading (H2–H6) (4).
+	 * N/A when the content contains no subheadings.
+	 *
+	 * The check uses the same semantic match as every other placement check, so
+	 * stemmed variants and synonyms qualify. The writer is never expected to force
+	 * the keyphrase into a heading; this location is worth fewer points than the
+	 * title or opening section precisely because the editorial decision belongs
+	 * to the writer.
+	 *
+	 * @param array $ctx Context.
+	 * @return array
+	 */
+	public static function check_keyphrase_in_subheading( array $ctx ) {
+		if ( empty( $ctx['headings'] ) ) {
+			return self::not_applicable(
+				'subheading_keyphrase',
+				'placement',
+				4,
+				__( 'No subheadings detected.', 'manny-wenas-seo' )
+			);
+		}
+
+		// Evaluate each heading independently and award the best single match.
+		//
+		// Concatenating all heading text before matching would let a keyphrase
+		// split across two unrelated headings ("Natural Expression" + "Writing
+		// Techniques") receive full credit for a focus of "natural writing".
+		// That is never a natural placement; the check requires the keyphrase to
+		// appear — even in stemmed, synonym-aware form — within a single heading.
+		$best = 0.0;
+		foreach ( $ctx['headings'] as $h ) {
+			$best = max( $best, MWSEO_Analyzer::match( $ctx['focus'], $h['text'] ) );
+		}
+		$ratio = $best >= 1 ? 1 : ( $best >= 0.6 ? 0.5 : 0 );
+
+		return self::result(
+			'subheading_keyphrase',
+			'placement',
+			4,
+			$ratio,
+			__( 'The focus keyphrase appears in a subheading.', 'manny-wenas-seo' ),
+			__( 'Focus keyphrase not found in any subheading.', 'manny-wenas-seo' )
 		);
 	}
 
@@ -453,7 +525,7 @@ class MWSEO_Scorer {
 			3,
 			$clean ? 1 : 0,
 			__( 'The URL slug is clean.', 'manny-wenas-seo' ),
-			__( 'Tidy the URL slug: no double hyphens, and more than just stop words.', 'manny-wenas-seo' )
+			__( 'URL slug contains double hyphens or consists only of stop words.', 'manny-wenas-seo' )
 		);
 	}
 
@@ -500,7 +572,7 @@ class MWSEO_Scorer {
 	 */
 	public static function check_related( array $ctx ) {
 		if ( empty( $ctx['related'] ) ) {
-			return self::not_applicable( 'related_body', 'optional', 10, __( 'Optional: add related keyphrases to score them.', 'manny-wenas-seo' ) );
+			return self::not_applicable( 'related_body', 'optional', 10, __( 'No related keyphrases configured.', 'manny-wenas-seo' ) );
 		}
 		$found = 0;
 		foreach ( $ctx['related'] as $phrase ) {
@@ -529,54 +601,110 @@ class MWSEO_Scorer {
 	public static function notices( array $ctx ) {
 		$out = array();
 		if ( $ctx['word_count'] < self::MIN_WORDS ) {
-			$out[] = __( 'This post is under 300 words. Consider expanding it.', 'manny-wenas-seo' );
+			$out[] = __( 'This post has fewer than 300 words.', 'manny-wenas-seo' );
 		}
 		if ( 0 === $ctx['links']['external'] && $ctx['word_count'] > 0 ) {
-			$out[] = __( 'Add at least one external source link.', 'manny-wenas-seo' );
+			$out[] = __( 'No external links detected.', 'manny-wenas-seo' );
 		}
 		return $out;
 	}
 
 	/**
-	 * Build the written verdict.
+	 * Build the structured verdict.
 	 *
-	 * @param int   $score     Score out of 100.
-	 * @param array $checks    Results.
+	 * Returns an array with a factual summary string and structured counts,
+	 * so the UI can present the outcome without reinterpreting a string.
+	 *
+	 * Classification is strict and deterministic:
+	 *   full    — points === max (no threshold tolerance)
+	 *   partial — 0 < points < max
+	 *   none    — points === 0
+	 *   na      — check does not apply (excluded from all counts)
+	 *
+	 * @param array $checks    Results from all scored checks.
 	 * @param bool  $has_focus Whether a focus keyphrase exists.
-	 * @return string
+	 * @return array {
+	 *     @type string   $summary       Factual one-line summary.
+	 *     @type string[] $observations  Messages for unfulfilled checks, highest gap first.
+	 *     @type int      $full_count    Checks that received full credit.
+	 *     @type int      $partial_count Checks that received partial credit.
+	 *     @type int      $none_count    Checks that received no credit.
+	 * }
 	 */
-	private static function verdict( $score, array $checks, $has_focus ) {
-		if ( $score >= self::GREEN ) {
-			$text = __( 'Excellent. This content is well optimised and easy to read.', 'manny-wenas-seo' );
-		} elseif ( $score >= self::ORANGE ) {
-			$text = __( 'Good. A few tweaks would make this stronger.', 'manny-wenas-seo' );
-		} else {
-			$text = __( 'Needs work. Start with the keyphrase, title and description.', 'manny-wenas-seo' );
-		}
+	private static function verdict( array $checks, $has_focus ) {
+		// Report the absence of a focus keyphrase as a neutral observation.
+		// Keyphrase checks are simply inactive, not failed.
 		if ( ! $has_focus ) {
-			return $text . ' ' . __( 'Set a focus keyphrase to unlock the keyphrase checks.', 'manny-wenas-seo' );
-		}
-		$misses = array_filter(
-			$checks,
-			static function ( $c ) {
-				return ! $c['na'] && '' !== $c['message'] && $c['points'] < $c['max'] * 0.6;
-			}
-		);
-		usort(
-			$misses,
-			static function ( $a, $b ) {
-				return ( $b['max'] - $b['points'] ) <=> ( $a['max'] - $a['points'] );
-			}
-		);
-		$top = array_slice( $misses, 0, 2 );
-		if ( $top ) {
-			$text .= ' ' . sprintf(
-				/* translators: %s: list of fixes */
-				__( 'Biggest wins: %s', 'manny-wenas-seo' ),
-				implode( ' ', array_column( $top, 'message' ) )
+			return array(
+				'summary'       => __( 'Focus keyphrase not set. Keyphrase checks are inactive.', 'manny-wenas-seo' ),
+				'observations'  => array(),
+				'full_count'    => 0,
+				'partial_count' => 0,
+				'none_count'    => 0,
 			);
 		}
-		return $text;
+
+		$full_count    = 0;
+		$partial_count = 0;
+		$none_count    = 0;
+		$unfulfilled   = array();
+
+		foreach ( $checks as $c ) {
+			if ( $c['na'] ) {
+				continue;
+			}
+			if ( 'full' === $c['classification'] ) {
+				++$full_count;
+			} elseif ( 'partial' === $c['classification'] ) {
+				++$partial_count;
+				$unfulfilled[] = $c;
+			} else {
+				++$none_count;
+				$unfulfilled[] = $c;
+			}
+		}
+
+		// Order unfulfilled checks by the gap between max and earned points so
+		// the most impactful observations appear first. Break ties by check ID
+		// for a stable, predictable order across PHP versions.
+		usort(
+			$unfulfilled,
+			static function ( $a, $b ) {
+				$gap = ( $b['max'] - $b['points'] ) <=> ( $a['max'] - $a['points'] );
+				return 0 !== $gap ? $gap : strcmp( $a['id'], $b['id'] );
+			}
+		);
+
+		if ( 0 === $none_count && 0 === $partial_count ) {
+			// Every applicable check received full credit — state it plainly.
+			$summary = __( 'All applicable checks received full credit.', 'manny-wenas-seo' );
+		} else {
+			// Build a precise factual count: "2 checks received no credit; 1 received partial credit."
+			$parts = array();
+			if ( $none_count > 0 ) {
+				$parts[] = sprintf(
+					/* translators: %d: number of checks with no credit */
+					_n( '%d check received no credit', '%d checks received no credit', $none_count, 'manny-wenas-seo' ),
+					$none_count
+				);
+			}
+			if ( $partial_count > 0 ) {
+				$parts[] = sprintf(
+					/* translators: %d: number of checks with partial credit */
+					_n( '%d received partial credit', '%d received partial credit', $partial_count, 'manny-wenas-seo' ),
+					$partial_count
+				);
+			}
+			$summary = implode( '; ', $parts ) . '.';
+		}
+
+		return array(
+			'summary'       => $summary,
+			'observations'  => array_values( array_column( $unfulfilled, 'message' ) ),
+			'full_count'    => $full_count,
+			'partial_count' => $partial_count,
+			'none_count'    => $none_count,
+		);
 	}
 
 	/**
@@ -594,7 +722,7 @@ class MWSEO_Scorer {
 	 */
 	private static function keyphrase_check( $id, $group, $max, $focus, $haystack, $good, $bad ) {
 		if ( '' === $focus ) {
-			return self::result( $id, $group, $max, 0, '', __( 'Set a focus keyphrase.', 'manny-wenas-seo' ) );
+			return self::result( $id, $group, $max, 0, '', __( 'No focus keyphrase set.', 'manny-wenas-seo' ) );
 		}
 		$m     = MWSEO_Analyzer::match( $focus, $haystack );
 		$ratio = $m >= 1 ? 1 : ( $m >= 0.6 ? 0.5 : 0 );
@@ -646,22 +774,28 @@ class MWSEO_Scorer {
 	 * @return array
 	 */
 	private static function result( $id, $group, $max, $ratio, $good, $bad ) {
-		$ratio = max( 0, min( 1, (float) $ratio ) );
-		if ( $ratio >= 0.999 ) {
-			$status = 'good';
-		} elseif ( $ratio >= 0.4 ) {
-			$status = 'ok';
+		$ratio = max( 0.0, min( 1.0, (float) $ratio ) );
+
+		if ( $ratio >= 1.0 ) {
+			$classification = 'full';
+			$status         = 'good';
+		} elseif ( $ratio > 0.0 ) {
+			$classification = 'partial';
+			$status         = $ratio >= 0.4 ? 'ok' : 'bad';
 		} else {
-			$status = 'bad';
+			$classification = 'none';
+			$status         = 'bad';
 		}
+
 		return array(
-			'id'      => $id,
-			'group'   => $group,
-			'points'  => round( $max * $ratio, 2 ),
-			'max'     => $max,
-			'status'  => $status,
-			'na'      => false,
-			'message' => 'good' === $status ? $good : $bad,
+			'id'             => $id,
+			'group'          => $group,
+			'points'         => round( $max * $ratio, 2 ),
+			'max'            => $max,
+			'status'         => $status,
+			'classification' => $classification,
+			'na'             => false,
+			'message'        => 'full' === $classification ? $good : $bad,
 		);
 	}
 
@@ -676,13 +810,14 @@ class MWSEO_Scorer {
 	 */
 	private static function not_applicable( $id, $group, $max, $message ) {
 		return array(
-			'id'      => $id,
-			'group'   => $group,
-			'points'  => 0,
-			'max'     => $max,
-			'status'  => 'na',
-			'na'      => true,
-			'message' => $message,
+			'id'             => $id,
+			'group'          => $group,
+			'points'         => 0,
+			'max'            => $max,
+			'status'         => 'na',
+			'classification' => 'na',
+			'na'             => true,
+			'message'        => $message,
 		);
 	}
 }
