@@ -488,8 +488,15 @@ class MWSEO_Pro {
 			return;
 		}
 		if ( MWSEO_Gsc::is_connected() && ! get_transient( 'mwseo_gsc_sitemap_sent' ) ) {
-			MWSEO_Gsc::submit_sitemap( MWSEO_Sitemaps::index_url() );
-			set_transient( 'mwseo_gsc_sitemap_sent', 1, DAY_IN_SECONDS );
+			$gsc_result = MWSEO_Gsc::submit_sitemap( MWSEO_Sitemaps::index_url() );
+			/*
+			 * Only suppress further attempts for today when the request
+			 * actually succeeded.  On failure the transient is left unset so
+			 * the next publish event will retry instead of silently giving up.
+			 */
+			if ( ! is_wp_error( $gsc_result ) ) {
+				set_transient( 'mwseo_gsc_sitemap_sent', 1, DAY_IN_SECONDS );
+			}
 		}
 
 		$key = MWSEO_Options::get( 'indexnow_key' );

@@ -122,18 +122,27 @@ class MWSEO_Gsc {
 	 * @return array|WP_Error
 	 */
 	private static function token_request( array $params ) {
+		$base = array(
+			'client_id'     => MWSEO_Options::get( 'gsc_client_id' ),
+			'client_secret' => MWSEO_Options::get( 'gsc_client_secret' ),
+		);
+
+		/*
+		 * redirect_uri is required for the initial authorization-code exchange
+		 * (RFC 6749 §4.1.3) but MUST be omitted for refresh-token requests
+		 * (RFC 6749 §6).  Sending it on a refresh can trigger a
+		 * redirect_uri_mismatch error from Google when the site's admin URL has
+		 * changed (e.g. HTTP → HTTPS) since the OAuth client was registered.
+		 */
+		if ( isset( $params['grant_type'] ) && 'authorization_code' === $params['grant_type'] ) {
+			$base['redirect_uri'] = self::redirect_uri();
+		}
+
 		$resp = wp_remote_post(
 			'https://oauth2.googleapis.com/token',
 			array(
 				'timeout' => 15,
-				'body'    => array_merge(
-					array(
-						'client_id'     => MWSEO_Options::get( 'gsc_client_id' ),
-						'client_secret' => MWSEO_Options::get( 'gsc_client_secret' ),
-						'redirect_uri'  => self::redirect_uri(),
-					),
-					$params
-				),
+				'body'    => array_merge( $base, $params ),
 			)
 		);
 		if ( is_wp_error( $resp ) ) {
