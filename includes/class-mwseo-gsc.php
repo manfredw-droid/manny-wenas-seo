@@ -21,6 +21,8 @@ class MWSEO_Gsc {
 	 */
 	public static function init() {
 		add_action( 'admin_init', array( __CLASS__, 'handle_admin' ) );
+		add_action( 'transition_post_status', array( __CLASS__, 'on_publish' ), 10, 3 );
+		add_action( 'mwseo_gsc_submit', array( __CLASS__, 'submit_scheduled' ) );
 	}
 
 	/**
@@ -66,7 +68,8 @@ class MWSEO_Gsc {
 				wp_safe_redirect( admin_url( 'admin.php?page=mwseo&tab=gsc&mwseo_msg=no_client' ) );
 				exit;
 			}
-			$scope = 'https://www.googleapis.com/auth/webmasters.readonly';
+			// Read/write scope required for sitemap submission (PUT /sitemaps/{url}).
+			$scope = 'https://www.googleapis.com/auth/webmasters';
 			$url   = add_query_arg(
 				array(
 					'client_id'     => $client_id,
@@ -121,18 +124,27 @@ class MWSEO_Gsc {
 	 * @return array|WP_Error
 	 */
 	private static function token_request( array $params ) {
+		$base = array(
+			'client_id'     => MWSEO_Options::get( 'gsc_client_id' ),
+			'client_secret' => MWSEO_Options::get( 'gsc_client_secret' ),
+		);
+
+		/*
+		 * redirect_uri is required for the initial authorization-code exchange
+		 * (RFC 6749 §4.1.3) but MUST be omitted for refresh-token requests
+		 * (RFC 6749 §6).  Sending it on a refresh can trigger a
+		 * redirect_uri_mismatch error from Google when the site's admin URL has
+		 * changed (e.g. HTTP → HTTPS) since the OAuth client was registered.
+		 */
+		if ( isset( $params['grant_type'] ) && 'authorization_code' === $params['grant_type'] ) {
+			$base['redirect_uri'] = self::redirect_uri();
+		}
+
 		$resp = wp_remote_post(
 			'https://oauth2.googleapis.com/token',
 			array(
 				'timeout' => 15,
-				'body'    => array_merge(
-					array(
-						'client_id'     => MWSEO_Options::get( 'gsc_client_id' ),
-						'client_secret' => MWSEO_Options::get( 'gsc_client_secret' ),
-						'redirect_uri'  => self::redirect_uri(),
-					),
-					$params
-				),
+				'body'    => array_merge( $base, $params ),
 			)
 		);
 		if ( is_wp_error( $resp ) ) {
@@ -196,6 +208,13 @@ class MWSEO_Gsc {
 		);
 		if ( null !== $body ) {
 			$args['body'] = wp_json_encode( $body );
+		} elseif ( in_array( $method, array( 'PUT', 'POST', 'PATCH' ), true ) ) {
+			// Google's front end answers body-less PUT/POST without an explicit
+			// Content-Length with an HTML "411 Length Required" page (sitemaps.submit
+			// has no request body), which surfaces as a generic failure.
+			unset( $args['headers']['Content-Type'] );
+			$args['headers']['Content-Length'] = '0';
+			$args['body']                      = '';
 		}
 		$resp = wp_remote_request( 'https://www.googleapis.com/webmasters/v3/sites/' . rawurlencode( self::property() ) . '/' . $path, $args );
 		if ( is_wp_error( $resp ) ) {
@@ -204,7 +223,13 @@ class MWSEO_Gsc {
 		$code = wp_remote_retrieve_response_code( $resp );
 		$data = json_decode( wp_remote_retrieve_body( $resp ), true );
 		if ( $code >= 300 ) {
-			return new WP_Error( 'mwseo_gsc_api', isset( $data['error']['message'] ) ? $data['error']['message'] : __( 'Search Console request failed.', 'manny-wenas-seo' ), array( 'status' => $code ) );
+			if ( isset( $data['error']['message'] ) ) {
+				$message = $data['error']['message'];
+			} else {
+				/* translators: %d: HTTP status code returned by Google. */
+				$message = sprintf( __( 'Search Console request failed (HTTP %d).', 'manny-wenas-seo' ), (int) $code );
+			}
+			return new WP_Error( 'mwseo_gsc_api', $message, array( 'status' => $code ) );
 		}
 		return is_array( $data ) ? $data : array();
 	}
@@ -256,5 +281,68 @@ class MWSEO_Gsc {
 		}
 		set_transient( $key, $rows, 6 * HOUR_IN_SECONDS );
 		return $rows;
+	}
+
+	/**
+	 * Schedule a sitemap submission when a post is first published.
+	 *
+	 * Fires on every transition_post_status. Skips anything that isn't a
+	 * first-time publication (old status already publish), posts with a
+	 * password, or when GSC is not connected.
+	 *
+	 * @param string  $new_status New post status.
+	 * @param string  $old_status Previous post status.
+	 * @param WP_Post $post       Post being transitioned.
+	 */
+	public static function on_publish( $new_status, $old_status, $post ) {
+		if ( 'publish' !== $new_status || 'publish' === $old_status ) {
+			return;
+		}
+		if ( ! self::is_connected() ) {
+			return;
+		}
+		if ( '' !== (string) $post->post_password ) {
+			return;
+		}
+		// One submission per day is enough — avoid hammering the API on bulk
+		// operations.  The transient is cleared on success so a retry is
+		// attempted the first time the guard expires, not immediately.
+		if ( get_transient( 'mwseo_gsc_sitemap_sent' ) ) {
+			return;
+		}
+		wp_schedule_single_event( time() + MINUTE_IN_SECONDS, 'mwseo_gsc_submit' );
+	}
+
+	/**
+	 * Cron callback: submit the sitemap index to Google Search Console.
+	 *
+	 * Only sets the suppression transient on success so a failed attempt is
+	 * retried the next time a post is published rather than silently dropped.
+	 */
+	public static function submit_scheduled() {
+		if ( ! self::is_connected() ) {
+			return;
+		}
+		$result = self::submit_sitemap( MWSEO_Sitemaps::index_url() );
+		if ( ! is_wp_error( $result ) ) {
+			set_transient( 'mwseo_gsc_sitemap_sent', 1, DAY_IN_SECONDS );
+		}
+	}
+
+	/**
+	 * Submit a sitemap URL to Google Search Console.
+	 *
+	 * Uses the Webmasters v3 sitemaps.submit endpoint:
+	 *   PUT https://www.googleapis.com/webmasters/v3/sites/{siteUrl}/sitemaps/{feedpath}
+	 *
+	 * Requires the site to have been connected with the 'webmasters' (read/write)
+	 * OAuth scope.  Returns true on success or a WP_Error on failure.
+	 *
+	 * @param string $sitemap_url Absolute sitemap URL.
+	 * @return true|WP_Error
+	 */
+	public static function submit_sitemap( $sitemap_url ) {
+		$res = self::request( 'PUT', 'sitemaps/' . rawurlencode( $sitemap_url ) );
+		return is_wp_error( $res ) ? $res : true;
 	}
 }
