@@ -419,8 +419,7 @@ class MWSEO_Importer {
 
 	$('#mw-seo-import-form').on('submit', function(e){
 		e.preventDefault();
-		const native = cfg.nativeSources.includes($('#mw-import-source').val());
-		runImport(native && $('input[name="dry_run"]').is(':checked'));
+		runImport($('input[name="dry_run"]').is(':checked'));
 	});
 
 	/* ---- Core import runner --------------------------------------- */
