@@ -240,7 +240,8 @@
 		window.requestAnimationFrame( function () {
 			var y = window.pageYOffset;
 			if ( Math.abs( y - lastY ) > 12 ) {
-				box.classList.toggle( 'is-away', y > lastY && y > 200 );
+				box.classList.toggle( 'is-away', $auto.prop( 'checked' ) &&
+					! box.contains( document.activeElement ) && y > lastY && y > 200 );
 				lastY = y;
 			}
 			ticking = false;

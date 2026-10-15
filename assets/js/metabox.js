@@ -245,6 +245,7 @@
 	function render( res ) {
 		// Read-only hand-off for the editor companion (no second analysis).
 		window.mwseoLast = res;
+		window.mwseoAnalysisError = '';
 		$( '#mwseo-ring' ).attr( 'data-state', ringState( res.score ) );
 		$( '#mwseo-ring-num' ).text( res.score );
 		var verdict = res.verdict;
@@ -308,7 +309,17 @@
 			.catch(
 				function () {
 					if ( ticket === inFlight ) {
+						window.mwseoLast = null;
+						window.mwseoAnalysisError = cfg.i18n.error;
+						$( '#mwseo-ring' ).attr( 'data-state', 'none' );
+						$( '#mwseo-ring-num' ).text( '–' );
 						$( '#mwseo-verdict' ).text( cfg.i18n.error );
+						$( '#mwseo-subscores' ).text( '' );
+						$( '#mwseo-checks, #mwseo-tips' ).empty();
+						// Keep mwseo:score reserved for unchanged, successful result objects.
+						try {
+							$( document ).trigger( 'mwseo:analysis-error' );
+						} catch ( e ) {} // eslint-disable-line no-empty
 					}
 				}
 			);
