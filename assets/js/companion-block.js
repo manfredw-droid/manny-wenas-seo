@@ -63,10 +63,23 @@
 		return textCache[ key ];
 	}
 
+	/** Preserve core's document order on WordPress 6.4 as well as newer versions. */
+	function blockIdsByName( be, name ) {
+		if ( ! be ) {
+			return [];
+		}
+		if ( be.getBlocksByName ) {
+			return be.getBlocksByName( name );
+		}
+		return be.getClientIdsWithDescendants().filter( function ( id ) {
+			return be.getBlockName( id ) === name;
+		} );
+	}
+
 	/** H2/H3 headings as a JSON string, so unrelated editor changes do not re-render. */
 	function headingSignature( select ) {
 		var be  = select( 'core/block-editor' );
-		var ids = be.getBlocksByName ? be.getBlocksByName( 'core/heading' ) : [];
+		var ids = blockIdsByName( be, 'core/heading' );
 		var out = [];
 		ids.forEach( function ( id ) {
 			var a     = be.getBlockAttributes( id ) || {};
@@ -116,7 +129,7 @@
 
 	function firstParagraphId() {
 		var be  = wp.data.select( 'core/block-editor' );
-		var ids = be.getBlocksByName ? be.getBlocksByName( 'core/paragraph' ) : [];
+		var ids = blockIdsByName( be, 'core/paragraph' );
 		for ( var i = 0; i < ids.length; i++ ) {
 			var a = be.getBlockAttributes( ids[ i ] ) || {};
 			if ( textOf( a.content ) ) {

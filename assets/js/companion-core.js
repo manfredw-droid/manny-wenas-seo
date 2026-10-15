@@ -41,17 +41,17 @@
 	};
 
 	/**
-	 * Subscribe to analysis results. Returns an unsubscribe function.
+	 * Subscribe to results, or null when analysis fails. Returns an unsubscribe function.
 	 *
-	 * @param {Function} cb Called with each result object.
+	 * @param {Function} cb Called with each result object or null after a failure.
 	 */
 	core.onScore = function ( cb ) {
 		var handler = function ( e, res ) {
-			cb( res );
+			cb( e.type === 'mwseo:analysis-error' ? null : res );
 		};
-		$( document ).on( 'mwseo:score', handler );
+		$( document ).on( 'mwseo:score mwseo:analysis-error', handler );
 		return function () {
-			$( document ).off( 'mwseo:score', handler );
+			$( document ).off( 'mwseo:score mwseo:analysis-error', handler );
 		};
 	};
 
@@ -136,7 +136,7 @@
 
 	core.verdictText = function ( res ) {
 		if ( ! res ) {
-			return core.i18n.analysing || '';
+			return window.mwseoAnalysisError || core.i18n.analysing || '';
 		}
 		var v = res.verdict;
 		if ( typeof v === 'string' ) {

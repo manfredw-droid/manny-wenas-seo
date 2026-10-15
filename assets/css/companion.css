@@ -62,7 +62,7 @@
 .mwseo-cmp--classic .mwseo-cmp__go { background: none; border: 0; padding: 0; cursor: pointer; color: #2271b1; text-decoration: underline; font: inherit; }
 
 /* Optional "hide while scrolling down": only the header stays. */
-.mwseo-cmp--classic.is-away .mwseo-cmp__body { display: none; }
+.mwseo-cmp--classic.is-away:not(:focus-within) .mwseo-cmp__body { display: none; }
 
 /* Scroll behaviour of the side column belongs to WordPress (editor-expand keeps
    the column in view while you scroll). The companion sits LAST in that column
