@@ -24,7 +24,7 @@ final class MWSEO_Scorer {
 	 * version) whenever a scoring rule changes intentionally, so constitutional
 	 * tests have a defined contract to verify against.
 	 */
-	const SCORING_VERSION = '1.1';
+	const SCORING_VERSION = '1.2';
 
 	/**
 	 * Points per section.
@@ -545,12 +545,16 @@ final class MWSEO_Scorer {
 
 	/**
 	 * Related keyphrases appear in the body (10 in total, shared between the
-	 * keyphrases). N/A, and left out of the total, when none is set.
+	 * keyphrases). N/A, and left out of the total, without a focus keyphrase
+	 * or when no related keyphrases are set.
 	 *
 	 * @param array $ctx Context.
 	 * @return array
 	 */
 	public static function check_related( array $ctx ) {
+		if ( '' === $ctx['focus'] ) {
+			return self::not_applicable( 'related_body', 'optional', 10, __( 'No focus keyphrase set.', 'manny-wenas-seo' ) );
+		}
 		if ( empty( $ctx['related'] ) ) {
 			return self::not_applicable( 'related_body', 'optional', 10, __( 'No related keyphrases configured.', 'manny-wenas-seo' ) );
 		}
