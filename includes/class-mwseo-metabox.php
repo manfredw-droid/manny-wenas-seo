@@ -65,6 +65,8 @@ class MWSEO_Metabox {
 					'chars'        => __( 'characters', 'manny-wenas-seo' ),
 					'use'          => __( 'Use', 'manny-wenas-seo' ),
 					'error'        => __( 'Something went wrong.', 'manny-wenas-seo' ),
+					'slugNative'   => __( 'Edit the slug in WordPress while synchronization is unavailable.', 'manny-wenas-seo' ),
+					'slugPending'  => __( 'Confirm or cancel the WordPress slug edit first.', 'manny-wenas-seo' ),
 				),
 			)
 		);
@@ -95,7 +97,8 @@ class MWSEO_Metabox {
 
 			<p>
 				<label for="mwseo_slug"><strong><?php esc_html_e( 'URL slug', 'manny-wenas-seo' ); ?></strong></label>
-				<input type="text" id="mwseo_slug" name="mwseo_slug" class="widefat" value="<?php echo esc_attr( $post->post_name ); ?>" />
+				<input type="text" id="mwseo_slug" class="widefat" readonly aria-describedby="mwseo-slug-help" value="<?php echo esc_attr( $post->post_name ); ?>" />
+				<span id="mwseo-slug-help" class="description" aria-live="polite"><?php esc_html_e( 'Edit the slug in WordPress while synchronization is unavailable.', 'manny-wenas-seo' ); ?></span>
 				<span class="description"><?php esc_html_e( 'The URL-friendly part of this post\'s address. Put the focus keyphrase here.', 'manny-wenas-seo' ); ?></span>
 			</p>
 
@@ -174,20 +177,7 @@ class MWSEO_Metabox {
 			return;
 		}
 
-		// Slug — update post_name directly; unhook to avoid infinite recursion.
-		if ( isset( $_POST['mwseo_slug'] ) ) {
-			$new_slug = sanitize_title( wp_unslash( $_POST['mwseo_slug'] ) );
-			if ( $new_slug && $new_slug !== $post->post_name ) {
-				remove_action( 'save_post', array( __CLASS__, 'save' ), 10 );
-				wp_update_post(
-					array(
-						'ID'        => $post_id,
-						'post_name' => $new_slug,
-					)
-				);
-				add_action( 'save_post', array( __CLASS__, 'save' ), 10, 2 );
-			}
-		}
+		// WordPress owns post_name. The unnamed slug control edits native editor state only.
 
 		$related = isset( $_POST['mwseo_related'] ) ? array_slice( array_filter( array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['mwseo_related'] ) ) ), 0, 2 ) : array();
 		MWSEO_Meta::set( $post_id, 'focus', isset( $_POST['mwseo_focus'] ) ? sanitize_text_field( wp_unslash( $_POST['mwseo_focus'] ) ) : '' );

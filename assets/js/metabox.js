@@ -16,23 +16,201 @@
 
 	var timer    = null;
 	var inFlight = 0;
+	var slugAdapter = null;
+	var slugBootSubscription = null;
+
+	/** One editor intention; no second slug write through the metabox form. */
+	function initSlugAdapter() {
+		if ( ! document.getElementById ) {
+			return;
+		}
+		var field = document.getElementById( 'mwseo_slug' );
+		if ( ! field ) {
+			return;
+		}
+		if ( ! document.body.classList.contains( 'block-editor-page' ) ) {
+			field.readOnly = true;
+			function observeClassicSlug() {
+				var value = readClassicSlug();
+				if ( field.value !== value ) {
+					field.value = value;
+					schedule();
+				}
+			}
+			observeClassicSlug();
+			$( '#post' ).on( 'input change keyup', '#post_name, #new-post-slug', observeClassicSlug );
+			var box = document.getElementById( 'edit-slug-box' );
+			if ( box && window.MutationObserver ) {
+				new window.MutationObserver( observeClassicSlug ).observe( box, { childList: true, subtree: true, characterData: true } );
+			}
+			return;
+		}
+		var confirmed = field.value, draft = false, generation = 0, writing = false;
+		var readNative, writeNative;
+		var lastNative, saving = false, manual = false, refreshing = false;
+		var block = document.body.classList.contains( 'block-editor-page' );
+		var ed, dispatch, core;
+		function availability( ready, message ) {
+			field.readOnly = ! ready;
+			var text = ready ? '' : ( message || cfg.i18n.slugNative );
+			if ( $( '#mwseo-slug-help' ).text() !== text ) {
+				$( '#mwseo-slug-help' ).text( text );
+			}
+		}
+		function showNative() {
+			var value = readNative();
+			if ( value !== lastNative ) {
+				lastNative = value;
+				var edits = block ? ed.getPostEdits() : null;
+				if ( ! writing && ( ( ! refreshing && ! saving ) ||
+					( edits && Object.prototype.hasOwnProperty.call( edits, 'slug' ) ) ) ) {
+					generation++;
+					confirmed = value;
+					draft = false;
+					field.value = value;
+					schedule();
+				}
+			}
+		}
+		function write( value ) {
+			writing = true;
+			lastNative = value;
+			try {
+				writeNative( value );
+			} finally {
+				writing = false;
+			}
+		}
+		function confirm() {
+			if ( ! draft ) {
+				return;
+			}
+			if ( ! field.value.trim() ) {
+				field.value = confirmed;
+			}
+			confirmed = field.value;
+			draft = false;
+			write( field.value );
+			schedule();
+		}
+		function refreshSaved() {
+			var ticket = generation, type = ed.getCurrentPostType(), id = ed.getCurrentPostId();
+			refreshing = true;
+			core.invalidateResolution( 'getEntityRecord', [ 'postType', type, id ] );
+			Promise.resolve( wp.data.resolveSelect( 'core' ).getEntityRecord( 'postType', type, id ) ).then(
+				function ( post ) {
+					if ( ticket === generation && post && typeof post.slug === 'string' &&
+						! Object.prototype.hasOwnProperty.call( ed.getPostEdits(), 'slug' ) ) {
+						confirmed = post.slug;
+						lastNative = readNative();
+						field.value = draft ? field.value : post.slug;
+						schedule();
+					}
+				}
+			).catch( function () { availability( false ); } ).then( function () { refreshing = false; } );
+		}
+		if ( block ) {
+			ed = editorSelect();
+			dispatch = wp.data && wp.data.dispatch && wp.data.dispatch( 'core/editor' );
+			core = wp.data && wp.data.dispatch && wp.data.dispatch( 'core' );
+			if ( ! ed || ! ed.getEditedPostAttribute || ! ed.getCurrentPostId || ! ed.getCurrentPostType ||
+				! ed.getPostEdits || ! ed.isSavingPost || ! ed.isAutosavingPost || ! ed.didPostSaveRequestSucceed ||
+				! dispatch || ! dispatch.editPost || ! core || ! core.invalidateResolution ||
+				! wp.data.resolveSelect || ! wp.data.subscribe || ! ed.getCurrentPostId() ) {
+				availability( false );
+				if ( wp.data && wp.data.subscribe && ! slugBootSubscription &&
+					( ! ed || ! ed.getCurrentPostId || ! ed.getCurrentPostId() ) ) {
+					slugBootSubscription = wp.data.subscribe( function () {
+						var ready = editorSelect();
+						if ( ready && ready.getCurrentPostId && ready.getCurrentPostId() ) {
+							var stop = slugBootSubscription;
+							slugBootSubscription = null;
+							stop();
+							initSlugAdapter();
+						}
+					} );
+				}
+				return;
+			}
+			readNative = function () { return ed.getEditedPostAttribute( 'slug' ) || ''; };
+			writeNative = function ( value ) { dispatch.editPost( { slug: value } ); };
+			lastNative = confirmed = readNative();
+			wp.data.subscribe( function () {
+				var meta = wp.data.select( 'core/edit-post' );
+				var active = ed.isSavingPost() || !! ( meta && meta.isSavingMetaBoxes && meta.isSavingMetaBoxes() );
+				if ( ed.isSavingPost() && ! ed.isAutosavingPost() ) {
+					manual = true;
+				}
+				var started = active && ! saving;
+				var finished = saving && ! active;
+				saving = active;
+				if ( started ) {
+					confirm();
+				}
+				if ( finished && manual && ed.didPostSaveRequestSucceed() ) {
+					manual = false;
+					refreshSaved();
+				} else {
+					showNative();
+				}
+			} );
+		}
+		field.value = confirmed;
+		availability( true );
+		slugAdapter = {
+			read: function () { return draft ? field.value : readNative(); }
+		};
+		$( field ).on( 'input', function () {
+			generation++;
+			draft = true;
+			write( field.value.trim() ? field.value : confirmed );
+			schedule();
+		} ).on( 'change blur', confirm ).on( 'keydown', function ( event ) {
+			if ( event.key === 'Enter' ) { event.preventDefault(); confirm(); }
+		} );
+	}
 
 	function editorSelect() {
 		return wp.data && wp.data.select ? wp.data.select( 'core/editor' ) : null;
 	}
 
 	function getContent() {
-		var ed = editorSelect();
-		if ( ed && ed.getEditedPostContent ) {
-			return ed.getEditedPostContent();
+		if ( document.body.classList.contains( 'block-editor-page' ) ) {
+			var ed = contentEditor();
+			var content = ed ? ed.getEditedPostContent() : null;
+			return typeof content === 'string' ? content : null;
 		}
 		if ( window.tinyMCE && window.tinyMCE.get( 'content' ) && ! window.tinyMCE.get( 'content' ).isHidden() ) {
 			return window.tinyMCE.get( 'content' ).getContent();
 		}
-		return $( '#content' ).val() || '';
+		var value = $( '#content' ).val();
+		return typeof value === 'string' ? value : null;
+	}
+
+	/** A loaded store is not necessarily the active post editor. */
+	function contentEditor() {
+		var ed = editorSelect();
+		if ( ! ed || ! ed.getEditedPostContent || ! ed.getCurrentPostId ||
+			! ed.getCurrentPostType || ! ed.getCurrentPost ) {
+			return null;
+		}
+		var id = Number( ed.getCurrentPostId() );
+		var post = ed.getCurrentPost();
+		return id > 0 && id === Number( cfg.postId ) && ed.getCurrentPostType() &&
+			post && Number( post.id ) === id ? ed : null;
+	}
+
+	function readClassicSlug() {
+		return $( '#post_name' ).val() || $( '#editable-post-name-full' ).text() || '';
 	}
 
 	function getSlug() {
+		if ( ! document.body.classList.contains( 'block-editor-page' ) ) {
+			return readClassicSlug();
+		}
+		if ( slugAdapter ) {
+			return slugAdapter.read();
+		}
 		var ed = editorSelect();
 		if ( ed && ed.getEditedPostAttribute ) {
 			return ed.getEditedPostAttribute( 'slug' ) || '';
@@ -65,9 +243,19 @@
 	}
 
 	function render( res ) {
+		// Read-only hand-off for the editor companion (no second analysis).
+		window.mwseoLast = res;
 		$( '#mwseo-ring' ).attr( 'data-state', ringState( res.score ) );
 		$( '#mwseo-ring-num' ).text( res.score );
-		$( '#mwseo-verdict' ).text( res.verdict );
+		var verdict = res.verdict;
+		var verdictText = '';
+		if ( typeof verdict === 'string' ) {
+			verdictText = verdict;
+		} else if ( verdict && typeof verdict === 'object' && ! Array.isArray( verdict )
+			&& typeof verdict.summary === 'string' ) {
+			verdictText = verdict.summary;
+		}
+		$( '#mwseo-verdict' ).text( verdictText.trim() ? verdictText : cfg.i18n.error );
 		$( '#mwseo-subscores' ).text(
 			Object.keys( res.sections || {} ).map(
 				function ( key ) {
@@ -105,7 +293,11 @@
 
 	function analyse() {
 		var ticket = ++inFlight;
-		wp.apiFetch( { path: '/mwseo/v1/analyze', method: 'POST', data: state() } )
+		var data = state();
+		if ( typeof data.content !== 'string' ) {
+			return;
+		}
+		wp.apiFetch( { path: '/mwseo/v1/analyze', method: 'POST', data: data } )
 			.then(
 				function ( res ) {
 					if ( ticket === inFlight ) {
@@ -115,7 +307,9 @@
 			)
 			.catch(
 				function () {
-					$( '#mwseo-verdict' ).text( cfg.i18n.error );
+					if ( ticket === inFlight ) {
+						$( '#mwseo-verdict' ).text( cfg.i18n.error );
+					}
 				}
 			);
 	}
@@ -245,6 +439,7 @@
 
 	$(
 		function () {
+			initSlugAdapter();
 			$( '#mwseo_focus' ).on( 'input', scheduleTrends );
 			loadTrends();
 			$( '.mwseo-box' ).on(
@@ -261,30 +456,52 @@
 			analyse();
 			loadGsc();
 
-			// Block editor: re-analyse when the content or slug changes.
-			if ( wp.data && wp.data.subscribe && editorSelect() ) {
-				var last = '';
+			// Content updates follow the active editor, not store availability.
+			function contentChanged() {
+				++inFlight;
+				schedule();
+			}
+			if ( document.body.classList.contains( 'block-editor-page' ) ) {
+				var last = null;
+				if ( ! wp.data || ! wp.data.subscribe ) {
+					return;
+				}
 				wp.data.subscribe(
 					function () {
-						var ed = editorSelect();
-						if ( ! ed || ! ed.getEditedPostContent ) {
-									return;
+						var ed = contentEditor();
+						if ( ! ed ) {
+							last = null;
+							++inFlight;
+							clearTimeout( timer );
+							return;
 						}
 						var sig = ed.getEditedPostContent() + '|' + ( ed.getEditedPostAttribute( 'slug' ) || '' );
 						if ( sig !== last ) {
 								last = sig;
-								schedule();
+								contentChanged();
 						}
 					}
 				);
 			} else {
+					var boundEditors = [];
+					function bindContentEditor( ed ) {
+						if ( ed && ed.id === 'content' && boundEditors.indexOf( ed ) === -1 ) {
+							boundEditors.push( ed );
+							ed.on( 'input keyup change Undo Redo', contentChanged );
+							contentChanged();
+						}
+					}
 					$( document ).on(
 						'tinymce-editor-init',
 						function ( e, ed ) {
-							ed.on( 'keyup change', schedule );
+							bindContentEditor( ed );
 						}
 					);
-					$( '#content' ).on( 'input', schedule );
+					bindContentEditor( window.tinyMCE && window.tinyMCE.get( 'content' ) );
+					$( '#content' ).on( 'input change', contentChanged );
+					$( '#content-tmce, #content-html' ).on( 'click', function () {
+						setTimeout( contentChanged, 0 );
+					} );
 			}
 		}
 	);

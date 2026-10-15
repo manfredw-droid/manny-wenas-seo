@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
 class MWSEO_Importer {
 
 	/**
-	 * Our post-meta key prefix.
+	 * Legacy prefix retained for the adapters outside finding #5 Stage A.
 	 */
 	const PREFIX = '_mw_seo_';
 
@@ -43,7 +43,7 @@ class MWSEO_Importer {
 	 *   robots_cb  – callable(int $post_id): string[]   robots directives
 	 *                because every plugin stores them differently
 	 *
-	 * Destination field slugs correspond to _mw_seo_{slug} post meta keys.
+	 * Legacy adapters use _mw_seo_{slug}; Yoast/Rank Math use import_native_post().
 	 *
 	 * @return array<string, array>
 	 */
@@ -300,6 +300,16 @@ class MWSEO_Importer {
 	 */
 	private static function script_data(): array {
 		return array(
+			'nativeSources' => array( 'yoast', 'rankmath' ),
+			'outcomes' => array(
+				'would_change' => __( 'Would change', 'manny-wenas-seo' ),
+				'changed' => __( 'Changed', 'manny-wenas-seo' ),
+				'matched' => __( 'Already matches', 'manny-wenas-seo' ),
+				'conflict' => __( 'Preserved native value', 'manny-wenas-seo' ),
+				'unsupported' => __( 'Unsupported or unresolved', 'manny-wenas-seo' ),
+				'invalid' => __( 'Invalid value', 'manny-wenas-seo' ),
+				'failed' => __( 'Write failed', 'manny-wenas-seo' ),
+			),
 			'fieldMaps' => static::get_field_maps_for_js(),
 			'batchSize' => (int) static::BATCH_SIZE,
 			'i18n'      => array(
@@ -363,6 +373,7 @@ class MWSEO_Importer {
 
 	/* Field maps emitted server-side — avoids a separate AJAX round-trip */
 	const FIELD_MAPS = cfg.fieldMaps;
+	const safe = value => $('<span>').text(String(value)).html();
 
 	/* ---- Field-map preview ---------------------------------------- */
 	$('#mw-import-source').on('change', function(){
@@ -375,14 +386,14 @@ class MWSEO_Importer {
 			rows += `<tr>
 				<td><code style="font-size:12px">${src}</code></td>
 				<td style="text-align:center">→</td>
-				<td>${FIELD_LABELS[dest] || dest}</td>
+				<td>${safe(FIELD_LABELS[dest] || dest)}</td>
 			</tr>`;
 		}
 		// Add robots row — always present.
 		rows += `<tr>
 			<td><em style="font-size:12px">${cfg.i18n.plugin_specific_robots_keys}</em></td>
 			<td style="text-align:center">→</td>
-			<td>${FIELD_LABELS.robots}</td>
+			<td>${cfg.nativeSources.includes(source) ? '_mwseo_noindex / _mwseo_nofollow (explicit only)' : FIELD_LABELS.robots}</td>
 		</tr>`;
 
 		$('#mw-import-field-map-content').html(
@@ -408,7 +419,8 @@ class MWSEO_Importer {
 
 	$('#mw-seo-import-form').on('submit', function(e){
 		e.preventDefault();
-		runImport(false);
+		const native = cfg.nativeSources.includes($('#mw-import-source').val());
+		runImport(native && $('input[name="dry_run"]').is(':checked'));
 	});
 
 	/* ---- Core import runner --------------------------------------- */
@@ -428,6 +440,9 @@ class MWSEO_Importer {
 		$('#mw-import-progress-text').text('');
 
 		const totals = { imported:0, skipped:0, unchanged:0, errors:0 };
+		const fieldTotals = Object.fromEntries(Object.keys(cfg.outcomes).map(key => [key, 0]));
+		const details = [];
+		let omitted = 0;
 		let offset   = 0;
 
 		(function batch(){
@@ -452,6 +467,11 @@ class MWSEO_Importer {
 				totals.skipped   += d.skipped;
 				totals.unchanged += d.unchanged;
 				totals.errors    += d.errors;
+				for (const key of Object.keys(fieldTotals)) fieldTotals[key] += (d.field_outcomes || {})[key] || 0;
+				for (const item of d.details || []) {
+					if (details.length < 100) details.push(item); else omitted++;
+				}
+				omitted += d.details_omitted || 0;
 
 				const pct = d.total > 0 ? Math.min(100, Math.round((d.processed / d.total) * 100)) : 100;
 				$('#mw-import-progress-bar').css('width', pct + '%');
@@ -466,8 +486,14 @@ class MWSEO_Importer {
 						<li>${cfg.i18n.unchanged_no_source_data_found} <strong>${totals.unchanged}</strong></li>
 						<li>${cfg.i18n.errors_see_php_error_log} <strong>${totals.errors}</strong></li>
 					</ul>`;
+					if (cfg.nativeSources.includes(source)) html = `<p><strong>${safe(label)}</strong></p><p>${d.processed} posts processed; ${totals.errors} posts encountered errors.</p>`;
 					if (dryRun) {
 						html += `<p>${cfg.i18n.uncheck_dry_run_and_click_run_import_to_}</p>`;
+					}
+					if (cfg.nativeSources.includes(source)) {
+						html += '<ul>' + Object.entries(fieldTotals).map(([key, count]) => `<li>${safe(cfg.outcomes[key])}: ${count}</li>`).join('') + '</ul>';
+						html += '<ul>' + details.map(item => `<li>${safe(item.post_id)} / ${safe(item.field)}: ${safe(item.status)} — ${safe(item.reason)}</li>`).join('') + '</ul>';
+						if (omitted) html += `<p>${omitted} additional field details omitted; narrow the selected post types to review them. Totals include all outcomes.</p>`;
 					}
 					$('#mw-import-results-content').html(html);
 					$('#mw-import-results').show();
@@ -507,6 +533,7 @@ JS;
 	 */
 	public static function render_admin_page(): void {
 		$active = static::detect_active_plugins();
+		$active = array_merge( array( 'yoast' => 'Yoast SEO', 'rankmath' => 'RankMath SEO' ), $active );
 		?>
 		<div class="wrap" id="mw-seo-importer">
 			<h1><?php esc_html_e( 'Import SEO Data', 'manny-wenas-seo' ); ?></h1>
@@ -527,7 +554,7 @@ JS;
 			<p class="description">
 				<?php
 				esc_html_e(
-					'Import SEO titles, meta descriptions, focus keyphrases, robots directives, and social meta from a previously installed SEO plugin into Manny Wenas SEO. Existing MW SEO values are preserved unless you check "Overwrite".',
+					'Yoast and Rank Math imports support titles with compatible tokens, literal descriptions, primary focus phrases, explicit noindex/nofollow flags and cornerstone flags. Other fields are reported as unsupported. Source metadata must still exist; the source plugin may be inactive. Existing native records are preserved unless you check "Overwrite". Historical imports are not repaired. Other adapters retain their previous behavior and are not verified by this correction.',
 					'manny-wenas-seo'
 				);
 				?>
@@ -632,6 +659,17 @@ JS;
 		$out = array();
 		foreach ( static::source_plugins() as $slug => $config ) {
 			$out[ $slug ] = $config['fields'];
+			if ( in_array( $slug, array( 'yoast', 'rankmath' ), true ) ) {
+				foreach ( $out[ $slug ] as $key => $field ) {
+					$native = array( 'title' => 'title', 'description' => 'desc', 'focus_kw' => 'focus', 'cornerstone' => 'cornerstone' );
+					$out[ $slug ][ $key ] = isset( $native[ $field ] ) ? '_mwseo_' . $native[ $field ] : __( 'Unsupported — retained at source', 'manny-wenas-seo' );
+				}
+				unset( $out[ $slug ]['rank_math_og_content_image'], $out[ $slug ]['rank_math_twitter_image_url'] );
+				if ( 'rankmath' === $slug ) {
+					$out[ $slug ]['rank_math_facebook_image'] = __( 'Unsupported — retained at source', 'manny-wenas-seo' );
+					$out[ $slug ]['rank_math_twitter_image'] = __( 'Unsupported — retained at source', 'manny-wenas-seo' );
+				}
+			}
 		}
 		return $out;
 	}
@@ -671,6 +709,9 @@ JS;
 		}
 
 		$config = $plugins[ $source ];
+		if ( in_array( $source, array( 'yoast', 'rankmath' ), true ) ) {
+			$batch_size = max( 1, $batch_size );
+		}
 
 		// Total posts (approximate — for progress display only).
 		$total = (int) array_sum(
@@ -698,9 +739,36 @@ JS;
 		$skipped   = 0;
 		$unchanged = 0;
 		$errors    = 0;
+		$native = in_array( $source, array( 'yoast', 'rankmath' ), true );
+		$field_outcomes = array_fill_keys( array( 'would_change', 'changed', 'matched', 'conflict', 'unsupported', 'invalid', 'failed' ), 0 );
+		$details = array();
+		$details_omitted = 0;
 
 		foreach ( $query->posts as $post_id ) {
 			try {
+				if ( $native ) {
+					$result = static::import_native_post( (int) $post_id, $source, $overwrite, $dry_run );
+					foreach ( $result as $item ) {
+						++$field_outcomes[ $item['status'] ];
+						if ( count( $details ) < 100 ) {
+							$details[] = array_merge( array( 'post_id' => (int) $post_id ), $item );
+						} else {
+							++$details_omitted;
+						}
+					}
+					$statuses = array_column( $result, 'status' );
+					if ( in_array( 'failed', $statuses, true ) ) {
+						++$errors;
+					}
+					if ( in_array( 'changed', $statuses, true ) ) {
+						++$imported;
+					} elseif ( empty( $result ) || count( array_unique( $statuses ) ) === 1 && 'matched' === $statuses[0] ) {
+						++$unchanged;
+					} else {
+						++$skipped;
+					}
+					continue;
+				}
 				switch ( static::import_post( (int) $post_id, $config, $overwrite, $dry_run ) ) {
 					case 'imported':
 						++$imported;
@@ -714,6 +782,14 @@ JS;
 				}
 			} catch ( \Throwable $e ) {
 				++$errors;
+				if ( $native ) {
+					++$field_outcomes['failed'];
+					if ( count( $details ) < 100 ) {
+						$details[] = array( 'post_id' => (int) $post_id, 'field' => 'post', 'status' => 'failed', 'reason' => 'Source read/planning failed; review this post before retrying.' );
+					} else {
+						++$details_omitted;
+					}
+				}
 			}
 		}
 
@@ -730,12 +806,167 @@ JS;
 				'total'       => $total,
 				'next_offset' => $processed,
 				'done'        => $count < $batch_size,
+				'field_outcomes' => $field_outcomes,
+				'details' => $details,
+				'details_omitted' => $details_omitted,
 			)
 		);
 	}
 
+	/**
+	 * Import only the existing native contract; never read historical importer keys.
+	 * Each outcome contains identifiers/reasons, not potentially private source values.
+	 *
+	 * @return array<int, array<string, string>> Field outcomes.
+	 */
+	private static function import_native_post( int $post_id, string $source, bool $overwrite, bool $dry_run ): array {
+		$config = static::source_plugins()[ $source ];
+		$fields = $config['fields'];
+		if ( 'rankmath' === $source ) {
+			// The old OG key is a content-image cache, not the configured social image.
+			$fields['rank_math_facebook_image'] = 'og_image';
+			$fields['rank_math_twitter_image'] = 'twitter_image';
+		}
+		$native = array( 'title' => 'title', 'description' => 'desc', 'focus_kw' => 'focus', 'cornerstone' => 'cornerstone' );
+		$candidates = array();
+		$out = array();
+		$report = static function ( $field, $status, $reason ) use ( &$out ) {
+			$out[] = array( 'field' => $field, 'status' => $status, 'reason' => $reason );
+		};
+		foreach ( $fields as $key => $field ) {
+			if ( ! metadata_exists( 'post', $post_id, $key ) ) {
+				continue;
+			}
+			$raw = get_post_meta( $post_id, $key, true );
+			if ( '' === $raw || null === $raw ) {
+				continue;
+			}
+			if ( ! isset( $native[ $field ] ) ) {
+				$report( $key, 'unsupported', 'No native destination; source data retained.' );
+				continue;
+			}
+			if ( 'cornerstone' === $field ) {
+				$true = 'yoast' === $source ? array( true, 1, '1', 'true' ) : array( 'on' );
+				$false = 'yoast' === $source ? array( false, 0, '0', 'false' ) : array( 'off' );
+				if ( in_array( $raw, $true, true ) ) {
+					$value = '1';
+				} elseif ( in_array( $raw, $false, true ) ) {
+					$value = '0';
+				} else {
+					$report( $key, 'invalid', 'Unrecognized cornerstone representation; no guess made.' );
+					continue;
+				}
+			} else {
+				if ( ! is_string( $raw ) ) {
+					$report( $key, 'invalid', 'Expected a string.' );
+					continue;
+				}
+				// Detect either source syntax, including parameterized/custom tokens.
+				$pattern = '/%{1,2}[a-zA-Z_][^%\r\n]*%{1,2}/';
+				if ( 'description' === $field && preg_match( $pattern, $raw ) ) {
+					$report( $key, 'unsupported', 'Description template skipped; no content expansion is performed.' );
+					continue;
+				}
+				if ( 'title' === $field ) {
+					// Site-specific separators and Yoast's custom site name are not equivalent.
+					$tokens = 'yoast' === $source
+						? array( '%%title%%' => '%%title%%', '%%sitedesc%%' => '%%tagline%%' )
+						: array( '%title%' => '%%title%%', '%sitename%' => '%%sitename%%', '%sitedesc%' => '%%tagline%%' );
+					preg_match_all( $pattern, $raw, $matches );
+					if ( array_diff( $matches[0], array_keys( $tokens ) ) ) {
+						$report( $key, 'unsupported', 'Title token lacks a verified native equivalent; separator/custom-site-name conversion needs separate approval.' );
+						continue;
+					}
+					$raw = strtr( $raw, $tokens );
+				}
+				if ( 'focus_kw' === $field && 'rankmath' === $source ) {
+					$phrases = array_values( array_filter( array_map( 'trim', explode( ',', $raw ) ), static fn( $phrase ) => '' !== $phrase ) );
+					$raw = $phrases[0] ?? '';
+					if ( count( $phrases ) > 1 ) {
+						$report( $key, 'unsupported', 'Additional keyphrases retained at source; related keyphrases remain untouched.' );
+					}
+				}
+				$value = 'description' === $field ? sanitize_textarea_field( $raw ) : sanitize_text_field( $raw );
+				if ( '' === $value ) {
+					$report( $key, 'invalid', 'Empty after normalization; native data not erased.' );
+					continue;
+				}
+			}
+			$candidates[ '_mwseo_' . $native[ $field ] ] = $value;
+		}
+
+		if ( 'yoast' === $source ) {
+			foreach ( array( 'noindex', 'nofollow' ) as $flag ) {
+				$key = '_yoast_wpseo_meta-robots-' . $flag;
+				if ( ! metadata_exists( 'post', $post_id, $key ) ) {
+					continue;
+				}
+				$raw = get_post_meta( $post_id, $key, true );
+				if ( '1' === $raw ) {
+					$candidates[ '_mwseo_' . $flag ] = '1';
+				} elseif ( ( 'noindex' === $flag && '2' === $raw ) || ( 'nofollow' === $flag && '0' === $raw ) ) {
+					$candidates[ '_mwseo_' . $flag ] = '0';
+				} else {
+					$report( $key, 'unsupported', 'Inherited, empty or unrecognized robots setting; native flag preserved.' );
+				}
+			}
+			$key = '_yoast_wpseo_meta-robots-adv';
+			$raw = get_post_meta( $post_id, $key, true );
+			if ( metadata_exists( 'post', $post_id, $key ) && '' !== $raw ) {
+				if ( ! is_string( $raw ) || array_diff( array_map( 'trim', explode( ',', $raw ) ), array( 'noarchive', 'noimageindex', 'nosnippet' ) ) ) {
+					unset( $candidates['_mwseo_noindex'], $candidates['_mwseo_nofollow'] );
+					$report( $key, 'unsupported', 'Unrecognized advanced directive may conflict with basic robots; both native flags preserved.' );
+				} else {
+					$report( $key, 'unsupported', 'Advanced robots directives have no native destination.' );
+				}
+			}
+		} elseif ( metadata_exists( 'post', $post_id, 'rank_math_robots' ) ) {
+			$raw = get_post_meta( $post_id, 'rank_math_robots', true );
+			if ( ! is_array( $raw ) || count( array_filter( $raw, 'is_string' ) ) !== count( $raw ) ) {
+				$report( 'rank_math_robots', 'invalid', 'Expected an array of directive strings; all flags preserved.' );
+			} elseif ( array_diff( $raw, array( 'index', 'noindex', 'follow', 'nofollow', 'noarchive', 'noimageindex', 'nosnippet' ) ) ) {
+				$report( 'rank_math_robots', 'unsupported', 'Unrecognized directive may affect indexing/following; all flags preserved.' );
+			} else {
+				foreach ( array( 'noindex' => 'index', 'nofollow' => 'follow' ) as $negative => $positive ) {
+					$deny = in_array( $negative, $raw, true );
+					$allow = in_array( $positive, $raw, true );
+					if ( $deny === $allow ) {
+						$report( 'rank_math_robots:' . $negative, 'unsupported', 'Conflicting or absent explicit directive; native flag preserved.' );
+					} else {
+						$candidates[ '_mwseo_' . $negative ] = $deny ? '1' : '0';
+					}
+				}
+				if ( array_diff( $raw, array( 'index', 'noindex', 'follow', 'nofollow' ) ) ) {
+					$report( 'rank_math_robots', 'unsupported', 'Additional directives have no supported native conversion.' );
+				}
+			}
+		}
+
+		foreach ( $candidates as $key => $value ) {
+			try {
+				$exists = metadata_exists( 'post', $post_id, $key );
+				$existing = get_post_meta( $post_id, $key, true );
+				if ( $exists && $existing === $value ) {
+					$report( $key, 'matched', 'Native value already matches.' );
+				} elseif ( $exists && ! $overwrite ) {
+					$report( $key, 'conflict', 'Existing native record preserved.' );
+				} elseif ( $dry_run ) {
+					$report( $key, 'would_change', 'Preview only; no write attempted.' );
+				} else {
+					// Unique add avoids deliberately overwriting a record created after the check.
+					$saved = $exists ? update_post_meta( $post_id, $key, wp_slash( $value ) ) : add_post_meta( $post_id, $key, wp_slash( $value ), true );
+					$matches = metadata_exists( 'post', $post_id, $key ) && get_post_meta( $post_id, $key, true ) === $value;
+					$report( $key, $matches ? ( false === $saved ? 'matched' : 'changed' ) : 'failed', $matches ? 'Stored value verified.' : 'Requested value was not stored; no rollback or cleanup attempted.' );
+				}
+			} catch ( \Throwable $e ) {
+				$report( $key, 'failed', 'Write/check raised an exception; verify this native field before retrying.' );
+			}
+		}
+		return $out;
+	}
+
 	// -------------------------------------------------------------------------
-	// Per-post import logic
+	// Legacy per-post logic: adapters outside Stage A retain their prior behavior.
 	// -------------------------------------------------------------------------
 
 	/**

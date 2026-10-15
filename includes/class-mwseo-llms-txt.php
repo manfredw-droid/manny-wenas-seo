@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
  */
 
 /**
- * Generates /llms.txt weekly. Anchor posts are listed first.
+ * Serves fresh /llms.txt output and maintains weekly snapshots. Anchor posts are listed first.
  */
 class MWSEO_Llms_Txt {
 
@@ -48,24 +48,45 @@ class MWSEO_Llms_Txt {
 		if ( ! get_query_var( 'mwseo_llms' ) ) {
 			return;
 		}
+		nocache_headers();
+		// WordPress before 6.8 does not always include no-store for anonymous visitors.
+		header( 'Cache-Control: no-store, private, no-cache, must-revalidate, max-age=0' );
 		if ( ! MWSEO_Options::get( 'llms_enabled' ) || ! get_option( 'blog_public' ) ) {
 			global $wp_query;
 			$wp_query->set_404();
 			status_header( 404 );
 			return;
 		}
-		$body = get_option( self::OPTION );
-		if ( ! $body ) {
-			$body = self::build();
-		}
 		header( 'Content-Type: text/plain; charset=UTF-8' );
 		header( 'X-Robots-Tag: noindex' );
+		// Build completely before emitting anything; never fall back to a stored snapshot.
+		$level = ob_get_level();
+		ob_start();
+		try {
+			$body = self::build();
+			if ( ! is_string( $body ) ) {
+				throw new \UnexpectedValueException( 'Invalid llms.txt output.' );
+			}
+		} catch ( \Throwable $e ) {
+			$body = null;
+		} finally {
+			// Discard incidental output from generation/filter callbacks, including failures.
+			while ( ob_get_level() > $level ) {
+				ob_end_clean();
+			}
+		}
+		if ( null === $body ) {
+			status_header( 503 );
+			echo 'llms.txt is temporarily unavailable.';
+			exit;
+		}
 		echo $body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain text.
 		exit;
 	}
 
 	/**
-	 * Rebuild and store the file (weekly cron and on settings save).
+	 * Rebuild the compatibility snapshot (weekly cron and on settings save).
+	 * Public serving never uses this snapshot as its authority or fallback.
 	 */
 	public static function regenerate() {
 		update_option( self::OPTION, self::build(), false );
@@ -115,13 +136,18 @@ class MWSEO_Llms_Txt {
 				),
 			)
 		);
-		if ( $cornerstone ) {
+		$entries = array();
+		foreach ( $cornerstone as $p ) {
+			$entry = self::entry( $p );
+			if ( null !== $entry ) {
+				$seen[]   = $p->ID;
+				$entries[] = $entry;
+			}
+		}
+		if ( $entries ) {
 			$lines[] = '';
 			$lines[] = '## ' . __( 'Key content', 'manny-wenas-seo' );
-			foreach ( $cornerstone as $p ) {
-				$seen[]  = $p->ID;
-				$lines[] = self::entry( $p );
-			}
+			$lines   = array_merge( $lines, $entries );
 		}
 
 		foreach ( $types as $type ) {
@@ -150,11 +176,19 @@ class MWSEO_Llms_Txt {
 			if ( ! $posts || ! $obj ) {
 				continue;
 			}
+			$entries = array();
+			foreach ( $posts as $p ) {
+				$entry = self::entry( $p );
+				if ( null !== $entry ) {
+					$entries[] = $entry;
+				}
+			}
+			if ( ! $entries ) {
+				continue;
+			}
 			$lines[] = '';
 			$lines[] = '## ' . $obj->labels->name;
-			foreach ( $posts as $p ) {
-				$lines[] = self::entry( $p );
-			}
+			$lines   = array_merge( $lines, $entries );
 		}
 
 		return apply_filters( 'mwseo_llms_txt', implode( "\n", $lines ) . "\n", $lines );
@@ -164,9 +198,13 @@ class MWSEO_Llms_Txt {
 	 * One markdown list entry.
 	 *
 	 * @param WP_Post $p Post.
-	 * @return string
+	 * @return string|null Null when the candidate is no longer publicly eligible.
 	 */
 	private static function entry( $p ) {
+		$p = get_post( $p->ID );
+		if ( ! $p || 'publish' !== $p->post_status || '' !== (string) $p->post_password || ! is_post_publicly_viewable( $p ) ) {
+			return null;
+		}
 		$desc = MWSEO_Head::description_for_post( $p->ID );
 		$line = '- [' . str_replace( array( '[', ']' ), '', wp_strip_all_tags( get_the_title( $p ) ) ) . '](' . get_permalink( $p ) . ')';
 		return $desc ? $line . ': ' . preg_replace( '/\s+/', ' ', $desc ) : $line;

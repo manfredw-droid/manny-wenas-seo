@@ -106,6 +106,11 @@ class MWSEO_Head {
 	public static function description_for_post( $id ) {
 		$desc = MWSEO_Meta::get( $id, 'desc' );
 		if ( ! $desc ) {
+			// Public descriptions must not depend on a visitor's password cookie.
+			$post = get_post( $id );
+			if ( $post && '' !== (string) $post->post_password ) {
+				return '';
+			}
 			if ( has_excerpt( $id ) ) {
 				$desc = get_the_excerpt( $id );
 			} else {
