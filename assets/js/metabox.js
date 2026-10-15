@@ -180,8 +180,10 @@
 			var content = ed ? ed.getEditedPostContent() : null;
 			return typeof content === 'string' ? content : null;
 		}
-		if ( window.tinyMCE && window.tinyMCE.get( 'content' ) && ! window.tinyMCE.get( 'content' ).isHidden() ) {
-			return window.tinyMCE.get( 'content' ).getContent();
+		var classicEditor = window.tinyMCE && window.tinyMCE.get( 'content' );
+		// Before TinyMCE initializes, the textarea still owns the existing content.
+		if ( classicEditor && classicEditor.initialized && ! classicEditor.isHidden() ) {
+			return classicEditor.getContent();
 		}
 		var value = $( '#content' ).val();
 		return typeof value === 'string' ? value : null;
@@ -498,7 +500,7 @@
 					function bindContentEditor( ed ) {
 						if ( ed && ed.id === 'content' && boundEditors.indexOf( ed ) === -1 ) {
 							boundEditors.push( ed );
-							ed.on( 'input keyup change Undo Redo', contentChanged );
+							ed.on( 'init input keyup change Undo Redo', contentChanged );
 							contentChanged();
 						}
 					}
