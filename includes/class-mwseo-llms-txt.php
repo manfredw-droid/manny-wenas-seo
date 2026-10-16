@@ -112,16 +112,18 @@ class MWSEO_Llms_Txt {
 		$types = MWSEO_Options::get( 'post_types' );
 		$seen  = array();
 
-		$cornerstone = get_posts(
-			array(
-				'post_type'      => $types,
-				'post_status'    => 'publish',
-				'posts_per_page' => 50,
-				'has_password'   => false,
-				'orderby'        => 'modified',
-				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-					'relation' => 'AND',
-					array(
+		// noindex is excluded in SQL (see exclude_noindex_sql) so it happens before the limit of 50.
+		add_filter( 'get_meta_sql', array( __CLASS__, 'exclude_noindex_sql' ), 10, 6 );
+		try {
+			$cornerstone = get_posts(
+				array(
+					'post_type'              => $types,
+					'post_status'            => 'publish',
+					'posts_per_page'         => 50,
+					'has_password'           => false,
+					'orderby'                => 'modified',
+					'mwseo_llms_cornerstone' => 1,
+					'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 						'relation' => 'OR',
 						array(
 							'key'   => '_mwseo_cornerstone',
@@ -136,10 +138,11 @@ class MWSEO_Llms_Txt {
 							'value' => 'on',
 						),
 					),
-					self::not_noindex(),
-				),
-			)
-		);
+				)
+			);
+		} finally {
+			remove_filter( 'get_meta_sql', array( __CLASS__, 'exclude_noindex_sql' ), 10 );
+		}
 		$entries = array();
 		foreach ( $cornerstone as $p ) {
 			$entry = self::entry( $p );
@@ -164,7 +167,16 @@ class MWSEO_Llms_Txt {
 					'has_password'   => false,
 					'post__not_in'   => $seen ? $seen : array( 0 ),
 					'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-						self::not_noindex(),
+						'relation' => 'OR',
+						array(
+							'key'     => '_mwseo_noindex',
+							'compare' => 'NOT EXISTS',
+						),
+						array(
+							'key'     => '_mwseo_noindex',
+							'value'   => '1',
+							'compare' => '!=',
+						),
 					),
 				)
 			);
@@ -190,24 +202,35 @@ class MWSEO_Llms_Txt {
 	}
 
 	/**
-	 * Meta clause that excludes posts flagged noindex, for cornerstone and
-	 * ordinary selection alike: a missing or non-'1' value stays eligible.
+	 * Add the noindex exclusion to the cornerstone query only.
 	 *
+	 * Same rule as the ordinary selection: a post stays eligible when it has no
+	 * _mwseo_noindex row, or a row whose value is not '1'. It is two correlated
+	 * subqueries limited to this key, so no second postmeta join multiplies the
+	 * rows (a meta_query clause would add an unrestricted join).
+	 *
+	 * @param array  $sql                Meta SQL parts (join, where).
+	 * @param array  $queries            Meta queries.
+	 * @param string $type               Meta type.
+	 * @param string $primary_table      Primary table.
+	 * @param string $primary_id_column  Primary ID column.
+	 * @param mixed  $context            The WP_Query being built.
 	 * @return array
 	 */
-	private static function not_noindex() {
-		return array(
-			'relation' => 'OR',
-			array(
-				'key'     => '_mwseo_noindex',
-				'compare' => 'NOT EXISTS',
-			),
-			array(
-				'key'     => '_mwseo_noindex',
-				'value'   => '1',
-				'compare' => '!=',
-			),
+	public static function exclude_noindex_sql( $sql, $queries, $type, $primary_table, $primary_id_column, $context = null ) {
+		if ( 'post' !== $type || ! $context instanceof WP_Query || ! $context->get( 'mwseo_llms_cornerstone' ) || ! is_array( $sql ) ) {
+			return $sql;
+		}
+		global $wpdb;
+		$id           = esc_sql( $primary_table ) . '.' . esc_sql( $primary_id_column );
+		$sql['where'] = ( isset( $sql['where'] ) ? $sql['where'] : '' ) . $wpdb->prepare(
+			" AND ( NOT EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS mwseo_ni WHERE mwseo_ni.post_id = {$id} AND mwseo_ni.meta_key = %s )" .
+			" OR EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS mwseo_nv WHERE mwseo_nv.post_id = {$id} AND mwseo_nv.meta_key = %s AND mwseo_nv.meta_value != %s ) )", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table and column names come from WP_Query.
+			'_mwseo_noindex',
+			'_mwseo_noindex',
+			'1'
 		);
+		return $sql;
 	}
 
 	/**

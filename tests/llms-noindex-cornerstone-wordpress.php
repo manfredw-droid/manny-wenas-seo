@@ -174,6 +174,33 @@ try {
 		$expected_key = array_slice( array_reverse( $eligible ), 0, 50 );
 		l23_check( array() === array_diff( $expected_key, $limit_key ), "$view: [limit] the 50 newest eligible posts occupy Key content" );
 	}
+
+	// 6. Query shape: one postmeta join (no N x N row multiplication), exclusion by correlated
+	// subqueries, and the filter does not leak into other queries or stay registered.
+	$captured = array();
+	$capture  = static function ( $query ) use ( &$captured ) {
+		if ( false !== strpos( $query, 'LIMIT 0, 50' ) && false !== strpos( $query, $GLOBALS['wpdb']->postmeta ) ) {
+			$captured[] = $query;
+		}
+		return $query;
+	};
+	wp_cache_flush(); // WP_Query results are cached in memory per request; force the SQL to run.
+	add_filter( 'query', $capture );
+	MWSEO_Llms_Txt::build();
+	remove_filter( 'query', $capture );
+	l23_check( 1 === count( $captured ), 'sql: exactly one 50-limit cornerstone query was issued (got ' . count( $captured ) . ')' );
+	$sql = $captured ? $captured[0] : '';
+	l23_check( 1 === preg_match_all( '/JOIN ' . preg_quote( $wpdb->postmeta, '/' ) . '\b/', $sql ), 'sql: exactly one JOIN on postmeta' );
+	l23_check( false !== strpos( $sql, 'NOT EXISTS' ) && 2 === substr_count( $sql, "meta_key = '_mwseo_noindex'" ), 'sql: noindex handled by two key-bounded subqueries' );
+	l23_check( false === has_filter( 'get_meta_sql', array( 'MWSEO_Llms_Txt', 'exclude_noindex_sql' ) ), 'sql: get_meta_sql filter is removed after build()' );
+	$other = new WP_Query( array( 'post_type' => 'post', 'fields' => 'ids', 'suppress_filters' => true, 'meta_query' => array( array( 'key' => '_mwseo_cornerstone', 'value' => '1' ) ) ) );
+	l23_check( false === strpos( $other->request, 'mwseo_ni' ), 'sql: an unrelated meta query is not touched' );
+	if ( is_callable( array( 'MWSEO_Llms_Txt', 'exclude_noindex_sql' ) ) ) {
+		add_filter( 'get_meta_sql', array( 'MWSEO_Llms_Txt', 'exclude_noindex_sql' ), 10, 6 );
+		$unmarked = new WP_Query( array( 'post_type' => 'post', 'fields' => 'ids', 'suppress_filters' => true, 'meta_query' => array( array( 'key' => '_mwseo_cornerstone', 'value' => '1' ) ) ) );
+		remove_filter( 'get_meta_sql', array( 'MWSEO_Llms_Txt', 'exclude_noindex_sql' ), 10 );
+		l23_check( false === strpos( $unmarked->request, 'mwseo_ni' ), 'sql: the filter ignores queries without the llms marker' );
+	}
 } finally {
 	foreach ( $created as $id ) {
 		wp_delete_post( $id, true );

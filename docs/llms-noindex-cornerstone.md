@@ -4,7 +4,11 @@
 
 ## What changed
 
-Before, only the ordinary per-type selection excluded noindex. The cornerstone query had no noindex condition, so a cornerstone post flagged noindex still appeared under "Key content". `includes/class-mwseo-llms-txt.php` now combines the existing cornerstone OR group (`_mwseo_cornerstone`, `_yoast_wpseo_is_cornerstone`, `rank_math_pillar_content`) with the same noindex clause as the ordinary selection, through one shared `not_noindex()` helper. The filter is part of the query, so excluded posts do not use any of the 50 cornerstone places.
+Before, only the ordinary per-type selection excluded noindex. The cornerstone query had no noindex condition, so a cornerstone post flagged noindex still appeared under "Key content".
+
+The cornerstone query (`includes/class-mwseo-llms-txt.php`) keeps its OR group (`_mwseo_cornerstone`, `_yoast_wpseo_is_cornerstone`, `rank_math_pillar_content`) and gets the noindex rule as SQL in the same query, through `MWSEO_Llms_Txt::exclude_noindex_sql()`. It is attached to the `get_meta_sql` filter only while that one `get_posts()` call runs, is removed afterwards (also on errors), and acts only on a query carrying the `mwseo_llms_cornerstone` marker. Because the exclusion is part of the query, excluded posts do not use any of the 50 cornerstone places.
+
+The rule is two correlated subqueries limited to `meta_key = '_mwseo_noindex'`: a post is eligible when it has no such row (`NOT EXISTS`), or a row whose value is not `'1'` (`EXISTS ... meta_value != '1'`). This is the same rule as the ordinary selection's meta query. A `meta_query` clause was deliberately not used for the cornerstone side: WordPress turns a `!=` clause into a second postmeta join without a `meta_key` condition, which together with the cornerstone OR group's join multiplies the joined rows per post (N x N, with N the post's meta rows). The subqueries keep a single postmeta join and read at most the post's `_mwseo_noindex` rows. The ordinary per-type query is unchanged.
 
 A missing, empty or `0` noindex value stays eligible; only `1` excludes. The existing publish, password and public-viewability checks are unchanged.
 
@@ -14,6 +18,6 @@ Only Manny's native `_mwseo_noindex` field is read. Noindex fields of other SEO 
 
 ## Test
 
-`php tests/llms-noindex-cornerstone-wordpress.php /path/to/wp-load.php [http://127.0.0.1:PORT]` needs real WordPress with the plugin active and a `solstice_llms23_` table prefix. It checks ordinary and native/Yoast/Rank Math cornerstone posts with absent, `0`, empty and `1` noindex values, noindex and cornerstone toggles, and a case with 55 newer noindex and 52 older eligible cornerstone posts (the 50 places go to eligible posts). It reads the generated body in-process and, with a base URL, over HTTP from `/?mwseo_llms=1`.
+`php tests/llms-noindex-cornerstone-wordpress.php /path/to/wp-load.php [http://127.0.0.1:PORT]` needs real WordPress with the plugin active and a `solstice_llms23_` table prefix. It checks ordinary and native/Yoast/Rank Math cornerstone posts with absent, `0`, empty and `1` noindex values, noindex and cornerstone toggles, and a case with 55 newer noindex and 52 older eligible cornerstone posts (the 50 places go to eligible posts). It also checks the cornerstone SQL: one postmeta join, noindex handled by two key-bounded subqueries, the filter removed after `build()` and not applied to other queries. It reads the generated body in-process and, with a base URL, over HTTP from `/?mwseo_llms=1`.
 
-Verified on WordPress 6.4.5, PHP 8.3.6, SQLite (not MySQL/MariaDB, not PHP 7.4): 52 checks, 18 failures on the code before this change, 0 after.
+Verified on WordPress 6.4.5, PHP 8.3.6, SQLite (not MySQL/MariaDB, not PHP 7.4): 58 checks pass. The code before this change fails 19 of 57 applicable checks; the first version of this fix (a nested `meta_query`) passes the behavioral checks but fails the two query-shape checks. SQL inspection and SQLite timings do not establish MySQL/MariaDB performance.
