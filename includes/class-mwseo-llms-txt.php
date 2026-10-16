@@ -113,7 +113,11 @@ class MWSEO_Llms_Txt {
 		$seen  = array();
 
 		// noindex is excluded in SQL (see exclude_noindex_sql) so it happens before the limit of 50.
-		add_filter( 'get_meta_sql', array( __CLASS__, 'exclude_noindex_sql' ), 10, 6 );
+		// Only the call that registers the filter removes it, so a nested build() cannot strip an outer one.
+		$added = false === has_filter( 'get_meta_sql', array( __CLASS__, 'exclude_noindex_sql' ) );
+		if ( $added ) {
+			add_filter( 'get_meta_sql', array( __CLASS__, 'exclude_noindex_sql' ), 10, 6 );
+		}
 		try {
 			$cornerstone = get_posts(
 				array(
@@ -141,7 +145,9 @@ class MWSEO_Llms_Txt {
 				)
 			);
 		} finally {
-			remove_filter( 'get_meta_sql', array( __CLASS__, 'exclude_noindex_sql' ), 10 );
+			if ( $added ) {
+				remove_filter( 'get_meta_sql', array( __CLASS__, 'exclude_noindex_sql' ), 10 );
+			}
 		}
 		$entries = array();
 		foreach ( $cornerstone as $p ) {

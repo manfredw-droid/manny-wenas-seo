@@ -201,6 +201,54 @@ try {
 		remove_filter( 'get_meta_sql', array( 'MWSEO_Llms_Txt', 'exclude_noindex_sql' ), 10 );
 		l23_check( false === strpos( $unmarked->request, 'mwseo_ni' ), 'sql: the filter ignores queries without the llms marker' );
 	}
+
+	// 7. Filter lifetime: each build() removes only a registration it added itself.
+	$cb_name   = array( 'MWSEO_Llms_Txt', 'exclude_noindex_sql' );
+	$callbacks = static function () {
+		global $wp_filter;
+		return isset( $wp_filter['get_meta_sql'] ) ? array_sum( array_map( 'count', $wp_filter['get_meta_sql']->callbacks ) ) : 0;
+	};
+	l23_post( 'L23 reentrancy noindex', array( '_mwseo_cornerstone' => '1', '_mwseo_noindex' => '1' ) );
+	l23_post( 'L23 reentrancy eligible', array( '_mwseo_cornerstone' => '1' ) );
+	$start = $callbacks();
+	for ( $i = 0; $i < 5; $i++ ) {
+		wp_cache_flush();
+		MWSEO_Llms_Txt::build();
+	}
+	l23_check( $start === $callbacks() && false === has_filter( 'get_meta_sql', $cb_name ), 'filter: repeated builds leave no get_meta_sql callbacks behind' );
+
+	$thrower = static function ( $query ) {
+		if ( $query->get( 'mwseo_llms_cornerstone' ) ) {
+			throw new RuntimeException( 'forced failure inside the query window' );
+		}
+	};
+	add_action( 'pre_get_posts', $thrower );
+	$caught = false;
+	try {
+		wp_cache_flush();
+		MWSEO_Llms_Txt::build();
+	} catch ( RuntimeException $e ) {
+		$caught = true;
+	}
+	remove_action( 'pre_get_posts', $thrower );
+	l23_check( $caught && $start === $callbacks() && false === has_filter( 'get_meta_sql', $cb_name ), 'filter: an exception inside the query window propagates and leaves no callback behind' );
+
+	// A build() started from inside the query window of another build() (nested).
+	$inner_body = null;
+	$reenter    = static function ( $query ) use ( &$inner_body ) {
+		static $entered = false;
+		if ( $query->get( 'mwseo_llms_cornerstone' ) && ! $entered ) {
+			$entered    = true;
+			$inner_body = MWSEO_Llms_Txt::build();
+		}
+	};
+	add_action( 'pre_get_posts', $reenter );
+	wp_cache_flush();
+	$outer_body = MWSEO_Llms_Txt::build();
+	remove_action( 'pre_get_posts', $reenter );
+	l23_check( null !== $inner_body && false !== strpos( $inner_body, '[L23 reentrancy eligible]' ) && false === strpos( $inner_body, '[L23 reentrancy noindex]' ), 'nested: the inner build() keeps the noindex exclusion' );
+	l23_check( false !== strpos( $outer_body, '[L23 reentrancy eligible]' ) && false === strpos( $outer_body, '[L23 reentrancy noindex]' ), 'nested: the outer build() keeps the noindex exclusion' );
+	l23_check( $start === $callbacks() && false === has_filter( 'get_meta_sql', $cb_name ), 'nested: no get_meta_sql callback is left behind' );
 } finally {
 	foreach ( $created as $id ) {
 		wp_delete_post( $id, true );
