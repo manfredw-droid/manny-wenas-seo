@@ -50,3 +50,46 @@ When post content contains no `<p>` element, the opening paragraph check now
 considers the first `<div>` block that contains at least 10 words (as counted by
 `MWSEO_Analyzer::words()`). Blocks with fewer than 10 words (navigation links,
 hero labels) are excluded; the check remains N/A when no qualifying block is found.
+
+---
+
+## Amendment 3 — SCORING_VERSION 1.2: related keyphrases require a focus keyphrase
+
+**Date:** 15 October 2026
+
+**Commit:** 08eae89131224774db222b5cd5b001537bc8cd51 (branch: fix/related-phrases-require-focus)
+
+**SCORING_VERSION:** 1.1 → 1.2
+
+**Principles clarified:** §2.4, §4.3, §4.4
+
+**Authority:** explicit owner approval of Finding #8, option A.
+
+When the trimmed focus keyphrase is empty, `related_body` is N/A even when
+related phrases are configured. It contributes neither earned points nor an
+applicable maximum to the rescaled score. This makes §4.4's rule that all
+keyphrase checks are inactive without focus apply to related phrases as well.
+The dedicated no-focus verdict, empty observations and zero verdict counts
+remain unchanged and consistent with that applicability rule.
+
+With a focus keyphrase, related scoring is unchanged: up to two phrases share
+10 points, or the check is N/A when none are configured. Section weights remain
+45/30/11/10, with an absolute maximum of 96 before rescaling. Matching logic,
+thresholds and the remaining checks are unchanged.
+
+Removing both earned and missed related points can raise **or lower** a score.
+Recorded examples without focus: a missing related phrase with an empty slug
+changes 30/40 = 75 to 30/30 = 100; a present related phrase in an article missing
+an internal link changes 33/43 = 77 to 23/33 = 70. This is an applicability change,
+not a blanket score increase or a change to the related section's weight.
+
+Configured phrases and other user metadata are preserved. No stored scores are
+rewritten and no migration or bulk recalculation is introduced. New analyses use
+1.2; this version increment does not itself refresh existing stored scores.
+
+`tests/related-without-focus.php` pins version 1.2 and covers absent/whitespace
+focus, zero/one/two related phrases, present/missing/mixed matches, effective
+points and denominator, N/A classifications and the no-focus verdict. It also
+compares complete focused-analysis outputs with the recorded 1.1 baseline and
+covers both score-change examples. These are isolated PHP checks, not WordPress
+runtime or browser compatibility certification.
