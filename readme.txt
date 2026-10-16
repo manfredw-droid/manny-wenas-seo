@@ -15,7 +15,7 @@ Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.t
 * SEO title, meta description, noindex/nofollow per post
 * Open Graph and X/Twitter cards
 * Sitemaps: posts, news, images, videos, categories, tags, authors, plus an HTML sitemap shortcode
-* robots.txt management and weekly-generated llms.txt (anchor posts first)
+* robots.txt management and llms.txt built when requested (anchor posts first)
 * Connected @graph JSON-LD, server-side rendered
 * Yoast SEO and Rank Math coexistence (we defer: no duplicate meta, schema or sitemaps)
 * Google Search Console (OAuth), per-post query data
@@ -61,14 +61,20 @@ This functionality is not present in the version hosted on WordPress.org.
 == Changelog ==
 
 = 1.0.6 =
-* Changed: the importer now offers Yoast SEO and Rank Math only; import from All in One SEO, SEOPress and The SEO Framework is switched off, because those imports did not fill the plugin's own fields
+* Changed: the importer now offers Yoast SEO and Rank Math only; import from All in One SEO, SEOPress and The SEO Framework is switched off, because those imports did not fill the plugin's own fields. Data already written by those imports is not changed
+* Fixed: the importer's Dry run checkbox is now honoured for every source; a checked Dry run could previously write data for some sources
 * Fixed: the AI ability that lists low-scoring posts now honours its threshold; it returned every scored post before
-* Changed: posts marked noindex are now excluded from llms.txt, including when they are anchor (cornerstone) posts
-* Scoring: word count below 300 words is now an advisory notice only — it no longer deducts points from the Technical section
-* Scoring: Technical section corrected to 11 points (image alt text 8 + clean slug 3); was incorrectly documented as 15
-* Scoring: when no focus keyphrase is set, all keyphrase checks now show N/A instead of scoring 0
-* Scoring: opening paragraph check now falls back to the first block of body text when post content uses div elements instead of paragraph tags, provided the block contains at least 10 words
-* Docs: added PHILOSOPHY.md (scoring rubric and founding principles) and AMENDMENTS.md (intentional change record) to the repository
+* Fixed: llms.txt now leaves out posts marked noindex, including when they are anchor (cornerstone) posts. llms.txt is built when it is requested; the settings text no longer says it is regenerated weekly
+* Fixed: Article wordCount in the schema now counts words the same way as the analyzer, including accented and non-Latin text
+* Fixed: a repeated schema build could emit a publisher logo reference without its image; fixed
+* Fixed: the Classic Editor now analyzes the saved content when the editor opens
+* Fixed: SEO score updates after content or SEO field changes made through the REST API; the stored score is refreshed after the post is saved
+* Fixed: block navigation, error display and keyboard focus in the editor Companion on WordPress 6.4
+* Changed: uninstall no longer deletes your SEO titles, descriptions, keyphrases, indexing settings, stored scores or plugin settings; it removes only operational data such as the Search Console connection, llms.txt snapshot, caches and the schedule
+* Scoring (version 1.2): related keyphrases are not scored when no focus keyphrase is set. Re-analysing a post can raise or lower its score; stored scores are not migrated and change only when a post is analysed again
+* Scoring: word count below 300 words is now an advisory notice only, and the Technical section is 11 points (image alt text 8 + clean slug 3). With no focus keyphrase, all keyphrase checks show N/A instead of 0. The opening paragraph check falls back to the first block of body text when content uses div elements
+* Changed: the readability message states the average sentence length without calling the text easy to read; scoring is unchanged
+* Docs: added PHILOSOPHY.md (scoring rubric and founding principles), AMENDMENTS.md (intentional change record) and a process amendment on proportional testing
 
 = 1.0.5 =
 * Fixed: Search Console "Suggest" button now shows a clear "not connected" message when GSC is not linked

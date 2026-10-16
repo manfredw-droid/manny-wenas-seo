@@ -1,7 +1,8 @@
 # Manny Wenas SEO — Amendment Record
 
 *Each entry records an intentional change to the philosophy or scoring rules.
-Entries are ordered oldest-first.*
+Entries are ordered oldest-first. Process rules (how releases are tested and approved)
+are recorded separately in PROCESS-AMENDMENTS.md.*
 
 ---
 
