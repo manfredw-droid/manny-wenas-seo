@@ -25,6 +25,13 @@ class MWSEO_Importer {
 	const PREFIX = '_mw_seo_';
 
 	/**
+	 * Sources that can be imported in 1.0.6. The All in One SEO, SEOPress and The
+	 * SEO Framework adapters below stay in the code but are switched off: their
+	 * values were stored under keys the plugin does not read.
+	 */
+	const SUPPORTED_SOURCES = array( 'yoast', 'rankmath' );
+
+	/**
 	 * Posts processed per AJAX batch (keeps requests inside 30 s timeout).
 	 */
 	const BATCH_SIZE = 50;
@@ -531,8 +538,9 @@ JS;
 	 * Render the import admin page.
 	 */
 	public static function render_admin_page(): void {
-		$active = static::detect_active_plugins();
-		$active = array_merge( array( 'yoast' => 'Yoast SEO', 'rankmath' => 'RankMath SEO' ), $active );
+		// Yoast and Rank Math are always offered (their metadata can outlive the plugin);
+		// other source plugins are not offered even when they are active.
+		$active = array( 'yoast' => 'Yoast SEO', 'rankmath' => 'RankMath SEO' );
 		?>
 		<div class="wrap" id="mw-seo-importer">
 			<h1><?php esc_html_e( 'Import SEO Data', 'manny-wenas-seo' ); ?></h1>
@@ -542,7 +550,7 @@ JS;
 				<div class="notice notice-info"><p>
 					<?php
 					esc_html_e(
-						'No supported SEO plugins detected on this site. Supported sources: Yoast SEO, RankMath, All in One SEO, SEOPress, The SEO Framework.',
+						'Import currently supports Yoast SEO and Rank Math. Import from All in One SEO, SEOPress and The SEO Framework is switched off.',
 						'manny-wenas-seo'
 					);
 					?>
@@ -553,7 +561,7 @@ JS;
 			<p class="description">
 				<?php
 				esc_html_e(
-					'Yoast and Rank Math imports support titles with compatible tokens, literal descriptions, primary focus phrases, explicit noindex/nofollow flags and cornerstone flags. Other fields are reported as unsupported. Source metadata must still exist; the source plugin may be inactive. Existing native records are preserved unless you check "Overwrite". Historical imports are not repaired. Other adapters retain their previous behavior and are not verified by this correction.',
+					'Yoast and Rank Math imports support titles with compatible tokens, literal descriptions, primary focus phrases, explicit noindex/nofollow flags and cornerstone flags. Other fields are reported as unsupported. Source metadata must still exist; the source plugin may be inactive. Existing native records are preserved unless you check "Overwrite". Historical imports are not repaired. Import from All in One SEO, SEOPress and The SEO Framework is switched off.',
 					'manny-wenas-seo'
 				);
 				?>
@@ -657,6 +665,9 @@ JS;
 	private static function get_field_maps_for_js(): array {
 		$out = array();
 		foreach ( static::source_plugins() as $slug => $config ) {
+			if ( ! in_array( $slug, static::SUPPORTED_SOURCES, true ) ) {
+				continue;
+			}
 			$out[ $slug ] = $config['fields'];
 			if ( in_array( $slug, array( 'yoast', 'rankmath' ), true ) ) {
 				foreach ( $out[ $slug ] as $key => $field ) {
@@ -701,10 +712,14 @@ JS;
 		$offset     = isset( $_POST['offset'] ) ? absint( sanitize_text_field( wp_unslash( $_POST['offset'] ) ) ) : 0;
 		$batch_size = min( isset( $_POST['batch_size'] ) ? absint( sanitize_text_field( wp_unslash( $_POST['batch_size'] ) ) ) : static::BATCH_SIZE, 200 );
 
+		// Refuse any source that is not offered, before reading or writing anything.
 		$plugins = static::source_plugins();
 		if ( ! isset( $plugins[ $source ] ) ) {
 			/* translators: %s: source plugin identifier */
 			wp_send_json_error( sprintf( __( 'Unknown source plugin: %s', 'manny-wenas-seo' ), esc_html( $source ) ) );
+		}
+		if ( ! in_array( $source, static::SUPPORTED_SOURCES, true ) ) {
+			wp_send_json_error( __( 'Import currently supports Yoast SEO and Rank Math. Support for the other sources is switched off.', 'manny-wenas-seo' ) );
 		}
 
 		$config = $plugins[ $source ];
