@@ -36,13 +36,15 @@ $matrix = array(
 // Full output fingerprints from the unchanged 0399fe2 baseline / scoring 1.1.
 // Includes every score, section, check, verdict, notice and word count. Derived
 // from the recorded research fixtures, which use WordPress's real formatting.
+// Since the readability pass message became 'Sentences average about N words.'
+// the six hashes differ from the original output only in that one string.
 $focused_baseline = array(
-    'none' => '746025822f67f6be0a487595d1de312ec4357336ee2b1cedba5b34a866b098d3',
-    'one_present' => 'b94b48c7633108ad10b8bc7e66f699d2861ce24386fe3206ec3451be185ea1d0',
-    'one_absent' => 'f67e9b95e5c817915aead95b21151c320b5fbf59d165ecc6fbea2892c98a5ef6',
-    'two_present' => '35080a26b6e96b5ae246cfad60acf210efafe86a13bc595a70ab53150975685f',
-    'two_mixed' => '91f57a443a149362c68eb72dba5dc5a2051a696964d5c3c807d117b8ff8e7871',
-    'two_absent' => 'ec984704776ec37b9fb41dfb6241aee0a278c066a99fad9ee36ca56cebe9d96f',
+    'none' => 'd89a9251e0fad2ccf90d550f0e87ac2ee8cbe61e56e8c4c06a46aaff6835d221',
+    'one_present' => '2625780f00271d2ce3616edce11afe7c0ff5fdaaee3384eedcc48d1a46f5f920',
+    'one_absent' => '5dabb19b70758222de62cd0c5852120c2a80344a008ae0a14c1a5a6f23787c78',
+    'two_present' => '10cb31ec6578bc7d292afc290aa8eb3831b83ad73dd43a3ed4d96772e9f4fe7a',
+    'two_mixed' => 'ff0b08023d117a1eb4a00bcb22e5524afe45fa7eaacd661a9147003a255a3682',
+    'two_absent' => '7ea7cdc146af131ef3141cc13cad4bcfb6c781f44b4adeabde93afd17c11ee61',
 );
 function same( $expected, $actual ) {
     if ( $expected !== $actual ) { throw new RuntimeException( 'Expected ' . json_encode( $expected ) . '; got ' . json_encode( $actual ) ); }
