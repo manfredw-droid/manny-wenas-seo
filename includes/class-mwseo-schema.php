@@ -206,10 +206,7 @@ class MWSEO_Schema {
 	 * @return array|null
 	 */
 	private static function publisher() {
-		static $cache = null;
-		if ( null !== $cache ) {
-			return $cache;
-		}
+		// Each build resets the graph; register its logo again rather than cache a reference.
 		$mode     = MWSEO_Options::get( 'site_represents' );
 		$user_id  = (int) MWSEO_Options::get( 'person_user' );
 		$user     = $user_id ? get_userdata( $user_id ) : false;
@@ -248,8 +245,7 @@ class MWSEO_Schema {
 		if ( $profiles ) {
 			$node['sameAs'] = $profiles;
 		}
-		$cache = $node;
-		return $cache;
+		return $node;
 	}
 
 	/**
