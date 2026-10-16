@@ -61,6 +61,7 @@ This functionality is not present in the version hosted on WordPress.org.
 == Changelog ==
 
 = 1.0.6 =
+* Changed: posts marked noindex are now excluded from llms.txt, including when they are anchor (cornerstone) posts
 * Scoring: word count below 300 words is now an advisory notice only — it no longer deducts points from the Technical section
 * Scoring: Technical section corrected to 11 points (image alt text 8 + clean slug 3); was incorrectly documented as 15
 * Scoring: when no focus keyphrase is set, all keyphrase checks now show N/A instead of scoring 0

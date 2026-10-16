@@ -120,19 +120,23 @@ class MWSEO_Llms_Txt {
 				'has_password'   => false,
 				'orderby'        => 'modified',
 				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-					'relation' => 'OR',
+					'relation' => 'AND',
 					array(
-						'key'   => '_mwseo_cornerstone',
-						'value' => '1',
+						'relation' => 'OR',
+						array(
+							'key'   => '_mwseo_cornerstone',
+							'value' => '1',
+						),
+						array(
+							'key'   => '_yoast_wpseo_is_cornerstone',
+							'value' => '1',
+						),
+						array(
+							'key'   => 'rank_math_pillar_content',
+							'value' => 'on',
+						),
 					),
-					array(
-						'key'   => '_yoast_wpseo_is_cornerstone',
-						'value' => '1',
-					),
-					array(
-						'key'   => 'rank_math_pillar_content',
-						'value' => 'on',
-					),
+					self::not_noindex(),
 				),
 			)
 		);
@@ -160,16 +164,7 @@ class MWSEO_Llms_Txt {
 					'has_password'   => false,
 					'post__not_in'   => $seen ? $seen : array( 0 ),
 					'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-						'relation' => 'OR',
-						array(
-							'key'     => '_mwseo_noindex',
-							'compare' => 'NOT EXISTS',
-						),
-						array(
-							'key'     => '_mwseo_noindex',
-							'value'   => '1',
-							'compare' => '!=',
-						),
+						self::not_noindex(),
 					),
 				)
 			);
@@ -192,6 +187,27 @@ class MWSEO_Llms_Txt {
 		}
 
 		return apply_filters( 'mwseo_llms_txt', implode( "\n", $lines ) . "\n", $lines );
+	}
+
+	/**
+	 * Meta clause that excludes posts flagged noindex, for cornerstone and
+	 * ordinary selection alike: a missing or non-'1' value stays eligible.
+	 *
+	 * @return array
+	 */
+	private static function not_noindex() {
+		return array(
+			'relation' => 'OR',
+			array(
+				'key'     => '_mwseo_noindex',
+				'compare' => 'NOT EXISTS',
+			),
+			array(
+				'key'     => '_mwseo_noindex',
+				'value'   => '1',
+				'compare' => '!=',
+			),
+		);
 	}
 
 	/**
