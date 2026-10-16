@@ -62,6 +62,7 @@ This functionality is not present in the version hosted on WordPress.org.
 
 = 1.0.6 =
 * Changed: the importer now offers Yoast SEO and Rank Math only; import from All in One SEO, SEOPress and The SEO Framework is switched off, because those imports did not fill the plugin's own fields
+* Fixed: the AI ability that lists low-scoring posts now honours its threshold; it returned every scored post before
 * Changed: posts marked noindex are now excluded from llms.txt, including when they are anchor (cornerstone) posts
 * Scoring: word count below 300 words is now an advisory notice only — it no longer deducts points from the Technical section
 * Scoring: Technical section corrected to 11 points (image alt text 8 + clean slug 3); was incorrectly documented as 15
