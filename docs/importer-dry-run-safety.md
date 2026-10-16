@@ -81,6 +81,10 @@ their known mapping/type/reporting limitations. Their real-import controls only
 confirm unchanged legacy behavior; they do not establish a successful native SEO
 migration. No historical repair or cleanup is performed by this fix.
 
+Update for 1.0.6: those three sources are no longer offered and the server refuses
+them, so the legacy-adapter statements above describe the situation at the time of
+this fix; see `docs/importer-supported-sources.md`.
+
 WordPress runtime coverage is 6.4 / PHP 7.4.33 only. PHP 8.3.33 coverage is syntax
 and isolated regression testing, not another WordPress/browser compatibility
 claim. No publication, merge, release tag or Gold approval is implied.
