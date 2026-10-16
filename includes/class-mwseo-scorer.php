@@ -10,10 +10,11 @@ defined( 'ABSPATH' ) || exit;
  * Scores a post against the Manny Wenas rubric.
  *
  * Sections: Text & Content 45, Keyphrase placement 30, Technical 11, Optional
- * keyphrases 10. Checks that cannot apply to a post (no related keyphrases, no
- * images, under 300 words) are marked N/A: they are left out of the maximum and
- * the score is rescaled, so they neither add nor remove points. Advisory notices
- * (short text, no external link) never change the score.
+ * keyphrases 10. Checks that cannot apply to a post (for example no focus
+ * keyphrase, no related keyphrases, no images, no subheadings, no slug yet) are
+ * marked N/A: they are left out of the maximum and the score is rescaled, so they
+ * neither add nor remove points. Advisory notices (fewer than 300 words, no
+ * external link) never change the score.
  *
  * Every sub-score is its own method so it can be tested or overridden alone.
  */
@@ -256,8 +257,12 @@ final class MWSEO_Scorer {
 	}
 
 	/**
-	 * Readability: average sentence length of 25 words or less, or a Flesch
-	 * reading ease of 60 or more (English text only) (10).
+	 * Readability (10): full credit when the average sentence length is 25 words
+	 * or less, or when the Flesch reading ease is 60 or more. Above 25 words the
+	 * sentence-length result falls to zero at 40 words; a Flesch value between 30
+	 * and 60 gives partial credit. Flesch is skipped only for Dutch locales (nl*)
+	 * and uses an English syllable heuristic for every other locale; it can raise
+	 * the result but never lowers it.
 	 *
 	 * @param array $ctx Context.
 	 * @return array
@@ -286,7 +291,7 @@ final class MWSEO_Scorer {
 			10,
 			$ratio,
 			/* translators: %d: average words per sentence */
-			sprintf( __( 'Sentences are easy to read (about %d words on average).', 'manny-wenas-seo' ), round( $avg ) ),
+			sprintf( __( 'Sentences average about %d words.', 'manny-wenas-seo' ), round( $avg ) ),
 			/* translators: %d: average words per sentence */
 			sprintf( __( 'Sentences average %d words.', 'manny-wenas-seo' ), round( $avg ) )
 		);
@@ -714,7 +719,9 @@ final class MWSEO_Scorer {
 	}
 
 	/**
-	 * Flesch reading ease (English only; null for other languages).
+	 * Flesch reading ease, computed with an English syllable heuristic for every
+	 * locale except Dutch (nl*). Null for Dutch locales and for text without words
+	 * or sentences.
 	 *
 	 * @param array $ctx Context.
 	 * @return float|null
@@ -731,7 +738,9 @@ final class MWSEO_Scorer {
 	}
 
 	/**
-	 * Rough English syllable count.
+	 * Rough English syllable count. The word is lower-cased and everything outside
+	 * a-z is dropped, so accented and non-Latin letters are ignored; a word left
+	 * with no a-z letters counts as one syllable.
 	 *
 	 * @param string $word Word.
 	 * @return int
