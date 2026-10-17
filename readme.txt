@@ -4,7 +4,7 @@ Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.6
+Stable tag: 1.0.6.1
 License: GPLv2 or later
 
 Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
@@ -59,6 +59,9 @@ optionally connects to OpenAI or Anthropic APIs for AI-assisted meta generation.
 This functionality is not present in the version hosted on WordPress.org.
 
 == Changelog ==
+
+= 1.0.6.1 =
+* Fixed: in the block editor, a repeated editor-initialisation callback could cause a JavaScript error and a blank editor; it is now ignored safely once the slug adapter has started
 
 = 1.0.6 =
 * Changed: the importer now offers Yoast SEO and Rank Math only; import from All in One SEO, SEOPress and The SEO Framework is switched off, because those imports did not fill the plugin's own fields. Data already written by those imports is not changed
