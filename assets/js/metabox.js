@@ -121,6 +121,10 @@
 				if ( wp.data && wp.data.subscribe && ! slugBootSubscription &&
 					( ! ed || ! ed.getCurrentPostId || ! ed.getCurrentPostId() ) ) {
 					slugBootSubscription = wp.data.subscribe( function () {
+						// An emit that began before the unsubscribe can still call this listener again.
+						if ( ! slugBootSubscription ) {
+							return;
+						}
 						var ready = editorSelect();
 						if ( ready && ready.getCurrentPostId && ready.getCurrentPostId() ) {
 							var stop = slugBootSubscription;
