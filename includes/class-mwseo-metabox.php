@@ -1,198 +1,24 @@
 <?php
 defined( 'ABSPATH' ) || exit;
-/**
- * Post/page metabox with live score.
- *
- * @package MannyWenasSEO
- */
-
-/**
- * Renders and saves the SEO metabox.
- */
+/** Score columns and the notice for unsupported editors. @package MannyWenasSEO */
 class MWSEO_Metabox {
-
-	/**
-	 * Hooks.
-	 */
+	/** Register shared administration hooks; there is no metabox or POST writer. */
 	public static function init() {
-		add_action( 'add_meta_boxes', array( __CLASS__, 'register' ) );
-		add_action( 'save_post', array( __CLASS__, 'save' ), 10, 2 );
-		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
+		add_action( 'admin_notices', array( __CLASS__, 'editor_notice' ) );
 		add_filter( 'manage_posts_columns', array( __CLASS__, 'column' ) );
 		add_filter( 'manage_pages_columns', array( __CLASS__, 'column' ) );
 		add_action( 'manage_posts_custom_column', array( __CLASS__, 'column_value' ), 10, 2 );
 		add_action( 'manage_pages_custom_column', array( __CLASS__, 'column_value' ), 10, 2 );
 	}
 
-	/**
-	 * Register the box on all enabled post types.
-	 */
-	public static function register() {
-		foreach ( MWSEO_Options::get( 'post_types' ) as $post_type ) {
-			add_meta_box( 'mwseo', __( 'Manny Wenas SEO', 'manny-wenas-seo' ), array( __CLASS__, 'render' ), $post_type, 'normal', 'high' );
-		}
-	}
-
-	/**
-	 * Enqueue scripts on edit screens.
-	 *
-	 * @param string $hook Admin hook suffix.
-	 */
-	public static function assets( $hook ) {
-		if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
+	/** Explain the editor requirement on configured Classic edit screens only. */
+	public static function editor_notice() {
+		$screen = get_current_screen();
+		if ( ! $screen || 'post' !== $screen->base || $screen->is_block_editor() ||
+			! in_array( $screen->post_type, (array) MWSEO_Options::get( 'post_types' ), true ) ) {
 			return;
 		}
-		wp_enqueue_style( 'mwseo-admin', MWSEO_URL . 'assets/css/admin.css', array(), MWSEO_VERSION );
-		wp_enqueue_script( 'mwseo-metabox', MWSEO_URL . 'assets/js/metabox.js', array( 'wp-api-fetch', 'wp-data', 'jquery' ), MWSEO_VERSION, true );
-		wp_localize_script(
-			'mwseo-metabox',
-			'mwseoBox',
-			array(
-				'postId' => get_the_ID(),
-				'hasGsc' => MWSEO_Gsc::is_connected(),
-				'ajax'   => MWSEO_Options::get( 'trends_enabled' ) ? array(
-					'url'    => admin_url( 'admin-ajax.php' ),
-					'action' => MWSEO_Trends::ACTION,
-					'nonce'  => wp_create_nonce( MWSEO_Trends::ACTION ),
-				) : null,
-				'i18n'   => array(
-					'na'           => __( 'N/A', 'manny-wenas-seo' ),
-					'trends'       => __( 'Trends (7 days)', 'manny-wenas-seo' ),
-					'average'      => __( 'Average', 'manny-wenas-seo' ),
-					'analysing'    => __( 'Analysing…', 'manny-wenas-seo' ),
-					'noData'       => __( 'No Search Console data for this URL yet.', 'manny-wenas-seo' ),
-					'notConnected' => __( 'Search Console is not connected. Go to Manny Wenas SEO → Search Console to connect.', 'manny-wenas-seo' ),
-					'chars'        => __( 'characters', 'manny-wenas-seo' ),
-					'use'          => __( 'Use', 'manny-wenas-seo' ),
-					'error'        => __( 'Something went wrong.', 'manny-wenas-seo' ),
-					'slugNative'   => __( 'Edit the slug in WordPress while synchronization is unavailable.', 'manny-wenas-seo' ),
-					'slugPending'  => __( 'Confirm or cancel the WordPress slug edit first.', 'manny-wenas-seo' ),
-				),
-			)
-		);
-	}
-
-	/**
-	 * Render the box.
-	 *
-	 * @param WP_Post $post Post.
-	 */
-	public static function render( $post ) {
-		wp_nonce_field( 'mwseo_save', 'mwseo_nonce' );
-		$id      = $post->ID;
-		$related = MWSEO_Meta::get( $id, 'related' );
-		?>
-		<div class="mwseo-box">
-			<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-				<img src="<?php echo esc_url( plugins_url( 'assets/images/mwseo-logo.svg', MWSEO_FILE ) ); ?>" alt="Manny Wenas SEO" height="28" width="28" style="display:block;">
-				<strong><?php esc_html_e( 'Manny Wenas SEO', 'manny-wenas-seo' ); ?></strong>
-			</div>
-			<div class="mwseo-score" id="mwseo-score" aria-live="polite">
-				<div class="mwseo-ring" id="mwseo-ring" data-state="none"><span id="mwseo-ring-num">–</span></div>
-				<div class="mwseo-score-text">
-					<strong id="mwseo-verdict"><?php esc_html_e( 'Analysing…', 'manny-wenas-seo' ); ?></strong>
-					<span id="mwseo-subscores"></span>
-				</div>
-			</div>
-
-			<p>
-				<label for="mwseo_slug"><strong><?php esc_html_e( 'URL slug', 'manny-wenas-seo' ); ?></strong></label>
-				<input type="text" id="mwseo_slug" class="widefat" readonly aria-describedby="mwseo-slug-help" value="<?php echo esc_attr( $post->post_name ); ?>" />
-				<span id="mwseo-slug-help" class="description" aria-live="polite"><?php esc_html_e( 'Edit the slug in WordPress while synchronization is unavailable.', 'manny-wenas-seo' ); ?></span>
-				<span class="description"><?php esc_html_e( 'The URL-friendly part of this post\'s address. Put the focus keyphrase here.', 'manny-wenas-seo' ); ?></span>
-			</p>
-
-			<p>
-				<label for="mwseo_focus"><strong><?php esc_html_e( 'Focus keyphrase', 'manny-wenas-seo' ); ?></strong></label>
-				<input type="text" id="mwseo_focus" name="mwseo_focus" class="widefat" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'focus' ) ); ?>" />
-				<span class="description"><?php esc_html_e( 'Matching is semantic: word order and common variants (plurals, verb forms) count.', 'manny-wenas-seo' ); ?></span>
-				<span class="mwseo-trends" id="mwseo-trends" hidden></span>
-			</p>
-
-			<div class="mwseo-related">
-				<?php for ( $i = 0; $i < 2; $i++ ) : ?>
-					<p>
-						<label for="mwseo_related_<?php echo (int) $i; ?>"><?php /* translators: %d: number */ echo esc_html( sprintf( __( 'Related keyphrase %d (optional)', 'manny-wenas-seo' ), $i + 1 ) ); ?></label>
-						<input type="text" id="mwseo_related_<?php echo (int) $i; ?>" name="mwseo_related[]" class="widefat mwseo-related-input" value="<?php echo esc_attr( isset( $related[ $i ] ) ? $related[ $i ] : '' ); ?>" />
-					</p>
-				<?php endfor; ?>
-				<p>
-					<button type="button" class="button" id="mwseo-suggest"><?php esc_html_e( 'Suggest from Search Console', 'manny-wenas-seo' ); ?></button>
-				</p>
-				<ul id="mwseo-suggestions"></ul>
-			</div>
-
-			<?php if ( MWSEO_Compat::owns_title_fields() ) : ?>
-				<?php // Another SEO plugin owns these fields. Unnamed hidden inputs keep the live score working but are never submitted, so saving cannot overwrite stored values. ?>
-				<p class="mwseo-yoast-notice notice notice-info inline"><?php /* translators: %s: SEO plugin name */ echo esc_html( sprintf( __( '%s is active — title and description are managed there.', 'manny-wenas-seo' ), MWSEO_Compat::owner_name() ) ); ?></p>
-				<input type="hidden" id="mwseo_title" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'title' ) ); ?>" />
-				<input type="hidden" id="mwseo_desc" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'desc' ) ); ?>" />
-			<?php else : ?>
-				<p>
-					<label for="mwseo_title"><strong><?php esc_html_e( 'SEO title', 'manny-wenas-seo' ); ?></strong></label>
-					<input type="text" id="mwseo_title" name="mwseo_title" class="widefat" value="<?php echo esc_attr( MWSEO_Meta::get( $id, 'title' ) ); ?>" />
-					<span class="description mwseo-counter" data-for="mwseo_title" data-min="50" data-max="60"></span>
-				</p>
-				<p>
-					<label for="mwseo_desc"><strong><?php esc_html_e( 'Meta description', 'manny-wenas-seo' ); ?></strong></label>
-					<textarea id="mwseo_desc" name="mwseo_desc" class="widefat" rows="3"><?php echo esc_textarea( MWSEO_Meta::get( $id, 'desc' ) ); ?></textarea>
-					<span class="description mwseo-counter" data-for="mwseo_desc" data-min="120" data-max="155"></span>
-				</p>
-			<?php endif; ?>
-
-			<fieldset class="mwseo-robots">
-				<legend><strong><?php esc_html_e( 'Search engine visibility', 'manny-wenas-seo' ); ?></strong></legend>
-				<label><input type="checkbox" name="mwseo_noindex" value="1" <?php checked( MWSEO_Meta::get( $id, 'noindex' ) ); ?> /> <?php esc_html_e( 'noindex: keep this out of search results', 'manny-wenas-seo' ); ?></label><br />
-				<label><input type="checkbox" name="mwseo_nofollow" value="1" <?php checked( MWSEO_Meta::get( $id, 'nofollow' ) ); ?> /> <?php esc_html_e( 'nofollow: do not follow links on this page', 'manny-wenas-seo' ); ?></label><br />
-				<label><input type="checkbox" name="mwseo_cornerstone" value="1" <?php checked( MWSEO_Meta::get( $id, 'cornerstone' ) ); ?> /> <?php esc_html_e( 'Anchor post (prioritised in llms.txt)', 'manny-wenas-seo' ); ?></label>
-			</fieldset>
-
-			<h4><?php esc_html_e( 'Analysis', 'manny-wenas-seo' ); ?></h4>
-			<ul id="mwseo-checks" class="mwseo-checks"></ul>
-			<ul id="mwseo-tips" class="mwseo-tips"></ul>
-
-			<div id="mwseo-gsc" class="mwseo-gsc">
-				<h4><?php esc_html_e( 'Search Console queries (last 28 days)', 'manny-wenas-seo' ); ?></h4>
-				<div id="mwseo-gsc-body">
-					<?php if ( ! MWSEO_Gsc::is_connected() ) : ?>
-						<em><?php esc_html_e( 'Connect Google Search Console in the plugin settings.', 'manny-wenas-seo' ); ?></em>
-					<?php endif; ?>
-				</div>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Save handler.
-	 *
-	 * @param int     $post_id Post ID.
-	 * @param WP_Post $post    Post.
-	 */
-	public static function save( $post_id, $post ) {
-		if ( ! isset( $_POST['mwseo_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['mwseo_nonce'] ) ), 'mwseo_save' ) ) {
-			return;
-		}
-		if ( ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) || wp_is_post_revision( $post_id ) || ! current_user_can( 'edit_post', $post_id ) ) {
-			return;
-		}
-
-		// WordPress owns post_name. The unnamed slug control edits native editor state only.
-
-		$related = isset( $_POST['mwseo_related'] ) ? array_slice( array_filter( array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['mwseo_related'] ) ) ), 0, 2 ) : array();
-		MWSEO_Meta::set( $post_id, 'focus', isset( $_POST['mwseo_focus'] ) ? sanitize_text_field( wp_unslash( $_POST['mwseo_focus'] ) ) : '' );
-		MWSEO_Meta::set( $post_id, 'related', $related );
-		// When another SEO plugin owns the fields they are not rendered; leave stored values untouched.
-		if ( ! MWSEO_Compat::owns_title_fields() ) {
-			MWSEO_Meta::set( $post_id, 'title', isset( $_POST['mwseo_title'] ) ? sanitize_text_field( wp_unslash( $_POST['mwseo_title'] ) ) : '' );
-			MWSEO_Meta::set( $post_id, 'desc', isset( $_POST['mwseo_desc'] ) ? sanitize_textarea_field( wp_unslash( $_POST['mwseo_desc'] ) ) : '' );
-		}
-		foreach ( array( 'noindex', 'nofollow', 'cornerstone' ) as $flag ) {
-			MWSEO_Meta::set( $post_id, $flag, ! empty( $_POST[ 'mwseo_' . $flag ] ) );
-		}
-
-		$result = MWSEO_Rest::analyze_post( $post );
-		MWSEO_Meta::set( $post_id, 'score', (int) $result['score'] );
+		echo '<div class="notice notice-info"><p>' . esc_html__( 'From version 1.0.7, Manny Wenas SEO requires the block editor for SEO controls. Your saved SEO data and frontend output continue to work.', 'manny-wenas-seo' ) . '</p></div>';
 	}
 
 	/**

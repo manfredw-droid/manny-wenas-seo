@@ -4,7 +4,7 @@ Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.6.1
+Stable tag: 1.0.7
 License: GPLv2 or later
 
 Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
@@ -21,6 +21,8 @@ Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.t
 * Google Search Console (OAuth), per-post query data
 * WordPress Abilities API (WP 6.9+)
 * 0-100 SEO and readability score with a written verdict in the editor
+
+SEO controls require the WordPress block editor from version 1.0.7. Existing SEO data and frontend output continue to work with other editors.
 
 Deliberately excluded: redirects, 404 monitor, analytics dashboard, AI writer.
 
@@ -40,14 +42,14 @@ Privacy policy: https://privacy.microsoft.com/en-us/privacystatement
 **Google Trends** (optional, disabled by default)
 When enabled, shows a search-interest score for your focus keyphrase in the post editor.
 Sends: the focus keyphrase you typed, to trends.google.com (unofficial endpoint, no account or API key).
-Triggered: about 800 milliseconds after you stop typing the focus keyphrase in the SEO metabox, if the feature is enabled (Manny Wenas SEO > General). Results are cached for 24 hours, failed requests for 1 hour.
+Triggered: about 800 milliseconds after you stop typing the focus keyphrase in the native SEO sidebar, if the feature is enabled (Manny Wenas SEO > General). Results are cached for 24 hours, failed requests for 1 hour.
 Service provider: Google LLC
 Terms of use: https://policies.google.com/terms
 Privacy policy: https://policies.google.com/privacy
 
 **Google Search Console** (optional, OAuth-based)
 When enabled, connects to your GSC account to display search query data for a post.
-Sends: OAuth tokens managed by the site administrator and, when the metabox asks for query data, the URL of the post. No post content is sent.
+Sends: OAuth tokens managed by the site administrator and, when the SEO sidebar asks for query data, the URL of the post. No post content is sent.
 Triggered: only after the GSC integration is manually authorized by the administrator.
 Service provider: Google LLC
 Terms of use: https://policies.google.com/terms
@@ -59,6 +61,14 @@ optionally connects to OpenAI or Anthropic APIs for AI-assisted meta generation.
 This functionality is not present in the version hosted on WordPress.org.
 
 == Changelog ==
+
+= 1.0.7 =
+* Changed: Equinox moves all SEO controls into a native Gutenberg sidebar, saved through WordPress editor metadata. Edit the slug using WordPress's own control
+* Preserved: existing SEO values, written analysis, heading navigation, optional Search Console queries/suggestions and Trends, and the working PHP/frontend core
+* Removed: Classic Editor SEO metaboxes, their POST save handler, TinyMCE bindings and the duplicate slug adapter. Unsupported edit screens explain that the block editor is required; saved SEO remains active
+* Fixed: intentional empty values and disabled flags remain authoritative; untouched fields and title-only REST updates retain their data. Editable metadata supports WordPress revisions and published-post autosave recovery
+* Fixed: the derived score is excluded from editable REST responses so Gutenberg saves refresh it from the final stored inputs; explicit API score operations remain supported
+* Scoring version remains 1.2; no scoring rules or stored scores are migrated
 
 = 1.0.6.1 =
 * Fixed: in the block editor, a repeated editor-initialisation callback could cause a JavaScript error and a blank editor; it is now ignored safely once the slug adapter has started

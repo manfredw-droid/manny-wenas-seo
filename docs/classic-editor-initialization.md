@@ -1,5 +1,7 @@
 # Classic Editor initial content analysis
 
+Historical evidence for 1.0.6/1.0.6.1. Classic SEO editing and this adapter were removed in 1.0.7; see [native Gutenberg editor](native-gutenberg-editor.md).
+
 Base: `development/1.0.6-companion`, `bdac530f8de209debe3320c42ed8f29964a730e9`.
 
 ## Cause and correction

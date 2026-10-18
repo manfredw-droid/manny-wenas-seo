@@ -1,3 +1,5 @@
+Historical 1.0.6 evidence. For current editor support, see [native Gutenberg editor](native-gutenberg-editor.md).
+
 # Companion UI corrections
 
 Base: `development/1.0.6-companion`, commit `fb7e57ced4efbbb2890e1ff34f181ce5cb11c772`.

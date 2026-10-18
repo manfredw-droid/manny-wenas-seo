@@ -48,30 +48,13 @@
 	outline-offset: 1px;
 }
 
-/* ---- Classic Editor: compact box in the native side column ---------------- */
-
-.mwseo-cmp--classic .mwseo-cmp__head { padding: 0 0 8px; }
-.mwseo-cmp--classic .mwseo-cmp__logo { display: block; flex: 0 0 auto; width: 32px; height: 32px; }
-.mwseo-cmp--classic .mwseo-cmp__section { margin: 0 0 12px; }
-.mwseo-cmp--classic .mwseo-cmp__option { margin: 8px 0 0; }
-.mwseo-cmp--classic .mwseo-cmp__status { margin: 6px 0 0; }
-.mwseo-cmp--classic .mwseo-cmp__heading-btn {
-	background: none; border: 0; cursor: pointer; color: #2271b1; font: inherit; border-radius: 2px;
-}
-.mwseo-cmp--classic .mwseo-cmp__heading-btn:hover { color: #135e96; text-decoration: underline; }
-.mwseo-cmp--classic .mwseo-cmp__go { background: none; border: 0; padding: 0; cursor: pointer; color: #2271b1; text-decoration: underline; font: inherit; }
-
-/* Optional "hide while scrolling down": only the header stays. */
-.mwseo-cmp--classic.is-away:not(:focus-within) .mwseo-cmp__body { display: none; }
-
-/* Scroll behaviour of the side column belongs to WordPress (editor-expand keeps
-   the column in view while you scroll). The companion sits LAST in that column
-   so nothing can be covered, and its body scrolls internally if it is taller
-   than the viewport. Below 851px WordPress stacks the column under the editor. */
-@media (min-width: 851px) {
-	#mwseo-companion .mwseo-cmp__body { max-height: max(160px, calc(100vh - var(--wp-admin--admin-bar--height, 32px) - 240px)); overflow-y: auto; }
-}
-
 @media (prefers-reduced-motion: reduce) {
 	.mwseo-cmp, .mwseo-cmp * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+.mwseo-cmp__queries { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mwseo-cmp__queries th, .mwseo-cmp__queries td { padding: 4px; text-align: left; overflow-wrap: anywhere; }
+.mwseo-cmp__queries td:first-child { max-width: 120px; }
+.mwseo-cmp__notices { margin: 12px 16px; }
+
+.mwseo-cmp__sections { margin: 0 16px 12px; color: #50575e; }

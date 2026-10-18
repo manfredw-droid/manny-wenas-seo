@@ -1,28 +1,11 @@
-/**
- * Manny Wenas SEO companion: helpers shared by the block-editor sidebar and
- * the Classic Editor box.
- *
- * Nothing here analyses content or writes to the post. It reads the result the
- * metabox script already received from the server-side scorer, and moves
- * focus to existing WordPress / Manny fields when the writer asks it to.
- *
- * @package MannyWenasSEO
- */
-
-( function ( window, document, $ ) {
+/** Native Gutenberg state and live analysis. No content or score is persisted here. */
+( function ( window, document, wp ) {
 	'use strict';
-
-	var cfg  = window.mwseoCompanionCfg || { i18n: {} };
-	var core = window.mwseoCompanion = window.mwseoCompanion || {};
-
-	core.cfg  = cfg;
-	core.i18n = cfg.i18n || {};
-
-	/**
-	 * Which existing control each scorer check should lead to. Checks that have
-	 * no sensible destination (internal links, image alt text) are left out on
-	 * purpose: Manny never invents a navigation target.
-	 */
+	var cfg = window.mwseoCompanionCfg || { i18n: {} };
+	var core = window.mwseoCompanion = {};
+	core.cfg = cfg;
+	core.i18n = cfg.i18n;
+	var listeners = [], latest = null, timer, generation = 0, last = null;
 	core.CHECK_ACTIONS = {
 		body_keyphrase: { type: 'field', id: 'mwseo_focus', label: 'keyphrase' },
 		intro_keyphrase: { type: 'intro', label: 'intro' },
@@ -35,94 +18,66 @@
 		related_body: { type: 'field', id: 'mwseo_related_0', label: 'related' }
 	};
 
-	/** Latest analysis result the metabox script received (or null). */
-	core.latest = function () {
-		return window.mwseoLast || null;
-	};
 
-	/**
-	 * Subscribe to results, or null when analysis fails. Returns an unsubscribe function.
-	 *
-	 * @param {Function} cb Called with each result object or null after a failure.
-	 */
+	core.latest = function () { return latest; };
 	core.onScore = function ( cb ) {
-		var handler = function ( e, res ) {
-			cb( e.type === 'mwseo:analysis-error' ? null : res );
-		};
-		$( document ).on( 'mwseo:score mwseo:analysis-error', handler );
-		return function () {
-			$( document ).off( 'mwseo:score mwseo:analysis-error', handler );
-		};
+		listeners.push( cb );
+		return function () { listeners = listeners.filter( function ( fn ) { return fn !== cb; } ); };
 	};
-
-	/** Plain text of an HTML fragment, without executing anything. */
+	function publish( result, error ) {
+		latest = result;
+		window.mwseoAnalysisError = error || '';
+		listeners.slice().forEach( function ( fn ) { fn( result ); } );
+	}
 	core.plainText = function ( html ) {
 		var doc = new window.DOMParser().parseFromString( String( html == null ? '' : html ), 'text/html' );
 		return ( doc.body.textContent || '' ).replace( /\s+/g, ' ' ).trim();
 	};
-
-	/** Re-open a collapsed WordPress meta box so its field can take focus. */
-	function openBox( el ) {
-		var box = el.closest ? el.closest( '.postbox' ) : null;
-		if ( box && box.classList.contains( 'closed' ) ) {
-			var toggle = box.querySelector( '.handlediv, .postbox-header button[aria-expanded]' );
-			if ( toggle ) {
-				toggle.click();
-			}
-		}
-	}
-
-	function visible( el ) {
-		return !! ( el.offsetWidth || el.offsetHeight || el.getClientRects().length );
-	}
-
-	/**
-	 * Focus an existing field by id. Returns '' on success or a message key.
-	 *
-	 * @param {string} id Element id.
-	 */
 	core.focusField = function ( id ) {
-		var el = document.getElementById( id );
-		if ( ! el ) {
-			return 'fieldMissing';
-		}
-		openBox( el );
-		if ( ! visible( el ) ) {
-			return 'fieldHidden';
-		}
-		el.scrollIntoView( { block: 'center', behavior: 'auto' } );
-		el.focus( { preventScroll: true } );
+		var node = document.getElementById( id );
+		if ( ! node ) { return 'fieldHidden'; }
+		node.scrollIntoView( { block: 'center', behavior: 'auto' } );
+		node.focus( { preventScroll: true } );
 		return '';
 	};
-
-	/**
-	 * Move focus to the native URL / permalink control of the Classic Editor.
-	 * Never edits the slug and never touches the Manny slug mirror.
-	 */
-	core.focusClassicSlug = function () {
-		var open  = document.getElementById( 'new-post-slug' );
-		var edit  = document.querySelector( '#edit-slug-buttons .edit-slug' );
-		var target = open && visible( open ) ? open : edit;
-		if ( ! target ) {
-			return 'slugMissing';
-		}
-		target.scrollIntoView( { block: 'center', behavior: 'auto' } );
-		target.focus( { preventScroll: true } );
-		return 'slugHint';
+	core.value = function ( meta, key ) {
+		var value = meta[ '_mwseo_' + key ];
+		return value === undefined ? ( key === 'related' ? [] : '' ) : value;
 	};
-
-	/** Debounce without timers piling up. */
-	core.debounce = function ( fn, wait ) {
-		var t = null;
-		return function () {
-			var args = arguments, self = this;
-			clearTimeout( t );
-			t = setTimeout( function () {
-				fn.apply( self, args );
-			}, wait );
-		};
+	core.edit = function ( key, value ) {
+		var patch = {};
+		patch[ '_mwseo_' + key ] = value;
+		wp.data.dispatch( 'core/editor' ).editPost( { meta: patch } );
 	};
-
+	function state() {
+		var ed = wp.data.select( 'core/editor' );
+		if ( ! ed || ! ed.getCurrentPostId || Number( ed.getCurrentPostId() ) !== Number( cfg.postId ) ||
+			! ed.getCurrentPost() || Number( ed.getCurrentPost().id ) !== Number( cfg.postId ) ) { return null; }
+		var meta = ed.getEditedPostAttribute( 'meta' );
+		var content = ed.getEditedPostContent();
+		if ( ! meta || typeof content !== 'string' ) { return null; }
+		var result = { post_id: cfg.postId, content: content, slug: ed.getEditedPostAttribute( 'slug' ) || '' };
+		[ 'focus', 'related', 'title', 'desc' ].forEach( function ( key ) {
+			result[ key ] = cfg.ownsTitle && ( key === 'title' || key === 'desc' )
+				? ( cfg.effectiveTitle || {} )[ key ] || '' : core.value( meta, key );
+		} );
+		return result;
+	}
+	function observe() {
+		var data = state(), signature = JSON.stringify( data );
+		if ( signature === last ) { return; }
+		last = signature;
+		var ticket = ++generation;
+		clearTimeout( timer );
+		if ( ! data ) { return; }
+		timer = setTimeout( function () {
+			wp.apiFetch( { path: '/mwseo/v1/analyze', method: 'POST', data: data } ).then( function ( result ) {
+				if ( ticket === generation ) { publish( result ); }
+			} ).catch( function () {
+				if ( ticket === generation ) { publish( null, cfg.i18n.error ); }
+			} );
+		}, 700 );
+	}
 	/** Traffic-light state, mirroring the scorer's own `state` field when present. */
 	core.ringState = function ( res ) {
 		if ( ! res ) {
@@ -145,20 +100,8 @@
 		return v && typeof v.summary === 'string' ? v.summary : '';
 	};
 
-	/** Per-viewer UI preference storage. Failure is silent: the UI still works. */
-	core.store = {
-		get: function ( key, fallback ) {
-			try {
-				var raw = window.localStorage.getItem( 'mwseo_cmp_' + key );
-				return raw === null ? fallback : JSON.parse( raw );
-			} catch ( e ) {
-				return fallback;
-			}
-		},
-		set: function ( key, value ) {
-			try {
-				window.localStorage.setItem( 'mwseo_cmp_' + key, JSON.stringify( value ) );
-			} catch ( e ) {} // eslint-disable-line no-empty
-		}
-	};
-} )( window, document, window.jQuery );
+
+	// One subscription for the editor lifetime, independent of sidebar visibility.
+	wp.data.subscribe( observe );
+	observe();
+} )( window, document, window.wp );
