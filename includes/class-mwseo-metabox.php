@@ -11,14 +11,21 @@ class MWSEO_Metabox {
 		add_action( 'manage_pages_custom_column', array( __CLASS__, 'column_value' ), 10, 2 );
 	}
 
-	/** Explain the editor requirement on configured Classic edit screens only. */
+	/** Explain missing requirements on configured edit screens. */
 	public static function editor_notice() {
 		$screen = get_current_screen();
-		if ( ! $screen || 'post' !== $screen->base || $screen->is_block_editor() ||
+		if ( ! $screen || 'post' !== $screen->base ||
 			! in_array( $screen->post_type, (array) MWSEO_Options::get( 'post_types' ), true ) ) {
 			return;
 		}
-		echo '<div class="notice notice-info"><p>' . esc_html__( 'From version 1.0.7, Manny Wenas SEO requires the block editor for SEO controls. Your saved SEO data and frontend output continue to work.', 'manny-wenas-seo' ) . '</p></div>';
+		if ( ! post_type_supports( $screen->post_type, 'custom-fields' ) ) {
+			$message = __( 'Manny Wenas SEO controls are unavailable because this post type does not support custom-fields. Your saved SEO data and frontend output continue to work.', 'manny-wenas-seo' );
+		} elseif ( ! $screen->is_block_editor() ) {
+			$message = __( 'From version 1.0.7, Manny Wenas SEO requires the block editor for SEO controls. Your saved SEO data and frontend output continue to work.', 'manny-wenas-seo' );
+		} else {
+			return;
+		}
+		echo '<div class="notice notice-info"><p>' . esc_html( $message ) . '</p></div>';
 	}
 
 	/**

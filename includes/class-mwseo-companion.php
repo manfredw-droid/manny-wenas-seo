@@ -28,6 +28,7 @@ class MWSEO_Companion {
 	 */
 	private static function enabled_for( $post_type ) {
 		return in_array( $post_type, (array) MWSEO_Options::get( 'post_types' ), true )
+			&& post_type_supports( $post_type, 'custom-fields' )
 			&& ( ! get_post() || current_user_can( 'edit_post', get_post()->ID ) );
 	}
 

@@ -9,14 +9,14 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-18T22:59:14+00:00\n"
+"POT-Creation-Date: 2026-10-18T23:25:25+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: manny-wenas-seo\n"
 
 #. Plugin Name of the plugin
 #: manny-wenas-seo.php
-#: includes/class-mwseo-companion.php:65
+#: includes/class-mwseo-companion.php:66
 #: includes/class-mwseo-settings.php:136
 #: includes/class-mwseo-settings.php:250
 msgid "Manny Wenas SEO"
@@ -38,7 +38,7 @@ msgid "Manny Wenas"
 msgstr ""
 
 #: includes/class-mwseo-abilities.php:32
-#: includes/class-mwseo-metabox.php:31
+#: includes/class-mwseo-metabox.php:38
 msgid "SEO"
 msgstr ""
 
@@ -88,200 +88,200 @@ msgid "Lists published posts and pages whose stored SEO score is below a thresho
 msgstr ""
 
 #. translators: %d: number
-#: includes/class-mwseo-companion.php:42
-#: includes/class-mwseo-companion.php:44
+#: includes/class-mwseo-companion.php:43
+#: includes/class-mwseo-companion.php:45
 #, php-format
 msgid "Related keyphrase %d (optional)"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:45
+#: includes/class-mwseo-companion.php:46
 msgid "Matching is semantic: word order and common variants (plurals, verb forms) count."
 msgstr ""
 
-#: includes/class-mwseo-companion.php:46
+#: includes/class-mwseo-companion.php:47
 msgid "noindex: keep this out of search results"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:47
+#: includes/class-mwseo-companion.php:48
 msgid "nofollow: do not follow links on this page"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:48
+#: includes/class-mwseo-companion.php:49
 msgid "Anchor post (prioritised in llms.txt)"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:49
+#: includes/class-mwseo-companion.php:50
 msgid "Search engine visibility"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:50
+#: includes/class-mwseo-companion.php:51
 msgid "No Search Console data for this URL yet."
 msgstr ""
 
-#: includes/class-mwseo-companion.php:51
+#: includes/class-mwseo-companion.php:52
 msgid "Search Console is not connected. Go to Manny Wenas SEO → Search Console to connect."
 msgstr ""
 
-#: includes/class-mwseo-companion.php:52
+#: includes/class-mwseo-companion.php:53
 msgid "characters"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:53
+#: includes/class-mwseo-companion.php:54
 msgid "Use"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:54
+#: includes/class-mwseo-companion.php:55
 msgid "Something went wrong."
 msgstr ""
 
-#: includes/class-mwseo-companion.php:55
+#: includes/class-mwseo-companion.php:56
 msgid "Suggest from Search Console"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:56
+#: includes/class-mwseo-companion.php:57
 msgid "Search Console queries (last 28 days)"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:57
+#: includes/class-mwseo-companion.php:58
 msgid "Trends (7 days)"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:58
+#: includes/class-mwseo-companion.php:59
 msgid "Average"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:59
+#: includes/class-mwseo-companion.php:60
 msgid "Query"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:60
+#: includes/class-mwseo-companion.php:61
 msgid "Clicks"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:61
+#: includes/class-mwseo-companion.php:62
 msgid "Impressions"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:62
+#: includes/class-mwseo-companion.php:63
 msgid "Position"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:63
+#: includes/class-mwseo-companion.php:64
 msgid "SEO fields"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:64
+#: includes/class-mwseo-companion.php:65
 msgid "Loading SEO fields…"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:66
+#: includes/class-mwseo-companion.php:67
 msgid "Analysing…"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:67
+#: includes/class-mwseo-companion.php:68
 msgid "N/A"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:68
-#: includes/class-mwseo-companion.php:79
+#: includes/class-mwseo-companion.php:69
+#: includes/class-mwseo-companion.php:80
 msgid "Headings"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:69
+#: includes/class-mwseo-companion.php:70
 msgid "No H2 or H3 headings yet."
 msgstr ""
 
-#: includes/class-mwseo-companion.php:70
+#: includes/class-mwseo-companion.php:71
 msgid "Go to:"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:71
+#: includes/class-mwseo-companion.php:72
 msgid "Go to"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:72
+#: includes/class-mwseo-companion.php:73
 msgid "Analysis"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:73
+#: includes/class-mwseo-companion.php:74
 #: includes/class-mwseo-importer.php:325
 msgid "Focus keyphrase"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:74
+#: includes/class-mwseo-companion.php:75
 #: includes/class-mwseo-importer.php:323
 msgid "SEO title"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:75
+#: includes/class-mwseo-companion.php:76
 #: includes/class-mwseo-importer.php:324
 msgid "Meta description"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:76
+#: includes/class-mwseo-companion.php:77
 msgid "URL slug"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:77
+#: includes/class-mwseo-companion.php:78
 #: includes/class-mwseo-scorer.php:65
 msgid "Related keyphrases"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:78
+#: includes/class-mwseo-companion.php:79
 msgid "Opening paragraph"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:80
+#: includes/class-mwseo-companion.php:81
 msgid "That field is not available on this screen."
 msgstr ""
 
-#: includes/class-mwseo-companion.php:81
+#: includes/class-mwseo-companion.php:82
 msgid "Open the SEO fields panel to use this field."
 msgstr ""
 
-#: includes/class-mwseo-companion.php:82
+#: includes/class-mwseo-companion.php:83
 msgid "URL control focused. Press Enter to edit the slug in WordPress."
 msgstr ""
 
-#: includes/class-mwseo-companion.php:83
+#: includes/class-mwseo-companion.php:84
 msgid "Opened the WordPress post settings. The URL control is under Summary."
 msgstr ""
 
-#: includes/class-mwseo-companion.php:84
+#: includes/class-mwseo-companion.php:85
 msgid "WordPress shows an editable permalink only once the post has a title and the site uses pretty permalinks."
 msgstr ""
 
-#: includes/class-mwseo-companion.php:85
+#: includes/class-mwseo-companion.php:86
 msgid "There is no paragraph to go to yet."
 msgstr ""
 
-#: includes/class-mwseo-companion.php:86
+#: includes/class-mwseo-companion.php:87
 msgid "SEO score"
 msgstr ""
 
 #. translators: %s: heading text
-#: includes/class-mwseo-companion.php:88
+#: includes/class-mwseo-companion.php:89
 #, php-format
 msgid "Go to heading: %s"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:89
+#: includes/class-mwseo-companion.php:90
 msgid "(empty heading)"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:90
+#: includes/class-mwseo-companion.php:91
 msgid "H2"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:91
+#: includes/class-mwseo-companion.php:92
 msgid "H3"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:92
+#: includes/class-mwseo-companion.php:93
 msgid "Open the Manny Wenas SEO companion"
 msgstr ""
 
-#: includes/class-mwseo-companion.php:93
+#: includes/class-mwseo-companion.php:94
 msgid "Title and description are managed by another SEO plugin."
 msgstr ""
 
@@ -515,7 +515,11 @@ msgstr ""
 msgid "A requested metadata reset cannot be completed with the current stored value. The request was rejected before saving."
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:21
+#: includes/class-mwseo-metabox.php:22
+msgid "Manny Wenas SEO controls are unavailable because this post type does not support custom-fields. Your saved SEO data and frontend output continue to work."
+msgstr ""
+
+#: includes/class-mwseo-metabox.php:24
 msgid "From version 1.0.7, Manny Wenas SEO requires the block editor for SEO controls. Your saved SEO data and frontend output continue to work."
 msgstr ""
 

@@ -18,6 +18,8 @@ The PHP scorer, analyzer, REST analysis/snapshot engine, frontend head/schema, s
 - The legacy metabox registration, nonce form, POST/save_post writer, duplicate slug adapter, Classic Companion and TinyMCE bindings are removed. `MWSEO_Metabox` retains score columns and a PHP-only unsupported-editor notice. There is no second metadata or score writer in Gutenberg.
 - Assets are gated by the real block-editor screen, configured post type and edit capability, never by `has_blocks()`. Classic edit screens get the notice and no Manny editor JS/CSS.
 
+**Review correction B1:** native SEO controls also require post-type `custom-fields` support, which WordPress needs to expose REST metadata. An enabled type without that support gets a PHP notice naming the missing requirement and no SEO editor assets. The plugin does not add support to external types; existing metadata and frontend SEO remain available. The focused `tests/editor-custom-fields-wordpress.php` regression passes **13/13** on WordPress 7.1.3/PHP 8.3.33, including post/page controls and preserved metadata/frontend descriptions. Against the reviewed implementation it reproduced exactly the two CPT asset/notice failures. PHP syntax passes on 7.4 and 8.3; the broader matrix was not repeated.
+
 ## Analysis and optional integrations
 
 One editor-lifetime subscription reads unsaved content, SEO fields and the native slug. It waits for the matching loaded post, debounces analysis by 700ms, and invalidates outstanding responses immediately on changed input. Late success/failure responses cannot replace current results. Repeated startup callbacks do not write editor state (the PR #28 safety guarantee survives removal of its old adapter).
