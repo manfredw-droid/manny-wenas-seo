@@ -63,7 +63,9 @@ foreach ( array( 'equinox_no_meta' => 'equinox_no_meta', 'post' => 'posts', 'pag
 	$screen = get_current_screen();
 	$screen->is_block_editor( true );
 	$GLOBALS['post'] = get_post( $fixture_id );
+	$inline_before = (array) wp_scripts()->get_data( 'wp-notices', 'after' );
 	MWSEO_Companion::block_assets();
+	MWSEO_Metabox::block_editor_notice();
 	check_custom_fields( $has_fields === wp_script_is( 'mwseo-companion-core', 'enqueued' ) &&
 		$has_fields === wp_script_is( 'mwseo-companion-block', 'enqueued' ) &&
 		$has_fields === wp_style_is( 'mwseo-companion', 'enqueued' ),
@@ -71,15 +73,32 @@ foreach ( array( 'equinox_no_meta' => 'equinox_no_meta', 'post' => 'posts', 'pag
 	ob_start();
 	MWSEO_Metabox::editor_notice();
 	$notice = ob_get_clean();
-	check_custom_fields( $has_fields ? '' === $notice :
-		false !== strpos( $notice, 'does not support custom-fields' ),
-		$type . ': appropriate missing-support notice' );
+	check_custom_fields( '' === $notice, $type . ': no duplicate hidden PHP notice in Gutenberg' );
+	$inline_after = (array) wp_scripts()->get_data( 'wp-notices', 'after' );
+	$inline_notice = implode( "\n", array_slice( $inline_after, count( $inline_before ) ) );
+	check_custom_fields( $has_fields ? '' === $inline_notice :
+		wp_script_is( 'wp-notices', 'enqueued' ) &&
+		false !== strpos( $inline_notice, 'core/notices' ) &&
+		false !== strpos( $inline_notice, 'does not support custom-fields' ) &&
+		1 === substr_count( $inline_notice, 'createNotice(' ),
+		$type . ': native notice only for missing custom-fields support' );
+	$screen->is_block_editor( false );
+	ob_start();
+	MWSEO_Metabox::editor_notice();
+	$classic_notice = ob_get_clean();
+	check_custom_fields( false !== strpos( $classic_notice, $has_fields ? 'requires the block editor' : 'does not support custom-fields' ),
+		$type . ': Classic retains the PHP explanation' );
+	MWSEO_Metabox::block_editor_notice();
+	check_custom_fields( $inline_after === (array) wp_scripts()->get_data( 'wp-notices', 'after' ),
+		$type . ': Classic does not receive native notice code' );
 	check_custom_fields( get_post_meta( $fixture_id ) === $before &&
 		'Existing SEO description.' === MWSEO_Head::description_for_post( $fixture_id ),
 		$type . ': stored metadata and frontend description remain available' );
 }
 check_custom_fields( ! post_type_supports( 'equinox_no_meta', 'custom-fields' ),
 	'external CPT support was not added automatically' );
+check_custom_fields( false !== has_action( 'enqueue_block_editor_assets', array( 'MWSEO_Metabox', 'block_editor_notice' ) ),
+	'native notice is registered on the block editor asset hook' );
 foreach ( $fixtures as $fixture_id ) {
 	wp_delete_post( $fixture_id, true );
 }

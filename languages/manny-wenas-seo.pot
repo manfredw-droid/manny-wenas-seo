@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-18T23:25:25+00:00\n"
+"POT-Creation-Date: 2026-10-18T23:41:45+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: manny-wenas-seo\n"
@@ -38,7 +38,7 @@ msgid "Manny Wenas"
 msgstr ""
 
 #: includes/class-mwseo-abilities.php:32
-#: includes/class-mwseo-metabox.php:38
+#: includes/class-mwseo-metabox.php:58
 msgid "SEO"
 msgstr ""
 
@@ -515,11 +515,11 @@ msgstr ""
 msgid "A requested metadata reset cannot be completed with the current stored value. The request was rejected before saving."
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:22
+#: includes/class-mwseo-metabox.php:17
 msgid "Manny Wenas SEO controls are unavailable because this post type does not support custom-fields. Your saved SEO data and frontend output continue to work."
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:24
+#: includes/class-mwseo-metabox.php:46
 msgid "From version 1.0.7, Manny Wenas SEO requires the block editor for SEO controls. Your saved SEO data and frontend output continue to work."
 msgstr ""
 
