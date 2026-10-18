@@ -167,13 +167,112 @@
 		var res = props.res;
 		return el(
 			'div',
-			{ className: 'mwseo-cmp__head' },
+			{ className: 'mwseo-cmp__head', 'aria-live': 'polite' },
 			el(
 				'div',
 				{ className: 'mwseo-ring mwseo-cmp__ring', 'data-state': core.ringState( res ), role: 'img', 'aria-label': t.score + ( res ? ': ' + res.score : '' ) },
 				el( 'span', null, res ? res.score : '–' )
 			),
 			el( 'strong', { className: 'mwseo-cmp__verdict' }, core.verdictText( res ) )
+		);
+	}
+
+	/** Fields bind to core/editor metadata; mounting never creates edits. */
+	function SEOFields() {
+		var meta = useSelect( function ( select ) {
+			return select( 'core/editor' ).getEditedPostAttribute( 'meta' );
+		}, [] );
+		if ( ! meta ) { return el( 'p', null, t.loading ); }
+		function value( key ) { return core.value( meta, key ); }
+		function text( key, label, help, multiline ) {
+			var current = value( key ) || '';
+			return el( multiline ? wp.components.TextareaControl : wp.components.TextControl, {
+				id: 'mwseo_' + key, label: label, value: current,
+				help: help, onChange: function ( next ) { core.edit( key, next ); }
+			} );
+		}
+		var related = value( 'related' );
+		function relatedField( index ) {
+			return el( wp.components.TextControl, {
+				id: 'mwseo_related_' + index, label: index ? t.relatedTwo : t.relatedOne,
+				value: related[ index ] || '', onChange: function ( next ) {
+					var updated = [ related[ 0 ] || '', related[ 1 ] || '' ];
+					updated[ index ] = next;
+					core.edit( 'related', updated );
+				}
+			} );
+		}
+		return el( Fragment, null,
+			text( 'focus', t.keyphrase, t.matching ),
+			el( Trends, { phrase: value( 'focus' ) || '' } ),
+			relatedField( 0 ), relatedField( 1 ),
+			core.cfg.ownsTitle ? el( 'p', null, t.ownedElsewhere ) : el( Fragment, null,
+				text( 'title', t.seoTitle, ( value( 'title' ) || '' ).length + ' ' + t.chars + ' (50–60)' ),
+				text( 'desc', t.metaDesc, ( value( 'desc' ) || '' ).length + ' ' + t.chars + ' (120–155)', true )
+			),
+			el( 'fieldset', null, el( 'legend', null, t.visibility ),
+				[ 'noindex', 'nofollow', 'cornerstone' ].map( function ( key ) {
+					return el( wp.components.CheckboxControl, { key: key, id: 'mwseo_' + key, label: t[ key ],
+						checked: !! value( key ), onChange: function ( next ) { core.edit( key, next ); } } );
+				} )
+			),
+			el( GSC, { related: related, focus: value( 'focus' ) || '' } )
+		);
+	}
+
+	function Trends( props ) {
+		var pair = useState( null ), result = pair[ 0 ], setResult = pair[ 1 ];
+		useEffect( function () {
+			setResult( null );
+			if ( ! core.cfg.ajax || ! props.phrase.trim() ) { return; }
+			var active = true, controller = new window.AbortController();
+			var timer = setTimeout( function () {
+				var ajax = core.cfg.ajax;
+				var body = new window.URLSearchParams( { action: ajax.action, nonce: ajax.nonce, keyphrase: props.phrase.trim() } );
+				window.fetch( ajax.url, { method: 'POST', body: body, signal: controller.signal } )
+					.then( function ( response ) { return response.json(); } )
+					.then( function ( response ) {
+						if ( active && response && response.success && response.data ) { setResult( response.data ); }
+					} ).catch( function () {} );
+			}, 800 );
+			return function () { active = false; clearTimeout( timer ); controller.abort(); };
+		}, [ props.phrase ] );
+		return result ? el( 'p', { className: 'mwseo-trends' }, t.trends + ': ' + t.average + ' ' + result.average + '/100' ) : null;
+	}
+
+	function GSC( props ) {
+		var pair = useState( null ), rows = pair[ 0 ], setRows = pair[ 1 ];
+		var errorPair = useState( '' ), error = errorPair[ 0 ], setError = errorPair[ 1 ];
+		var showPair = useState( false ), show = showPair[ 0 ], setShow = showPair[ 1 ];
+		useEffect( function () {
+			if ( ! core.cfg.hasGsc ) { return; }
+			var active = true;
+			wp.apiFetch( { path: '/mwseo/v1/gsc/' + core.cfg.postId } ).then( function ( result ) {
+				if ( active ) { setRows( result.rows || [] ); }
+			} ).catch( function ( err ) { if ( active ) { setError( err.message || t.error ); } } );
+			return function () { active = false; };
+		}, [] );
+		function useQuery( query ) {
+			var related = [ props.related[ 0 ] || '', props.related[ 1 ] || '' ];
+			related[ related[ 0 ] ? 1 : 0 ] = query;
+			core.edit( 'related', related );
+		}
+		var suggestions = ( rows || [] ).filter( function ( row ) { return row.query.toLowerCase() !== props.focus.toLowerCase(); } ).slice( 0, 6 );
+		return el( Fragment, null,
+			el( Button, { variant: 'secondary', onClick: function () { setShow( ! show ); } }, t.suggest ),
+			show ? el( 'div', { role: 'status' },
+				! core.cfg.hasGsc ? t.notConnected : error || ( rows === null ? t.analysing : ( ! suggestions.length ? t.noData : '' ) ),
+				el( 'ul', null, suggestions.map( function ( row ) { return el( 'li', { key: row.query }, row.query + ' (' + row.impressions + ') ',
+					el( Button, { variant: 'link', onClick: function () { useQuery( row.query ); } }, t.use ) ); } ) )
+			) : null,
+			el( 'h4', null, t.gsc ),
+			! core.cfg.hasGsc ? el( 'p', null, t.notConnected ) : error ? el( 'p', { role: 'status' }, error ) :
+				rows === null ? el( 'p', null, t.analysing ) : ! rows.length ? el( 'p', null, t.noData ) :
+					el( 'table', { className: 'mwseo-cmp__queries' },
+						el( 'thead', null, el( 'tr', null, [ t.query, t.clicks, t.impressions, t.position ].map( function ( label ) { return el( 'th', { key: label }, label ); } ) ) ),
+						el( 'tbody', null, rows.slice( 0, 10 ).map( function ( row ) { return el( 'tr', { key: row.query },
+							[ row.query, row.clicks, row.impressions, row.position ].map( function ( cell, index ) { return el( 'td', { key: index }, cell ); } ) ); } ) )
+					)
 		);
 	}
 
@@ -188,6 +287,7 @@
 		var msg     = _msg[ 0 ];
 		var setMsg  = _msg[ 1 ];
 		var listRef = useRef( null );
+		var fieldsPair = useState( true ), fieldsOpen = fieldsPair[ 0 ], setFieldsOpen = fieldsPair[ 1 ];
 
 		useEffect( function () {
 			setRes( core.latest() );
@@ -202,7 +302,8 @@
 		}
 
 		function field( id ) {
-			say( core.focusField( id ) );
+			setFieldsOpen( true );
+			window.requestAnimationFrame( function () { say( core.focusField( id ) ); } );
 		}
 
 		function intro() {
@@ -292,6 +393,8 @@
 			'div',
 			{ className: 'mwseo-cmp' },
 			el( Ring, { res: res } ),
+			el( 'p', { className: 'mwseo-cmp__sections' }, Object.keys( res && res.sections || {} ).map( function ( key ) { var section = res.sections[ key ]; return section.label + ' ' + ( section.na ? t.na : section.points + '/' + section.max ); } ).join( ' · ' ) ),
+			el( PanelBody, { title: t.fieldsTitle, opened: fieldsOpen, onToggle: function () { setFieldsOpen( ! fieldsOpen ); } }, el( SEOFields ) ),
 			el(
 				PanelBody,
 				{ title: t.fields, initialOpen: true },
@@ -329,6 +432,7 @@
 					);
 				} ) )
 			),
+			el( 'ul', { className: 'mwseo-cmp__notices' }, ( res && res.notices || [] ).map( function ( notice, index ) { return el( 'li', { key: index }, notice ); } ) ),
 			el( 'p', { className: 'mwseo-cmp__status', role: 'status' }, msg )
 		);
 	}

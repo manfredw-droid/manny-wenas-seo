@@ -1,7 +1,8 @@
 # Stored score snapshot — Finding #20
 
-The owner-authorized policy preserves `_mwseo_score` as a derived snapshot. In
-addition to existing metabox and Abilities writes, successful relevant ordinary
+For the 1.0.7 editor/storage integration, see [native Gutenberg editor](native-gutenberg-editor.md). The verification section below records historical 1.0.6 evidence.
+
+The owner-authorized policy preserves `_mwseo_score` as a derived snapshot. Alongside existing Abilities writes, successful relevant ordinary
 REST saves refresh it after WordPress has saved both the post and its metadata.
 This changes update timing, not scoring: `SCORING_VERSION` stays **1.2**.
 
@@ -29,8 +30,7 @@ The `rest_after_insert_{$post_type}` hook runs only after successful standard
 content/meta processing. The saved post is reread and the existing `analyze_post`
 and `MWSEO_Meta::set` paths are used. The callback checks `edit_post`; it grants no
 new permissions. It calculates at most once for each request object/post pair.
-A later Gutenberg metabox request remains independent and can recalculate after
-different SEO inputs are saved. An unchanged stored score avoids a redundant write.
+From 1.0.7 there is no Gutenberg metabox POST writer. The derived score is absent from edit-context REST metadata, preventing core from echoing it back as an explicit score operation. An unchanged stored score avoids a redundant write.
 
 ## Failure behavior
 
@@ -44,8 +44,7 @@ WordPress's other update operations transactional.
 
 No historical scores are migrated, no version metadata is added, and read/live
 analysis requests do not write a score. Imports, direct metadata calls, changed
-site options and custom controllers are not newly covered. Existing Classic
-nonce handling, scoring, metadata ownership and disclosure protections are unchanged.
+site options and custom controllers are not newly covered. Scoring, metadata ownership and disclosure protections remain. Classic SEO editing was removed in 1.0.7; WordPress REST authentication and capabilities protect native saves.
 
 ## Verification
 

@@ -50,6 +50,19 @@ class MWSEO_Meta {
 						return current_user_can( 'edit_post', $object_id );
 					},
 				);
+				if ( 'score' !== $key ) {
+					$args['default'] = 'array' === $def[0] ? array() : ( 'boolean' === $def[0] ? false : '' );
+					$args['revisions_enabled'] = true;
+					$args['sanitize_callback'] = static function ( $value ) use ( $key, $def ) {
+						if ( 'array' === $def[0] ) {
+							return array_values( array_slice( array_filter( array_map( 'sanitize_text_field', (array) $value ), 'strlen' ), 0, 2 ) );
+						}
+						if ( 'boolean' === $def[0] ) {
+							return rest_sanitize_boolean( $value );
+						}
+						return 'desc' === $key ? sanitize_textarea_field( $value ) : sanitize_text_field( $value );
+					};
+				}
 				if ( 'array' === $def[0] ) {
 					$args['show_in_rest'] = array(
 						'schema' => array(
@@ -57,6 +70,10 @@ class MWSEO_Meta {
 							'items' => array( 'type' => 'string' ),
 						),
 					);
+				} elseif ( 'score' === $key ) {
+					// Derived snapshots must not be echoed back as editable entity metadata.
+					// Keep explicit REST score operations available to existing API clients.
+					$args['show_in_rest'] = array( 'schema' => array( 'context' => array( 'view' ) ) );
 				} else {
 					$args['show_in_rest'] = true;
 				}
@@ -66,7 +83,7 @@ class MWSEO_Meta {
 				"rest_prepare_{$post_type}",
 				array( __CLASS__, 'protect_rest_meta' ),
 				10,
-				2
+				3
 			);
 		}
 		add_filter( 'rest_dispatch_request', array( __CLASS__, 'preflight_rest_meta' ), 10, 4 );
@@ -134,10 +151,24 @@ class MWSEO_Meta {
 	 *
 	 * @param WP_REST_Response $response Prepared response.
 	 * @param WP_Post          $post     Response post.
+	 * @param WP_REST_Request  $request  Request context.
 	 * @return WP_REST_Response
 	 */
-	public static function protect_rest_meta( $response, $post ) {
+	public static function protect_rest_meta( $response, $post, $request = null ) {
 		if ( current_user_can( 'edit_post', $post->ID ) ) {
+			// Expose effective legacy fallbacks in editor state without creating stored
+			// defaults on read. A subsequent explicit empty value stays authoritative.
+			if ( $request && 'edit' === $request->get_param( 'context' ) ) {
+				$data = $response->get_data();
+				foreach ( self::fields() as $key => $definition ) {
+					$meta_key = '_mwseo_' . $key;
+					if ( 'score' !== $key && isset( $data['meta'] ) && array_key_exists( $meta_key, $data['meta'] ) &&
+						! metadata_exists( 'post', $post->ID, $meta_key ) ) {
+						$data['meta'][ $meta_key ] = self::get( $post->ID, $key );
+					}
+				}
+				$response->set_data( $data );
+			}
 			return $response;
 		}
 
@@ -152,7 +183,7 @@ class MWSEO_Meta {
 	}
 
 	/**
-	 * Read a field, falling back to Yoast's value when ours is empty.
+	 * Read a field, falling back to another SEO plugin only when ours is absent.
 	 *
 	 * @param int    $post_id Post ID.
 	 * @param string $key     Field key (without prefix).
@@ -168,8 +199,8 @@ class MWSEO_Meta {
 			$slots = MWSEO_Compat::rank_math_active() ? array( 2 ) : array( 1 );
 			$other = self::from_other_plugins( $post_id, $key, $def, $slots );
 			$value = '' !== $other ? $other : $value;
-		} elseif ( '' === $value || array() === $value || false === $value ) {
-			// Ours is empty: fall back to Yoast, then Rank Math.
+		} elseif ( ! metadata_exists( 'post', $post_id, '_mwseo_' . $key ) ) {
+			// Only absent keys fall back; an explicit native empty/false must remain cleared.
 			$value = self::from_other_plugins( $post_id, $key, $def, array( 1, 2 ) );
 		}
 		if ( 'array' === $def[0] ) {
