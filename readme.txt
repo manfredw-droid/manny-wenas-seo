@@ -22,7 +22,9 @@ Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.t
 * WordPress Abilities API (WP 6.9+)
 * 0-100 SEO and readability score with a written verdict in the editor
 
-SEO controls require the WordPress block editor from version 1.0.7. Existing SEO data and frontend output continue to work with other editors.
+From version 1.0.7 (Equinox), SEO controls require the WordPress block editor and a post type with custom-fields support. Classic edit screens and enabled post types without the required support show an explanation instead of SEO controls. The plugin does not add support to external post types.
+
+Existing saved SEO metadata and frontend output continue to work independently of the editor. Save or update the post explicitly to persist changed SEO input: an author's draft autosave can update draft content while retaining the last explicitly saved SEO values. Recovery of unsaved draft SEO after a crash is not guaranteed.
 
 Deliberately excluded: redirects, 404 monitor, analytics dashboard, AI writer.
 
@@ -68,6 +70,8 @@ This functionality is not present in the version hosted on WordPress.org.
 * Removed: Classic Editor SEO metaboxes, their POST save handler, TinyMCE bindings and the duplicate slug adapter. Unsupported edit screens explain that the block editor is required; saved SEO remains active
 * Fixed: intentional empty values and disabled flags remain authoritative; untouched fields and title-only REST updates retain their data. Editable metadata supports WordPress revisions and published-post autosave recovery
 * Fixed: the derived score is excluded from editable REST responses so Gutenberg saves refresh it from the final stored inputs; explicit API score operations remain supported
+* Fixed: enabled post types without custom-fields support load no SEO editor assets and show a native Gutenberg notice; Classic retains the PHP notice. No support is automatically added to external post types
+* Known limitation: changed SEO input requires explicit Save Draft, Save or Update for durable storage; native draft autosave does not guarantee recovery of unsaved SEO input. The independent review found no autosave regression
 * Scoring version remains 1.2; no scoring rules or stored scores are migrated
 
 = 1.0.6.1 =
