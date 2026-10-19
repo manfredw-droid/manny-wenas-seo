@@ -1,0 +1,1038 @@
+# Copyright (C) 2026 Manny Wenas
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Manny Wenas SEO 1.0.7\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/manny-wenas-seo\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-10-19T10:03:48+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: manny-wenas-seo\n"
+
+#. Plugin Name of the plugin
+#: manny-wenas-seo.php
+#: includes/class-mwseo-companion.php:66
+#: includes/class-mwseo-settings.php:136
+#: includes/class-mwseo-settings.php:250
+msgid "Manny Wenas SEO"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: manny-wenas-seo.php
+msgid "https://mannywenas.com"
+msgstr ""
+
+#. Description of the plugin
+#: manny-wenas-seo.php
+msgid "Lean SEO for WordPress: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities."
+msgstr ""
+
+#. Author of the plugin
+#: manny-wenas-seo.php
+msgid "Manny Wenas"
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:32
+#: includes/class-mwseo-metabox.php:58
+msgid "SEO"
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:33
+msgid "Read and improve on-page SEO."
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:51
+msgid "Post or page ID."
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:65
+msgid "Get SEO analysis"
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:66
+msgid "Returns the 0-100 SEO and readability score, written verdict and per-check results for a post."
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:73
+#: includes/class-mwseo-abilities.php:139
+msgid "Post not found."
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:85
+msgid "Get SEO meta"
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:86
+msgid "Returns the focus keyphrase, related keyphrases, SEO title, meta description and robots flags for a post."
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:114
+msgid "Update SEO meta"
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:115
+msgid "Sets the focus keyphrase, up to two related keyphrases, SEO title, meta description and robots flags for a post. Only supplied fields change."
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:168
+msgid "List low-scoring posts"
+msgstr ""
+
+#: includes/class-mwseo-abilities.php:169
+msgid "Lists published posts and pages whose stored SEO score is below a threshold, lowest first."
+msgstr ""
+
+#. translators: %d: number
+#: includes/class-mwseo-companion.php:43
+#: includes/class-mwseo-companion.php:45
+#, php-format
+msgid "Related keyphrase %d (optional)"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:46
+msgid "Matching is semantic: word order and common variants (plurals, verb forms) count."
+msgstr ""
+
+#: includes/class-mwseo-companion.php:47
+msgid "noindex: keep this out of search results"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:48
+msgid "nofollow: do not follow links on this page"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:49
+msgid "Anchor post (prioritised in llms.txt)"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:50
+msgid "Search engine visibility"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:51
+msgid "No Search Console data for this URL yet."
+msgstr ""
+
+#: includes/class-mwseo-companion.php:52
+msgid "Search Console is not connected. Go to Manny Wenas SEO → Search Console to connect."
+msgstr ""
+
+#: includes/class-mwseo-companion.php:53
+msgid "characters"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:54
+msgid "Use"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:55
+msgid "Something went wrong."
+msgstr ""
+
+#: includes/class-mwseo-companion.php:56
+msgid "Suggest from Search Console"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:57
+msgid "Search Console queries (last 28 days)"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:58
+msgid "Trends (7 days)"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:59
+msgid "Average"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:60
+msgid "Query"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:61
+msgid "Clicks"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:62
+msgid "Impressions"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:63
+msgid "Position"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:64
+msgid "SEO fields"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:65
+msgid "Loading SEO fields…"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:67
+msgid "Analysing…"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:68
+msgid "N/A"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:69
+#: includes/class-mwseo-companion.php:80
+msgid "Headings"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:70
+msgid "No H2 or H3 headings yet."
+msgstr ""
+
+#: includes/class-mwseo-companion.php:71
+msgid "Go to:"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:72
+msgid "Go to"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:73
+msgid "Analysis"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:74
+#: includes/class-mwseo-importer.php:325
+msgid "Focus keyphrase"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:75
+#: includes/class-mwseo-importer.php:323
+msgid "SEO title"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:76
+#: includes/class-mwseo-importer.php:324
+msgid "Meta description"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:77
+msgid "URL slug"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:78
+#: includes/class-mwseo-scorer.php:65
+msgid "Related keyphrases"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:79
+msgid "Opening paragraph"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:81
+msgid "That field is not available on this screen."
+msgstr ""
+
+#: includes/class-mwseo-companion.php:82
+msgid "Open the SEO fields panel to use this field."
+msgstr ""
+
+#: includes/class-mwseo-companion.php:83
+msgid "URL control focused. Press Enter to edit the slug in WordPress."
+msgstr ""
+
+#: includes/class-mwseo-companion.php:84
+msgid "Opened the WordPress post settings. The URL control is under Summary."
+msgstr ""
+
+#: includes/class-mwseo-companion.php:85
+msgid "WordPress shows an editable permalink only once the post has a title and the site uses pretty permalinks."
+msgstr ""
+
+#: includes/class-mwseo-companion.php:86
+msgid "There is no paragraph to go to yet."
+msgstr ""
+
+#: includes/class-mwseo-companion.php:87
+msgid "SEO score"
+msgstr ""
+
+#. translators: %s: heading text
+#: includes/class-mwseo-companion.php:89
+#, php-format
+msgid "Go to heading: %s"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:90
+msgid "(empty heading)"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:91
+msgid "H2"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:92
+msgid "H3"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:93
+msgid "Open the Manny Wenas SEO companion"
+msgstr ""
+
+#: includes/class-mwseo-companion.php:94
+msgid "Title and description are managed by another SEO plugin."
+msgstr ""
+
+#: includes/class-mwseo-compat.php:71
+msgid "Rank Math SEO is active. Manny Wenas SEO is deferring to Rank Math for meta tags, schema and sitemaps."
+msgstr ""
+
+#: includes/class-mwseo-gsc.php:143
+msgid "Token request failed."
+msgstr ""
+
+#: includes/class-mwseo-gsc.php:156
+msgid "Search Console is not connected."
+msgstr ""
+
+#: includes/class-mwseo-gsc.php:207
+msgid "Search Console request failed."
+msgstr ""
+
+#: includes/class-mwseo-importer.php:312
+msgid "Would change"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:313
+msgid "Changed"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:314
+msgid "Already matches"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:315
+msgid "Preserved native value"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:316
+msgid "Unsupported or unresolved"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:317
+msgid "Invalid value"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:318
+msgid "Write failed"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:326
+msgid "Canonical URL"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:327
+msgid "Robots directives"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:328
+msgid "OG title"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:329
+msgid "OG description"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:330
+msgid "OG image URL"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:331
+msgid "Twitter title"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:332
+msgid "Twitter description"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:333
+msgid "Twitter image URL"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:334
+msgid "Anchor post"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:335
+msgid "Schema page type"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:336
+msgid "Schema article type"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:337
+msgid "Please select a source plugin."
+msgstr ""
+
+#: includes/class-mwseo-importer.php:338
+msgid "Please select at least one post type."
+msgstr ""
+
+#: includes/class-mwseo-importer.php:339
+msgid "Dry run complete — no data was written."
+msgstr ""
+
+#: includes/class-mwseo-importer.php:340
+msgid "Import complete."
+msgstr ""
+
+#: includes/class-mwseo-importer.php:341
+msgid "(plugin-specific robots keys)"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:342
+msgid "Source field (post meta key)"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:343
+msgid "MW SEO field"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:344
+msgid "Imported:"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:345
+msgid "Skipped (MW SEO data already exists):"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:346
+msgid "Unchanged (no source data found):"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:347
+msgid "Errors:"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:348
+msgid "Uncheck \"Dry run\" and click Run Import to apply changes."
+msgstr ""
+
+#: includes/class-mwseo-importer.php:529
+#: includes/class-mwseo-importer.php:546
+msgid "Import SEO Data"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:530
+msgid "Import"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:552
+msgid "Import currently supports Yoast SEO and Rank Math. Import from All in One SEO, SEOPress and The SEO Framework is switched off."
+msgstr ""
+
+#: includes/class-mwseo-importer.php:563
+msgid "Yoast and Rank Math imports support titles with compatible tokens, literal descriptions, primary focus phrases, explicit noindex/nofollow flags and cornerstone flags. Other fields are reported as unsupported. Source metadata must still exist; the source plugin may be inactive. Existing native records are preserved unless you check \"Overwrite\". Historical imports are not repaired. Import from All in One SEO, SEOPress and The SEO Framework is switched off."
+msgstr ""
+
+#: includes/class-mwseo-importer.php:577
+msgid "Import from"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:581
+msgid "— select a plugin —"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:592
+msgid "Post types"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:608
+msgid "Options"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:612
+msgid "Overwrite existing Manny Wenas SEO data"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:616
+msgid "Dry run — preview only, no data written"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:624
+msgid "Field map"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:630
+msgid "Preview"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:634
+msgid "Run Import"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:641
+msgid "Progress"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:651
+msgid "Results"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:675
+#: includes/class-mwseo-importer.php:679
+#: includes/class-mwseo-importer.php:680
+msgid "Unsupported — retained at source"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:705
+msgid "Insufficient permissions."
+msgstr ""
+
+#. translators: %s: source plugin identifier
+#: includes/class-mwseo-importer.php:719
+#, php-format
+msgid "Unknown source plugin: %s"
+msgstr ""
+
+#: includes/class-mwseo-importer.php:722
+msgid "Import currently supports Yoast SEO and Rank Math. Support for the other sources is switched off."
+msgstr ""
+
+#: includes/class-mwseo-indexnow.php:153
+#: includes/class-mwseo-notices.php:74
+msgid "You do not have permission to do this."
+msgstr ""
+
+#: includes/class-mwseo-llms-txt.php:162
+msgid "Key content"
+msgstr ""
+
+#: includes/class-mwseo-meta.php:141
+msgid "A requested metadata reset cannot be completed with the current stored value. The request was rejected before saving."
+msgstr ""
+
+#: includes/class-mwseo-metabox.php:17
+msgid "Manny Wenas SEO controls are unavailable because this post type does not support custom-fields. Your saved SEO data and frontend output continue to work."
+msgstr ""
+
+#: includes/class-mwseo-metabox.php:46
+msgid "From version 1.0.7, Manny Wenas SEO requires the block editor for SEO controls. Your saved SEO data and frontend output continue to work."
+msgstr ""
+
+#: includes/class-mwseo-notices.php:52
+msgid "MWSEO: Rewrite rules have been flushed."
+msgstr ""
+
+#: includes/class-mwseo-notices.php:62
+msgid "MWSEO: Sitemap rewrite rules zijn verdwenen door een conflicterende plugin."
+msgstr ""
+
+#: includes/class-mwseo-notices.php:63
+msgid "Klik hier om opnieuw te flushen"
+msgstr ""
+
+#: includes/class-mwseo-notices.php:98
+msgid "MWSEO: Er is een fysiek robots.txt bestand aangetroffen op de server. Zolang dit bestand bestaat, worden de MWSEO robots.txt instellingen niet toegepast. Verwijder het bestand om MWSEO de controle te geven."
+msgstr ""
+
+#: includes/class-mwseo-notices.php:99
+msgid "Negeer deze melding"
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:62
+msgid "Text & Content"
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:63
+msgid "Keyphrase placement"
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:64
+msgid "Technical"
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:225
+msgid "The focus keyphrase appears in the body text."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:226
+msgid "Focus keyphrase not found in the body text."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:252
+msgid "No H2 subheading detected."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:254
+msgid "Heading levels are not sequential (for example H4 follows H2 with no H3)."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:256
+msgid "The heading structure is logical."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:273
+msgid "No text available for readability analysis."
+msgstr ""
+
+#. translators: %d: average words per sentence
+#: includes/class-mwseo-scorer.php:294
+#, php-format
+msgid "Sentences average about %d words."
+msgstr ""
+
+#. translators: %d: average words per sentence
+#: includes/class-mwseo-scorer.php:296
+#, php-format
+msgid "Sentences average %d words."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:312
+msgid "The text links to other pages on this site."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:313
+msgid "No internal links detected."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:351
+msgid "The focus keyphrase appears in the SEO title."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:352
+msgid "Focus keyphrase not found in the SEO title."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:369
+msgid "The focus keyphrase appears in the meta description."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:370
+msgid "Focus keyphrase not found in the meta description."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:387
+msgid "The focus keyphrase appears in the URL slug."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:388
+msgid "Focus keyphrase not found in the URL slug."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:411
+msgid "No paragraph detected in the content."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:420
+msgid "The focus keyphrase appears in the opening paragraph."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:421
+msgid "Focus keyphrase not found in the opening paragraph."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:444
+msgid "No subheadings detected."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:449
+#: includes/class-mwseo-scorer.php:561
+#: includes/class-mwseo-scorer.php:714
+msgid "No focus keyphrase set."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:470
+msgid "The focus keyphrase appears in a subheading."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:471
+msgid "Focus keyphrase not found in any subheading."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:500
+msgid "No images to check."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:507
+msgid "All images have alt text."
+msgstr ""
+
+#. translators: 1: number of images without alt text, 2: total number of images
+#: includes/class-mwseo-scorer.php:509
+#, php-format
+msgid "%1$d of %2$d images lack alt text."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:523
+msgid "The URL slug is generated when the post is saved."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:534
+msgid "The URL slug is clean."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:535
+msgid "URL slug contains double hyphens or consists only of stop words."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:564
+msgid "No related keyphrases configured."
+msgstr ""
+
+#. translators: 1: related keyphrases found in the text, 2: total related keyphrases
+#: includes/class-mwseo-scorer.php:575
+#, php-format
+msgid "%1$d of %2$d related keyphrases appear in the text."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:593
+msgid "This post has fewer than 300 words."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:596
+msgid "No external links detected."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:628
+msgid "Focus keyphrase not set. Keyphrase checks are inactive."
+msgstr ""
+
+#: includes/class-mwseo-scorer.php:669
+msgid "All applicable checks received full credit."
+msgstr ""
+
+#. translators: %d: number of checks with no credit
+#: includes/class-mwseo-scorer.php:676
+#, php-format
+msgid "%d check received no credit"
+msgid_plural "%d checks received no credit"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of checks with partial credit
+#: includes/class-mwseo-scorer.php:683
+#, php-format
+msgid "%d received partial credit"
+msgid_plural "%d received partial credit"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-mwseo-settings.php:31
+msgid "General"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:32
+msgid "Social"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:33
+msgid "Schema"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:34
+msgid "Sitemaps"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:35
+msgid "Robots & llms.txt"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:36
+msgid "Search Console"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:37
+msgid "Verification & IndexNow"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:53
+msgid "— none —"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:65
+msgid "Default title template"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:65
+msgid "Variables: %%title%%, %%sitename%%, %%tagline%%, %%sep%%."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:66
+msgid "Title separator"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:67
+msgid "Post types with SEO controls"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:68
+msgid "Google Trends indicator"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:68
+msgid "Off by default. When enabled, your focus keyphrase is sent to Google Trends (an external service run by Google) to show a search-interest score in the post editor."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:71
+msgid "Default social image (attachment ID)"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:71
+msgid "Used when a post has no featured image. Find the ID in the Media Library."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:72
+msgid "X / Twitter handle"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:72
+msgid "For example @yoursite."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:73
+msgid "Facebook app ID (optional)"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:79
+msgid "This site represents"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:80
+msgid "Choose \"both\" for a personal site: the publisher becomes a hybrid [Person, Organization] node."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:82
+msgid "An organization"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:83
+msgid "A person"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:84
+msgid "Both (personal brand)"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:87
+msgid "Organization name"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:88
+msgid "Logo (attachment ID)"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:89
+msgid "Person (for person / both)"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:90
+msgid "Social profile URLs (one per line)"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:90
+msgid "Output as sameAs."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:94
+msgid "Default article type for posts"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:104
+msgid "News sitemap"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:105
+msgid "News publication name"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:106
+msgid "Image sitemap"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:107
+msgid "Video sitemap"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:108
+msgid "Category sitemap"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:109
+msgid "Tag sitemap"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:110
+msgid "Author sitemap"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:111
+msgid "HTML sitemap"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:111
+msgid "Place it on any page with the [mwseo_html_sitemap] shortcode."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:114
+msgid "Custom robots.txt rules"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:114
+msgid "Appended to WordPress’s virtual robots.txt. A physical robots.txt file overrides this."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:115
+msgid "Add sitemap URL to robots.txt"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:116
+msgid "Serve /llms.txt"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:116
+msgid "Built whenever /llms.txt is requested. Anchor posts are listed first."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:117
+msgid "llms.txt summary"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:117
+msgid "Defaults to the site tagline."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:120
+msgid "Google OAuth client ID"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:121
+msgid "Google OAuth client secret"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:122
+msgid "Search Console property"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:122
+msgid "For example https://example.com/ or sc-domain:example.com. Defaults to the home URL."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:125
+msgid "IndexNow notifications"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:125
+msgid "Off by default. When enabled, the URL of every post or page you publish or update, plus your IndexNow key, is sent to IndexNow (api.indexnow.org, an external service run by Microsoft/Bing) so search engines can crawl it sooner."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:126
+msgid "Google Search Console HTML file"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:127
+msgid "Bing Webmaster Tools verification code"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:161
+msgid "Settings"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:296
+msgid "IndexNow"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:302
+msgid "IndexNow key"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:305
+msgid "Vernieuw sleutel"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:307
+msgid "Key file:"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:309
+msgid "Published and updated posts and pages are sent to IndexNow automatically."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:324
+msgid "Connected to Google Search Console."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:325
+msgid "Disconnected from Google Search Console."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:326
+msgid "Google did not return a refresh token. Check your client ID, secret and redirect URI, then try again."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:327
+msgid "A new IndexNow key has been generated."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:328
+msgid "Save your OAuth client ID and secret first."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:342
+msgid "Sitemap index:"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:348
+msgid "Create an OAuth client (type: Web application) in Google Cloud Console, enable the Search Console API, and add this authorised redirect URI:"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:351
+msgid "Status: connected."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:351
+msgid "Disconnect"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:354
+msgid "Status: not connected."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:354
+msgid "Connect Search Console"
+msgstr ""
+
+#: includes/class-mwseo-settings.php:354
+msgid "Save your client ID and secret first."
+msgstr ""
+
+#: includes/class-mwseo-settings.php:401
+msgid "•••••••• (saved; leave blank to keep)"
+msgstr ""
+
+#: includes/class-mwseo-sitemaps.php:374
+msgid "Pages"
+msgstr ""
+
+#: includes/class-mwseo-sitemaps.php:405
+msgid "Authors"
+msgstr ""
+
+#: includes/class-mwseo-verification.php:94
+msgid "Niet ingesteld"
+msgstr ""
+
+#: includes/class-mwseo-verification.php:95
+msgid "Actief — controleer via Google Search Console."
+msgstr ""
+
+#: includes/class-mwseo-yoast.php:49
+msgid "Yoast SEO is active. Manny Wenas SEO is deferring to Yoast for all front-end output."
+msgstr ""
+
+#: manny-wenas-seo.php:47
+msgid "Once Weekly"
+msgstr ""

@@ -206,10 +206,7 @@ class MWSEO_Schema {
 	 * @return array|null
 	 */
 	private static function publisher() {
-		static $cache = null;
-		if ( null !== $cache ) {
-			return $cache;
-		}
+		// Each build resets the graph; register its logo again rather than cache a reference.
 		$mode     = MWSEO_Options::get( 'site_represents' );
 		$user_id  = (int) MWSEO_Options::get( 'person_user' );
 		$user     = $user_id ? get_userdata( $user_id ) : false;
@@ -248,8 +245,7 @@ class MWSEO_Schema {
 		if ( $profiles ) {
 			$node['sameAs'] = $profiles;
 		}
-		$cache = $node;
-		return $cache;
+		return $node;
 	}
 
 	/**
@@ -281,6 +277,23 @@ class MWSEO_Schema {
 	}
 
 	/**
+	 * Word count for the Article node, matching the analyzer's contract: the
+	 * same content preparation as MWSEO_Scorer::context() followed by
+	 * MWSEO_Analyzer::words(), without running a full analysis.
+	 *
+	 * @param string $content Raw post content.
+	 * @return int
+	 */
+	private static function word_count( $content ) {
+		$html = strip_shortcodes( (string) $content );
+		$html = preg_replace( '/<!--.*?-->/s', '', $html );
+		if ( false === stripos( $html, '<p' ) ) {
+			$html = wpautop( $html );
+		}
+		return count( MWSEO_Analyzer::words( MWSEO_Analyzer::plain( $html ) ) );
+	}
+
+	/**
 	 * Article / NewsArticle node.
 	 *
 	 * @param WP_Post    $post      Post.
@@ -300,7 +313,7 @@ class MWSEO_Schema {
 			'headline'         => get_the_title( $post ),
 			'datePublished'    => get_post_time( 'c', true, $post ),
 			'dateModified'     => get_post_modified_time( 'c', true, $post ),
-			'wordCount'        => str_word_count( wp_strip_all_tags( $post->post_content ) ),
+			'wordCount'        => self::word_count( $post->post_content ),
 			'inLanguage'       => get_bloginfo( 'language' ),
 		);
 		$author = self::author_ref( (int) $post->post_author );

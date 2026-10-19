@@ -36,6 +36,7 @@ final class MWSEO_Plugin {
 	private function __construct() {
 		MWSEO_Meta::init();
 		MWSEO_Metabox::init();
+		MWSEO_Companion::init();
 		MWSEO_Settings::init();
 		MWSEO_Rest::init();
 		MWSEO_Head::init();

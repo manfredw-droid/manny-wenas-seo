@@ -195,7 +195,7 @@ class MWSEO_Abilities {
 							'post_status'    => 'publish',
 							'posts_per_page' => $limit,
 							'meta_key'       => '_mwseo_score', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-							'meta_value_num' => $threshold, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+							'meta_value'     => $threshold, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 							'meta_compare'   => '<',
 							'meta_type'      => 'NUMERIC',
 							'orderby'        => 'meta_value_num',

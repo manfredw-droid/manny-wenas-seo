@@ -50,6 +50,19 @@ class MWSEO_Meta {
 						return current_user_can( 'edit_post', $object_id );
 					},
 				);
+				if ( 'score' !== $key ) {
+					$args['default'] = 'array' === $def[0] ? array() : ( 'boolean' === $def[0] ? false : '' );
+					$args['revisions_enabled'] = true;
+					$args['sanitize_callback'] = static function ( $value ) use ( $key, $def ) {
+						if ( 'array' === $def[0] ) {
+							return array_values( array_slice( array_filter( array_map( 'sanitize_text_field', (array) $value ), 'strlen' ), 0, 2 ) );
+						}
+						if ( 'boolean' === $def[0] ) {
+							return rest_sanitize_boolean( $value );
+						}
+						return 'desc' === $key ? sanitize_textarea_field( $value ) : sanitize_text_field( $value );
+					};
+				}
 				if ( 'array' === $def[0] ) {
 					$args['show_in_rest'] = array(
 						'schema' => array(
@@ -57,16 +70,120 @@ class MWSEO_Meta {
 							'items' => array( 'type' => 'string' ),
 						),
 					);
+				} elseif ( 'score' === $key ) {
+					// Derived snapshots must not be echoed back as editable entity metadata.
+					// Keep explicit REST score operations available to existing API clients.
+					$args['show_in_rest'] = array( 'schema' => array( 'context' => array( 'view' ) ) );
 				} else {
 					$args['show_in_rest'] = true;
 				}
 				register_post_meta( $post_type, '_mwseo_' . $key, $args );
 			}
+			add_filter(
+				"rest_prepare_{$post_type}",
+				array( __CLASS__, 'protect_rest_meta' ),
+				10,
+				3
+			);
 		}
+		add_filter( 'rest_dispatch_request', array( __CLASS__, 'preflight_rest_meta' ), 10, 4 );
 	}
 
 	/**
-	 * Read a field, falling back to Yoast's value when ours is empty.
+	 * Reject unsafe native null resets before a core post update is dispatched.
+	 *
+	 * Autosaves do not apply the ordinary post metadata reset operation.
+	 * Never return an error through their shared prepared-post filter.
+	 *
+	 * @param mixed           $dispatch_result Earlier dispatch result, or null.
+	 * @param WP_REST_Request $request         REST request.
+	 * @param string          $route           Matched REST route.
+	 * @param array           $handler         Matched endpoint handler.
+	 * @return mixed
+	 */
+	public static function preflight_rest_meta( $dispatch_result, $request, $route, $handler ) {
+		if ( null !== $dispatch_result ) {
+			return $dispatch_result;
+		}
+		$callback = isset( $handler['callback'] ) ? $handler['callback'] : null;
+		if ( ! is_array( $callback ) || ! isset( $callback[0], $callback[1] ) ||
+			! is_object( $callback[0] ) || 'WP_REST_Posts_Controller' !== get_class( $callback[0] ) ||
+			'update_item' !== $callback[1] ) {
+			return $dispatch_result;
+		}
+		$post_id = (int) $request->get_param( 'id' );
+		$meta    = $request->get_param( 'meta' );
+		if ( ! $post_id || ! is_array( $meta ) || ! current_user_can( 'edit_post', $post_id ) ) {
+			return $dispatch_result;
+		}
+		$post_type = get_post_type( $post_id );
+		$type      = get_post_type_object( $post_type );
+		if ( ! in_array( $post_type, MWSEO_Options::get( 'post_types', array( 'post', 'page' ) ), true ) ||
+			! $type || $type->get_rest_controller() !== $callback[0] ) {
+			return $dispatch_result;
+		}
+
+		$schema = null;
+		foreach ( self::fields() as $key => $definition ) {
+			$meta_key = '_mwseo_' . $key;
+			if ( ! array_key_exists( $meta_key, $meta ) || null !== $meta[ $meta_key ] ) {
+				continue;
+			}
+			if ( null === $schema ) {
+				$fields = new WP_REST_Post_Meta_Fields( get_post_type( $post_id ) );
+				$schema = $fields->get_field_schema();
+			}
+			if ( isset( $schema['properties'][ $meta_key ] ) && is_wp_error(
+				rest_validate_value_from_schema( get_post_meta( $post_id, $meta_key, true ), $schema['properties'][ $meta_key ] )
+			) ) {
+				return new WP_Error(
+					'mwseo_invalid_null_reset',
+					__( 'A requested metadata reset cannot be completed with the current stored value. The request was rejected before saving.', 'manny-wenas-seo' ),
+					array( 'status' => 409 )
+				);
+			}
+		}
+		return $dispatch_result;
+	}
+
+	/**
+	 * Restrict editorial metadata to users who can edit this post.
+	 *
+	 * @param WP_REST_Response $response Prepared response.
+	 * @param WP_Post          $post     Response post.
+	 * @param WP_REST_Request  $request  Request context.
+	 * @return WP_REST_Response
+	 */
+	public static function protect_rest_meta( $response, $post, $request = null ) {
+		if ( current_user_can( 'edit_post', $post->ID ) ) {
+			// Expose effective legacy fallbacks in editor state without creating stored
+			// defaults on read. A subsequent explicit empty value stays authoritative.
+			if ( $request && 'edit' === $request->get_param( 'context' ) ) {
+				$data = $response->get_data();
+				foreach ( self::fields() as $key => $definition ) {
+					$meta_key = '_mwseo_' . $key;
+					if ( 'score' !== $key && isset( $data['meta'] ) && array_key_exists( $meta_key, $data['meta'] ) &&
+						! metadata_exists( 'post', $post->ID, $meta_key ) ) {
+						$data['meta'][ $meta_key ] = self::get( $post->ID, $key );
+					}
+				}
+				$response->set_data( $data );
+			}
+			return $response;
+		}
+
+		$data = $response->get_data();
+		if ( is_array( $data ) && isset( $data['meta'] ) && is_array( $data['meta'] ) ) {
+			foreach ( array( 'focus', 'related', 'score' ) as $key ) {
+				unset( $data['meta'][ '_mwseo_' . $key ] );
+			}
+			$response->set_data( $data );
+		}
+		return $response;
+	}
+
+	/**
+	 * Read a field, falling back to another SEO plugin only when ours is absent.
 	 *
 	 * @param int    $post_id Post ID.
 	 * @param string $key     Field key (without prefix).
@@ -82,8 +199,8 @@ class MWSEO_Meta {
 			$slots = MWSEO_Compat::rank_math_active() ? array( 2 ) : array( 1 );
 			$other = self::from_other_plugins( $post_id, $key, $def, $slots );
 			$value = '' !== $other ? $other : $value;
-		} elseif ( '' === $value || array() === $value || false === $value ) {
-			// Ours is empty: fall back to Yoast, then Rank Math.
+		} elseif ( ! metadata_exists( 'post', $post_id, '_mwseo_' . $key ) ) {
+			// Only absent keys fall back; an explicit native empty/false must remain cleared.
 			$value = self::from_other_plugins( $post_id, $key, $def, array( 1, 2 ) );
 		}
 		if ( 'array' === $def[0] ) {
