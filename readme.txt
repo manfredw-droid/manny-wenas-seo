@@ -1,5 +1,6 @@
 === Manny Wenas SEO ===
 Contributors: mannywenas
+Donate link: https://paypal.me/manfr3dw
 Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
