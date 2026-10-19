@@ -11,6 +11,22 @@ Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.t
 
 == Description ==
 
+Write it your way.
+
+At a conference in 2011, journalists asked whether they really needed to repeat a keyphrase fifteen times in an article to rank in Google.
+
+The answer was yes.
+
+That answer stayed with me. Years later, I found myself adding awkward repetitions to an otherwise finished article because my SEO plugin said the keyword density was too low. The score improved. The story didn’t.
+
+That is why I built Manny Wenas SEO.
+
+Manny Wenas SEO helps you make your subject clear using semantic matching rather than requiring the same exact phrase everywhere. There is no keyword-density target to chase. Its score reflects the checks it can perform — not the quality of your ideas, your voice or your story.
+
+Five placement checks cover the title, introduction, subheadings, slug and meta description. You remain the writer.
+
+An optional Search Console connection shows you the actual queries people used to find your posts — inside WordPress, when you want it. The goal is simple: less time managing SEO, more time writing something worth reading.
+
 * Focus keyphrase (semantic matching) plus up to two related keyphrases
 * SEO title, meta description, noindex/nofollow per post
 * Open Graph and X/Twitter cards
