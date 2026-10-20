@@ -263,7 +263,7 @@
 		}
 		var suggestions = ( rows || [] ).filter( function ( row ) { return row.query.toLowerCase() !== props.focus.toLowerCase(); } ).slice( 0, 6 );
 		return el( Fragment, null,
-			el( Button, { variant: 'secondary', onClick: function () { setShow( ! show ); } }, t.suggest ),
+			el( Button, { className: 'mwseo-cmp__gsc-suggest', variant: 'secondary', onClick: function () { setShow( ! show ); } }, t.suggest ),
 			show ? el( 'div', { role: 'status' },
 				! core.cfg.hasGsc ? t.notConnected : error || ( rows === null ? t.analysing : ( ! suggestions.length ? t.noData : '' ) ),
 				el( 'ul', null, suggestions.map( function ( row ) { return el( 'li', { key: row.query }, row.query + ' (' + row.impressions + ') ',

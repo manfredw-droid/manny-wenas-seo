@@ -55,6 +55,7 @@
 }
 
 .mwseo-cmp__queries { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mwseo-cmp__gsc-suggest.components-button { margin-top: 12px; }
 .mwseo-cmp__queries th, .mwseo-cmp__queries td { padding: 4px; text-align: left; overflow-wrap: anywhere; }
 .mwseo-cmp__queries td:first-child { max-width: 120px; }
 .mwseo-cmp__notices { margin: 12px 16px; }
