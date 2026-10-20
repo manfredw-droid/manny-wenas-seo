@@ -74,11 +74,6 @@ Service provider: Google LLC
 Terms of use: https://policies.google.com/terms
 Privacy policy: https://policies.google.com/privacy
 
-**OpenAI / Anthropic** (pro tier only, not included in this plugin)
-The pro version of this plugin (distributed separately, not through WordPress.org) 
-optionally connects to OpenAI or Anthropic APIs for AI-assisted meta generation.
-This functionality is not present in the version hosted on WordPress.org.
-
 == Changelog ==
 
 = 1.0.7 =

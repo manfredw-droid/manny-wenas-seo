@@ -528,19 +528,19 @@ msgid "MWSEO: Rewrite rules have been flushed."
 msgstr ""
 
 #: includes/class-mwseo-notices.php:62
-msgid "MWSEO: Sitemap rewrite rules zijn verdwenen door een conflicterende plugin."
+msgid "MWSEO: Sitemap rewrite rules were removed by a conflicting plugin."
 msgstr ""
 
 #: includes/class-mwseo-notices.php:63
-msgid "Klik hier om opnieuw te flushen"
+msgid "Restore sitemap rewrite rules"
 msgstr ""
 
 #: includes/class-mwseo-notices.php:98
-msgid "MWSEO: Er is een fysiek robots.txt bestand aangetroffen op de server. Zolang dit bestand bestaat, worden de MWSEO robots.txt instellingen niet toegepast. Verwijder het bestand om MWSEO de controle te geven."
+msgid "MWSEO: A physical robots.txt file on the server overrides the robots.txt settings in Manny Wenas SEO. Remove that file to use these settings."
 msgstr ""
 
 #: includes/class-mwseo-notices.php:99
-msgid "Negeer deze melding"
+msgid "Dismiss this notice"
 msgstr ""
 
 #: includes/class-mwseo-scorer.php:62
@@ -950,7 +950,7 @@ msgid "IndexNow key"
 msgstr ""
 
 #: includes/class-mwseo-settings.php:305
-msgid "Vernieuw sleutel"
+msgid "Regenerate key"
 msgstr ""
 
 #: includes/class-mwseo-settings.php:307
@@ -1022,11 +1022,11 @@ msgid "Authors"
 msgstr ""
 
 #: includes/class-mwseo-verification.php:94
-msgid "Niet ingesteld"
+msgid "Not configured"
 msgstr ""
 
 #: includes/class-mwseo-verification.php:95
-msgid "Actief — controleer via Google Search Console."
+msgid "Configured locally; verify in the corresponding webmaster tool."
 msgstr ""
 
 #: includes/class-mwseo-yoast.php:49

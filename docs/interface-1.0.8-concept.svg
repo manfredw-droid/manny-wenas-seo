@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 650" width="1120" height="650" role="img" aria-label="Manny Wenas SEO setup screen concept with branded navigation">
+  <rect width="1120" height="650" fill="#f5f4f7"/>
+  <rect width="256" height="650" fill="#fff"/>
+  <path d="M256 0v650" stroke="#e6e0e9"/>
+  <svg x="28" y="30" width="68" height="68" viewBox="0 0 400 400" aria-hidden="true">
+    <circle cx="200" cy="200" r="200" fill="#721E97"/>
+    <path fill="#fff" d="M331.49 105.7 L314.83 105.7 L243.72 293.08 L211.65 219.25 L204.75 233.04 L237.67 310.28 L244.76 324.05 L319.61 127.41 L319.61 295.25 L331.49 294.47Z M125.55 78.43 L125.55 185.86 L137.43 215.69 L137.43 108.14 L189.19 199.88 L195.72 187.64 L135.59 78.43Z M275.4 78.49 L265.48 78.49 L197.62 201.07 L157.22 292.1 L152.47 281.76 L86.27 106.12 L69.16 106.12 L69.16 294.77 L81.16 294.77 L81.16 129.53 L86.87 141.89 L155.93 323.75 L160.78 315.03 L207.49 207.37 L263.5 107.13 L263.49 121.21 L263.49 217.63 L275.4 185.98Z"/>
+  </svg>
+  <text x="108" y="55" fill="#27212b" font-family="Arial, sans-serif" font-size="16" font-weight="700">Manny Wenas</text>
+  <text x="108" y="77" fill="#721E97" font-family="Arial, sans-serif" font-size="16" font-weight="700">SEO</text>
+  <text x="28" y="127" fill="#721E97" font-family="Georgia, serif" font-size="19">Write it your way.</text>
+  <path d="M28 146h200" stroke="#e6e0e9"/>
+  <rect x="15" y="171" width="226" height="47" rx="7" fill="#f1e6f6"/>
+  <text x="35" y="201" fill="#571475" font-family="Arial, sans-serif" font-size="16" font-weight="700">Get started</text>
+  <text x="35" y="255" fill="#4b4550" font-family="Arial, sans-serif" font-size="16">Settings</text>
+  <text x="35" y="304" fill="#4b4550" font-family="Arial, sans-serif" font-size="16">Import</text>
+  <text x="35" y="353" fill="#4b4550" font-family="Arial, sans-serif" font-size="16">Help</text>
+  <text x="300" y="80" fill="#27212b" font-family="Arial, sans-serif" font-size="31" font-weight="700">Let’s get you started</text>
+  <text x="300" y="117" fill="#6b626e" font-family="Arial, sans-serif" font-size="16">A short setup. Your writing stays yours.</text>
+  <rect x="300" y="153" width="769" height="358" rx="13" fill="#fff" stroke="#e6e0e9"/>
+  <text x="332" y="200" fill="#721E97" font-family="Arial, sans-serif" font-size="14" font-weight="700">STEP 1 OF 3</text>
+  <text x="332" y="244" fill="#27212b" font-family="Arial, sans-serif" font-size="26" font-weight="700">Bring your SEO data along</text>
+  <text x="332" y="280" fill="#625a65" font-family="Arial, sans-serif" font-size="16">Preview and import supported post SEO data from Yoast SEO or Rank Math.</text>
+  <text x="332" y="307" fill="#625a65" font-family="Arial, sans-serif" font-size="16">Then check your site identity. Existing Manny values stay in place by default.</text>
+  <rect x="332" y="343" width="300" height="50" rx="6" fill="#fff" stroke="#b9adbf"/>
+  <text x="349" y="374" fill="#27212b" font-family="Arial, sans-serif" font-size="16">Yoast SEO</text>
+  <path d="m599 365 8 8 8-8" fill="none" stroke="#625a65" stroke-width="2"/>
+  <rect x="332" y="417" width="195" height="49" rx="6" fill="#721E97"/>
+  <text x="354" y="448" fill="#fff" font-family="Arial, sans-serif" font-size="16" font-weight="700">Preview import</text>
+  <text x="554" y="448" fill="#721E97" font-family="Arial, sans-serif" font-size="16">Skip for now</text>
+  <text x="301" y="555" fill="#6b626e" font-family="Arial, sans-serif" font-size="14">Site-wide settings are reviewed separately · Next: site identity · editor</text>
+</svg>

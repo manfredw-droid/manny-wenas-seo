@@ -59,8 +59,8 @@ class MWSEO_Notices {
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:.5em 0;">
 				<input type="hidden" name="action" value="mwseo_flush_rewrite" />
 				<?php wp_nonce_field( 'mwseo_flush_rewrite', 'mwseo_flush_nonce' ); ?>
-				<?php esc_html_e( 'MWSEO: Sitemap rewrite rules zijn verdwenen door een conflicterende plugin.', 'manny-wenas-seo' ); ?>
-				<button type="submit" class="button-link"><?php esc_html_e( 'Klik hier om opnieuw te flushen', 'manny-wenas-seo' ); ?></button>
+				<?php esc_html_e( 'MWSEO: Sitemap rewrite rules were removed by a conflicting plugin.', 'manny-wenas-seo' ); ?>
+				<button type="submit" class="button-link"><?php esc_html_e( 'Restore sitemap rewrite rules', 'manny-wenas-seo' ); ?></button>
 			</form>
 		</div>
 		<?php
@@ -95,8 +95,8 @@ class MWSEO_Notices {
 		?>
 		<div class="notice notice-warning is-dismissible">
 			<p>
-				<?php esc_html_e( 'MWSEO: Er is een fysiek robots.txt bestand aangetroffen op de server. Zolang dit bestand bestaat, worden de MWSEO robots.txt instellingen niet toegepast. Verwijder het bestand om MWSEO de controle te geven.', 'manny-wenas-seo' ); ?>
-				<a href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'Negeer deze melding', 'manny-wenas-seo' ); ?></a>
+				<?php esc_html_e( 'MWSEO: A physical robots.txt file on the server overrides the robots.txt settings in Manny Wenas SEO. Remove that file to use these settings.', 'manny-wenas-seo' ); ?>
+				<a href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'Dismiss this notice', 'manny-wenas-seo' ); ?></a>
 			</p>
 		</div>
 		<?php

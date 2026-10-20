@@ -124,7 +124,7 @@ class MWSEO_Settings {
 			'verify'   => array(
 				array( 'indexnow_enabled', 'checkbox', __( 'IndexNow notifications', 'manny-wenas-seo' ), __( 'Off by default. When enabled, the URL of every post or page you publish or update, plus your IndexNow key, is sent to IndexNow (api.indexnow.org, an external service run by Microsoft/Bing) so search engines can crawl it sooner.', 'manny-wenas-seo' ) ),
 				array( 'gsc_html_filename', 'text', __( 'Google Search Console HTML file', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'gsc_html_filename' ) ), array(), 'googleXXXXXXXXXXXXXXXX.html' ),
-				array( 'bing_verification_key', 'text', __( 'Bing Webmaster Tools verification code', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'bing_verification_key' ) ), array(), 'jouw Bing verificatiecode' ),
+				array( 'bing_verification_key', 'text', __( 'Bing Webmaster Tools verification code', 'manny-wenas-seo' ), MWSEO_Verification::status( MWSEO_Options::get( 'bing_verification_key' ) ), array(), 'Your Bing verification code' ),
 			),
 		);
 	}
@@ -302,7 +302,7 @@ class MWSEO_Settings {
 					<th scope="row"><label for="mwseo_indexnow_key"><?php esc_html_e( 'IndexNow key', 'manny-wenas-seo' ); ?></label></th>
 					<td>
 						<input type="text" id="mwseo_indexnow_key" class="regular-text code" value="<?php echo esc_attr( $key ); ?>" readonly="readonly" />
-						<button type="submit" class="button"><?php esc_html_e( 'Vernieuw sleutel', 'manny-wenas-seo' ); ?></button>
+						<button type="submit" class="button"><?php esc_html_e( 'Regenerate key', 'manny-wenas-seo' ); ?></button>
 						<p class="description">
 							<?php esc_html_e( 'Key file:', 'manny-wenas-seo' ); ?>
 							<a href="<?php echo esc_url( home_url( '/' . $key . '.txt' ) ); ?>" target="_blank" rel="noopener"><?php echo esc_html( home_url( '/' . $key . '.txt' ) ); ?></a>
