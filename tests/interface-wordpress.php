@@ -46,7 +46,7 @@ delete_option( MWSEO_Options::KEY );
 delete_transient( MWSEO_Setup::TRANSIENT );
 MWSEO_Options::flush();
 MWSEO_Plugin::activate();
-check_ui( (bool) get_transient( MWSEO_Setup::TRANSIENT ), 'fresh installation (no stored options) sets the one-time setup flag' );
+check_ui( (string) get_current_user_id() === get_transient( MWSEO_Setup::TRANSIENT ), 'fresh installation (no stored options) sets the one-time setup flag for the activating user' );
 check_ui( false !== get_option( MWSEO_Options::KEY ), 'activation still stores the default options' );
 delete_transient( MWSEO_Setup::TRANSIENT );
 MWSEO_Plugin::activate();
@@ -70,7 +70,7 @@ function redirect_target() {
 	}
 	return null;
 }
-set_transient( MWSEO_Setup::TRANSIENT, 1, 300 );
+set_transient( MWSEO_Setup::TRANSIENT, 'any', 300 );
 $_GET['activate-multi'] = '1';
 check_ui( null === redirect_target() && (bool) get_transient( MWSEO_Setup::TRANSIENT ), 'bulk activation does not redirect and keeps nothing hidden' );
 unset( $_GET['activate-multi'] );
@@ -79,6 +79,12 @@ check_ui( null === redirect_target(), 'a visitor without manage_options is never
 wp_set_current_user( 1 );
 // The one-time landing must never intercept a POST or an administration action.
 $GLOBALS['pagenow'] = 'index.php';
+set_transient( MWSEO_Setup::TRANSIENT, '99999', 300 );
+check_ui( null === redirect_target() && '99999' === get_transient( MWSEO_Setup::TRANSIENT ), "another user's one-time landing is not consumed by this administrator" );
+set_transient( MWSEO_Setup::TRANSIENT, 'any', 300 );
+$any_target = redirect_target();
+check_ui( is_string( $any_target ) && has( $any_target, 'page=mwseo-setup' ), 'an activation without a user (WP-CLI) lets the first administrator page view land on setup' );
+set_transient( MWSEO_Setup::TRANSIENT, (string) get_current_user_id(), 300 );
 $_SERVER['REQUEST_METHOD'] = 'POST';
 check_ui( null === redirect_target() && (bool) get_transient( MWSEO_Setup::TRANSIENT ), 'a POST request is never redirected and keeps the flag' );
 $_SERVER['REQUEST_METHOD'] = 'GET';

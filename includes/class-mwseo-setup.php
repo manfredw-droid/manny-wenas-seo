@@ -41,13 +41,15 @@ class MWSEO_Setup {
 
 	/**
 	 * Remember that this activation created the options (a new installation).
-	 * Existing sites (options already stored) are never redirected.
+	 * Existing sites (options already stored) are never redirected. The flag belongs to the user who
+	 * activated the plugin, so another administrator's page view cannot consume it; an activation
+	 * without a user (WP-CLI) lets the first administrator page view use it.
 	 *
 	 * @param bool $is_new_install True when no options existed before activation.
 	 */
 	public static function flag_new_install( $is_new_install ) {
 		if ( $is_new_install ) {
-			set_transient( self::TRANSIENT, 1, 5 * MINUTE_IN_SECONDS );
+			set_transient( self::TRANSIENT, get_current_user_id() ? (string) get_current_user_id() : 'any', 5 * MINUTE_IN_SECONDS );
 		}
 	}
 
@@ -70,7 +72,8 @@ class MWSEO_Setup {
 	 * One-time landing after a fresh activation. No bulk, network, AJAX or non-admin redirects.
 	 */
 	public static function maybe_redirect() {
-		if ( ! get_transient( self::TRANSIENT ) ) {
+		$owner = get_transient( self::TRANSIENT );
+		if ( ! $owner || ( 'any' !== (string) $owner && (int) $owner !== get_current_user_id() ) ) {
 			return;
 		}
 		// Only a plain page view (GET) of the dashboard-style admin may be redirected: never a POST,

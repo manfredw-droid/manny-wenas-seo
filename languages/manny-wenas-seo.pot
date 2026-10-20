@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Manny Wenas SEO 1.0.7\n"
+"Project-Id-Version: Manny Wenas SEO 1.0.8\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/manny-wenas-seo\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-20T12:00:00+00:00\n"
+"POT-Creation-Date: 2026-10-20T13:00:00+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: manny-wenas-seo\n"
@@ -145,9 +145,9 @@ msgid "Write it your way."
 msgstr ""
 
 #: includes/class-mwseo-admin.php:131
-#: includes/class-mwseo-setup.php:60
-#: includes/class-mwseo-setup.php:61
-#: includes/class-mwseo-setup.php:91
+#: includes/class-mwseo-setup.php:62
+#: includes/class-mwseo-setup.php:63
+#: includes/class-mwseo-setup.php:110
 msgid "Get started"
 msgstr ""
 
@@ -161,7 +161,7 @@ msgid "Tools"
 msgstr ""
 
 #: includes/class-mwseo-admin.php:137
-#: includes/class-mwseo-importer.php:537
+#: includes/class-mwseo-importer.php:550
 msgid "Import"
 msgstr ""
 
@@ -509,83 +509,83 @@ msgstr ""
 msgid "Uncheck \"Dry run\" and click Run Import to apply changes."
 msgstr ""
 
-#: includes/class-mwseo-importer.php:536
-#: includes/class-mwseo-importer.php:552
+#: includes/class-mwseo-importer.php:549
+#: includes/class-mwseo-importer.php:565
 msgid "Import SEO Data"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:552
+#: includes/class-mwseo-importer.php:565
 msgid "Preview and import supported post SEO data from Yoast SEO or Rank Math."
 msgstr ""
 
-#: includes/class-mwseo-importer.php:557
+#: includes/class-mwseo-importer.php:570
 msgid "Yoast and Rank Math imports support titles with compatible tokens, literal descriptions, primary focus phrases, explicit noindex/nofollow flags and cornerstone flags. Other fields are reported as unsupported. Source metadata must still exist; the source plugin may be inactive. Existing native records are preserved unless you check \"Overwrite\". Historical imports are not repaired. Import from All in One SEO, SEOPress and The SEO Framework is switched off."
 msgstr ""
 
-#: includes/class-mwseo-importer.php:593
+#: includes/class-mwseo-importer.php:606
 msgid "Import from"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:597
+#: includes/class-mwseo-importer.php:610
 msgid "— select a plugin —"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:606
+#: includes/class-mwseo-importer.php:619
 msgid "Post types"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:618
+#: includes/class-mwseo-importer.php:631
 msgid "Options"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:622
+#: includes/class-mwseo-importer.php:635
 msgid "Overwrite existing Manny Wenas SEO data"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:629
+#: includes/class-mwseo-importer.php:642
 msgid "Dry run — preview only, no data written"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:638
+#: includes/class-mwseo-importer.php:651
 msgid "Field map"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:644
+#: includes/class-mwseo-importer.php:657
 msgid "Preview import"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:647
+#: includes/class-mwseo-importer.php:660
 msgid "Run Import"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:649
+#: includes/class-mwseo-importer.php:662
 msgid "Available after a preview."
 msgstr ""
 
-#: includes/class-mwseo-importer.php:654
+#: includes/class-mwseo-importer.php:667
 msgid "Progress"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:660
+#: includes/class-mwseo-importer.php:673
 msgid "Results"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:682
-#: includes/class-mwseo-importer.php:686
-#: includes/class-mwseo-importer.php:687
+#: includes/class-mwseo-importer.php:695
+#: includes/class-mwseo-importer.php:699
+#: includes/class-mwseo-importer.php:700
 msgid "Unsupported — retained at source"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:712
+#: includes/class-mwseo-importer.php:725
 msgid "Insufficient permissions."
 msgstr ""
 
 #. translators: %s: source plugin identifier
-#: includes/class-mwseo-importer.php:726
+#: includes/class-mwseo-importer.php:739
 msgid "Unknown source plugin: %s"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:729
+#: includes/class-mwseo-importer.php:742
 msgid "Import currently supports Yoast SEO and Rank Math. Support for the other sources is switched off."
 msgstr ""
 
@@ -1084,104 +1084,104 @@ msgstr ""
 msgid "•••••••• (saved; leave blank to keep)"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:103
+#: includes/class-mwseo-setup.php:122
 msgid "Rank Math SEO is still active. Manny Wenas SEO defers to it for frontend output until you deactivate it."
 msgstr ""
 
-#: includes/class-mwseo-setup.php:106
+#: includes/class-mwseo-setup.php:125
 msgid "Yoast SEO is still active. Manny Wenas SEO defers to it for frontend output until you deactivate it."
 msgstr ""
 
-#: includes/class-mwseo-setup.php:120
+#: includes/class-mwseo-setup.php:139
 msgid "name"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:123
+#: includes/class-mwseo-setup.php:142
 msgid "logo"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:126
+#: includes/class-mwseo-setup.php:145
 msgid "person"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:140
+#: includes/class-mwseo-setup.php:159
 msgid "Let’s get you started"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:140
+#: includes/class-mwseo-setup.php:159
 msgid "A short setup. Your writing stays yours."
 msgstr ""
 
-#: includes/class-mwseo-setup.php:144
+#: includes/class-mwseo-setup.php:163
 msgid "Step 1 of 3"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:145
+#: includes/class-mwseo-setup.php:164
 msgid "Bring your SEO data along"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:146
+#: includes/class-mwseo-setup.php:165
 msgid "Preview and import supported post SEO data from Yoast SEO or Rank Math. Then check your site identity."
 msgstr ""
 
-#: includes/class-mwseo-setup.php:148
+#: includes/class-mwseo-setup.php:167
 msgid "Site-wide settings are reviewed separately, in the next step and under Settings."
 msgstr ""
 
-#: includes/class-mwseo-setup.php:149
+#: includes/class-mwseo-setup.php:168
 msgid "Your source data is kept. Nothing is deleted and no plugin is deactivated for you."
 msgstr ""
 
-#: includes/class-mwseo-setup.php:150
+#: includes/class-mwseo-setup.php:169
 msgid "Existing Manny Wenas SEO values are preserved unless you choose to overwrite them."
 msgstr ""
 
-#: includes/class-mwseo-setup.php:151
+#: includes/class-mwseo-setup.php:170
 msgid "Not every setting is imported. Unsupported fields are listed in the preview."
 msgstr ""
 
-#: includes/class-mwseo-setup.php:157
+#: includes/class-mwseo-setup.php:176
 msgid "Skip this step"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:161
+#: includes/class-mwseo-setup.php:180
 msgid "Step 2 of 3"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:162
+#: includes/class-mwseo-setup.php:181
 msgid "Check your site identity"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:163
+#: includes/class-mwseo-setup.php:182
 msgid "Used in structured data (schema) on your site. All of it is optional for writing."
 msgstr ""
 
 #. translators: %s: list of missing items, for example "logo, person"
-#: includes/class-mwseo-setup.php:169
+#: includes/class-mwseo-setup.php:188
 msgid "Not set yet: %s. You can add it below whenever you like."
 msgstr ""
 
-#: includes/class-mwseo-setup.php:180
+#: includes/class-mwseo-setup.php:199
 msgid "Save site identity"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:185
+#: includes/class-mwseo-setup.php:204
 msgid "Step 3 of 3"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:186
+#: includes/class-mwseo-setup.php:205
 msgid "Write in the block editor"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:187
+#: includes/class-mwseo-setup.php:206
 msgid "Open the Manny Wenas SEO panel from the editor’s top-right toolbar. Add a focus keyphrase, a title and a description when it helps. The checks are guidance, not a verdict on your writing."
 msgstr ""
 
-#: includes/class-mwseo-setup.php:189
+#: includes/class-mwseo-setup.php:208
 msgid "Write a post"
 msgstr ""
 
-#: includes/class-mwseo-setup.php:190
+#: includes/class-mwseo-setup.php:209
 msgid "Review all settings"
 msgstr ""
 

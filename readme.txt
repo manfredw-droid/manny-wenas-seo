@@ -5,7 +5,7 @@ Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.7
+Stable tag: 1.0.8
 License: GPLv2 or later
 
 Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
@@ -75,6 +75,14 @@ Terms of use: https://policies.google.com/terms
 Privacy policy: https://policies.google.com/privacy
 
 == Changelog ==
+
+= 1.0.8 =
+* Added: a first-time "Get started" screen. It offers a previewed import of supported post SEO data from Yoast SEO or Rank Math, then a site identity step (name and logo). It opens once after a new installation, can be skipped, and is never forced on existing sites; "Get started" stays in the menu
+* Changed: settings use a left navigation with section descriptions and a stable save bar; the logo and default social image are chosen from the media library (the stored attachment ID is unchanged)
+* Changed: the editor panel groups the SEO fields, labels the number as the score of automated checks (not a judgement of your writing) and drops the redundant quick-navigation row. The slug link, heading navigation, analysis and Search Console tools remain
+* Changed: administration texts that were still Dutch are now English translation sources
+* Removed: the paragraph about a separate Pro AI service from the readme's External Services section; this plugin has no such feature
+* Unchanged: scoring (version 1.2), stored SEO data, frontend output and Search Console behaviour
 
 = 1.0.7 =
 * Changed: Equinox moves all SEO controls into a native Gutenberg sidebar, saved through WordPress editor metadata. Edit the slug using WordPress's own control
