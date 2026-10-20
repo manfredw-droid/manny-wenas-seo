@@ -27,15 +27,42 @@ class MWSEO_Settings {
 	 * @return array
 	 */
 	private static function tabs() {
-		return array(
-			'general'  => __( 'General', 'manny-wenas-seo' ),
-			'social'   => __( 'Social', 'manny-wenas-seo' ),
-			'schema'   => __( 'Schema', 'manny-wenas-seo' ),
-			'sitemaps' => __( 'Sitemaps', 'manny-wenas-seo' ),
-			'robots'   => __( 'Robots & llms.txt', 'manny-wenas-seo' ),
-			'gsc'      => __( 'Search Console', 'manny-wenas-seo' ),
-			'verify'   => __( 'Verification & IndexNow', 'manny-wenas-seo' ),
+		return MWSEO_Admin::sections();
+	}
+
+	/**
+	 * Short description shown under each section title.
+	 *
+	 * @param string $tab Tab slug.
+	 * @return string
+	 */
+	private static function section_description( $tab ) {
+		$map = array(
+			'general'  => __( 'Titles, the post types that get SEO controls, and optional indicators.', 'manny-wenas-seo' ),
+			'social'   => __( 'How your pages look when shared on social networks.', 'manny-wenas-seo' ),
+			'schema'   => __( 'Who your site represents in structured data. All of it is optional for writing.', 'manny-wenas-seo' ),
+			'sitemaps' => __( 'Which sitemaps your site offers to search engines.', 'manny-wenas-seo' ),
+			'robots'   => __( 'Rules for crawlers and the llms.txt summary for AI agents.', 'manny-wenas-seo' ),
+			'gsc'      => __( 'Optional. Connect Google Search Console to see the queries behind your posts.', 'manny-wenas-seo' ),
+			'verify'   => __( 'Site verification codes and optional IndexNow notifications.', 'manny-wenas-seo' ),
 		);
+		return isset( $map[ $tab ] ) ? $map[ $tab ] : '';
+	}
+
+	/**
+	 * Fields of the site identity step on the setup screen (stored by the Schema section).
+	 *
+	 * @return array
+	 */
+	public static function identity_fields() {
+		$keep = array( 'site_represents', 'org_name', 'org_logo', 'person_user' );
+		$out  = array();
+		foreach ( self::fields()['schema'] as $f ) {
+			if ( in_array( $f[0], $keep, true ) ) {
+				$out[] = $f;
+			}
+		}
+		return $out;
 	}
 
 	/**
@@ -68,7 +95,7 @@ class MWSEO_Settings {
 				array( 'trends_enabled', 'checkbox', __( 'Google Trends indicator', 'manny-wenas-seo' ), __( 'Off by default. When enabled, your focus keyphrase is sent to Google Trends (an external service run by Google) to show a search-interest score in the post editor.', 'manny-wenas-seo' ) ),
 			),
 			'social'   => array(
-				array( 'default_image', 'number', __( 'Default social image (attachment ID)', 'manny-wenas-seo' ), __( 'Used when a post has no featured image. Find the ID in the Media Library.', 'manny-wenas-seo' ) ),
+				array( 'default_image', 'media', __( 'Default social image', 'manny-wenas-seo' ), __( 'Used when a post has no featured image.', 'manny-wenas-seo' ) ),
 				array( 'twitter_site', 'text', __( 'X / Twitter handle', 'manny-wenas-seo' ), __( 'For example @yoursite.', 'manny-wenas-seo' ) ),
 				array( 'fb_app_id', 'text', __( 'Facebook app ID (optional)', 'manny-wenas-seo' ), '' ),
 			),
@@ -85,7 +112,7 @@ class MWSEO_Settings {
 					),
 				),
 				array( 'org_name', 'text', __( 'Organization name', 'manny-wenas-seo' ), '' ),
-				array( 'org_logo', 'number', __( 'Logo (attachment ID)', 'manny-wenas-seo' ), '' ),
+				array( 'org_logo', 'media', __( 'Logo', 'manny-wenas-seo' ), __( 'Used as the publisher logo in structured data.', 'manny-wenas-seo' ) ),
 				array( 'person_user', 'select', __( 'Person (for person / both)', 'manny-wenas-seo' ), '', $users ),
 				array( 'social_profiles', 'textarea', __( 'Social profile URLs (one per line)', 'manny-wenas-seo' ), __( 'Output as sameAs.', 'manny-wenas-seo' ) ),
 				array(
@@ -133,7 +160,7 @@ class MWSEO_Settings {
 	 * Menu registration.
 	 */
 	public static function menu() {
-		add_menu_page( __( 'Manny Wenas SEO', 'manny-wenas-seo' ), __( 'Manny Wenas SEO', 'manny-wenas-seo' ), 'manage_options', 'mwseo', array( __CLASS__, 'render' ), 'dashicons-search', 80 );
+		MWSEO_Admin::register_screen( add_menu_page( __( 'Manny Wenas SEO', 'manny-wenas-seo' ), __( 'Manny Wenas SEO', 'manny-wenas-seo' ), 'manage_options', 'mwseo', array( __CLASS__, 'render' ), 'dashicons-search', 80 ) );
 	}
 
 	/**
@@ -185,6 +212,7 @@ class MWSEO_Settings {
 						$current[ $key ] = empty( $raw ) ? 0 : 1;
 						break;
 					case 'number':
+					case 'media':
 						$current[ $key ] = absint( $raw );
 						break;
 					case 'textarea':
@@ -245,28 +273,11 @@ class MWSEO_Settings {
 		$tab  = isset( $tabs[ $tab ] ) ? $tab : 'general';
 		$all  = self::fields();
 		$opts = MWSEO_Options::all();
+		MWSEO_Admin::shell_open( 'settings:' . $tab, $tabs[ $tab ], self::section_description( $tab ) );
+		self::messages();
+		settings_errors();
 		?>
-		<div class="wrap mwseo-settings">
-			<h1><?php esc_html_e( 'Manny Wenas SEO', 'manny-wenas-seo' ); ?> <small>v<?php echo esc_html( MWSEO_VERSION ); ?></small></h1>
-			<?php self::messages(); ?>
-			<h2 class="nav-tab-wrapper">
-				<?php foreach ( $tabs as $slug => $label ) : ?>
-					<a class="nav-tab <?php echo $slug === $tab ? 'nav-tab-active' : ''; ?>" href="
-					<?php
-					echo esc_url(
-						add_query_arg(
-							array(
-								'page' => 'mwseo',
-								'tab'  => $slug,
-							),
-							admin_url( 'admin.php' )
-						)
-					);
-					?>
-										"><?php echo esc_html( $label ); ?></a>
-				<?php endforeach; ?>
-			</h2>
-
+		<div class="mwseo-card mwseo-settings">
 			<form method="post" action="options.php">
 				<?php settings_fields( 'mwseo_group' ); ?>
 				<?php self::tab_intro( $tab ); ?>
@@ -275,11 +286,12 @@ class MWSEO_Settings {
 						<?php self::field( $f, $opts ); ?>
 					<?php endforeach; ?>
 				</table>
-				<?php submit_button(); ?>
+				<div class="mwseo-savebar"><?php submit_button( __( 'Save changes', 'manny-wenas-seo' ), 'primary', 'submit', false ); ?></div>
 			</form>
 			<?php self::indexnow_box( $tab ); ?>
 		</div>
 		<?php
+		MWSEO_Admin::shell_close();
 	}
 
 	/**
@@ -362,7 +374,7 @@ class MWSEO_Settings {
 	 * @param array $f    Field definition.
 	 * @param array $opts Current options.
 	 */
-	private static function field( array $f, array $opts ) {
+	public static function field( array $f, array $opts ) {
 		list( $key, $type, $label, $desc ) = $f;
 		$choices                           = isset( $f[4] ) ? $f[4] : array();
 		$name                              = MWSEO_Options::KEY . '[' . $key . ']';
@@ -396,6 +408,14 @@ class MWSEO_Settings {
 						break;
 					case 'number':
 						printf( '<input type="number" min="0" id="%1$s" name="%2$s" value="%3$s" class="small-text" />', esc_attr( $id ), esc_attr( $name ), esc_attr( $val ) );
+						break;
+					case 'media':
+						// The numeric attachment ID stays the stored value; admin.js adds the media-library picker.
+						$thumb = $val ? wp_get_attachment_image_url( (int) $val, 'thumbnail' ) : '';
+						echo '<div class="mwseo-media" data-mwseo-media>';
+						printf( '<input type="number" min="0" id="%1$s" name="%2$s" value="%3$s" class="small-text mwseo-media__id" />', esc_attr( $id ), esc_attr( $name ), esc_attr( $val ) );
+						printf( '<span class="mwseo-media__preview">%s</span>', $thumb ? '<img src="' . esc_url( $thumb ) . '" alt="" />' : '' );
+						echo '</div>';
 						break;
 					case 'password':
 						printf( '<input type="password" id="%1$s" name="%2$s" value="" class="regular-text" autocomplete="new-password" placeholder="%3$s" />', esc_attr( $id ), esc_attr( $name ), $val ? esc_attr__( '•••••••• (saved; leave blank to keep)', 'manny-wenas-seo' ) : '' );

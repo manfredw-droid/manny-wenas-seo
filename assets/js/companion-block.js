@@ -170,7 +170,7 @@
 			{ className: 'mwseo-cmp__head', 'aria-live': 'polite' },
 			el(
 				'div',
-				{ className: 'mwseo-ring mwseo-cmp__ring', 'data-state': core.ringState( res ), role: 'img', 'aria-label': t.score + ( res ? ': ' + res.score : '' ) },
+				{ className: 'mwseo-ring mwseo-cmp__ring', 'data-state': core.ringState( res ), role: 'img', 'aria-label': t.checksScore + ( res ? ': ' + res.score : '' ) },
 				el( 'span', null, res ? res.score : '–' )
 			),
 			el( 'strong', { className: 'mwseo-cmp__verdict' }, core.verdictText( res ) )
@@ -178,7 +178,7 @@
 	}
 
 	/** Fields bind to core/editor metadata; mounting never creates edits. */
-	function SEOFields() {
+	function SEOFields( props ) {
 		var meta = useSelect( function ( select ) {
 			return select( 'core/editor' ).getEditedPostAttribute( 'meta' );
 		}, [] );
@@ -203,19 +203,23 @@
 			} );
 		}
 		return el( Fragment, null,
+			el( 'h4', { className: 'mwseo-cmp__group' }, t.keyphrases ),
 			text( 'focus', t.keyphrase, t.matching ),
 			el( Trends, { phrase: value( 'focus' ) || '' } ),
 			relatedField( 0 ), relatedField( 1 ),
+			el( 'h4', { className: 'mwseo-cmp__group' }, t.searchResult ),
 			core.cfg.ownsTitle ? el( 'p', null, t.ownedElsewhere ) : el( Fragment, null,
 				text( 'title', t.seoTitle, ( value( 'title' ) || '' ).length + ' ' + t.chars + ' (50–60)' ),
 				text( 'desc', t.metaDesc, ( value( 'desc' ) || '' ).length + ' ' + t.chars + ' (120–155)', true )
 			),
-			el( 'fieldset', null, el( 'legend', null, t.visibility ),
+			el( 'p', { className: 'mwseo-cmp__slug' }, el( Button, { variant: 'link', onClick: function () { goToNativeSlug( props.say ); } }, t.editSlug ) ),
+			el( 'fieldset', { className: 'mwseo-cmp__visibility' }, el( 'legend', null, t.visibility ),
 				[ 'noindex', 'nofollow', 'cornerstone' ].map( function ( key ) {
 					return el( wp.components.CheckboxControl, { key: key, id: 'mwseo_' + key, label: t[ key ],
 						checked: !! value( key ), onChange: function ( next ) { core.edit( key, next ); } } );
 				} )
 			),
+			el( 'h4', { className: 'mwseo-cmp__group' }, t.gsc ),
 			el( GSC, { related: related, focus: value( 'focus' ) || '' } )
 		);
 	}
@@ -265,7 +269,6 @@
 				el( 'ul', null, suggestions.map( function ( row ) { return el( 'li', { key: row.query }, row.query + ' (' + row.impressions + ') ',
 					el( Button, { variant: 'link', onClick: function () { useQuery( row.query ); } }, t.use ) ); } ) )
 			) : null,
-			el( 'h4', null, t.gsc ),
 			! core.cfg.hasGsc ? el( 'p', null, t.notConnected ) : error ? el( 'p', { role: 'status' }, error ) :
 				rows === null ? el( 'p', null, t.analysing ) : ! rows.length ? el( 'p', null, t.noData ) :
 					el( 'table', { className: 'mwseo-cmp__queries' },
@@ -368,40 +371,18 @@
 			);
 		}
 
-		var quick = [
-			{ label: t.keyphrase, run: function () {
-				field( 'mwseo_focus' );
-			} }
-		];
-		if ( ! core.cfg.ownsTitle ) {
-			quick.push( { label: t.seoTitle, run: function () {
-				field( 'mwseo_title' );
-			} } );
-			quick.push( { label: t.metaDesc, run: function () {
-				field( 'mwseo_desc' );
-			} } );
-		}
-		quick.push( { label: t.slug, run: function () {
-			goToNativeSlug( say );
-		} } );
-
 		var checks = ( res && res.checks ? res.checks : [] ).filter( function ( c ) {
 			return c.message;
 		} );
+		var review = checks.filter( function ( c ) { return c.status === 'bad' || c.status === 'ok'; } ).length;
 
 		return el(
 			'div',
 			{ className: 'mwseo-cmp' },
 			el( Ring, { res: res } ),
+			el( 'p', { className: 'mwseo-cmp__note' }, t.scoreNote ),
 			el( 'p', { className: 'mwseo-cmp__sections' }, Object.keys( res && res.sections || {} ).map( function ( key ) { var section = res.sections[ key ]; return section.label + ' ' + ( section.na ? t.na : section.points + '/' + section.max ); } ).join( ' · ' ) ),
-			el( PanelBody, { title: t.fieldsTitle, opened: fieldsOpen, onToggle: function () { setFieldsOpen( ! fieldsOpen ); } }, el( SEOFields ) ),
-			el(
-				PanelBody,
-				{ title: t.fields, initialOpen: true },
-				el( 'div', { className: 'mwseo-cmp__quick' }, quick.map( function ( q ) {
-					return el( Button, { key: q.label, variant: 'secondary', size: 'small', onClick: q.run }, q.label );
-				} ) )
-			),
+			el( PanelBody, { title: t.fieldsTitle, opened: fieldsOpen, onToggle: function () { setFieldsOpen( ! fieldsOpen ); } }, el( SEOFields, { say: say } ) ),
 			el(
 				PanelBody,
 				{ title: t.headings, opened: open, onToggle: function () {
@@ -415,7 +396,7 @@
 			),
 			el(
 				PanelBody,
-				{ title: t.checks, initialOpen: false },
+				{ title: review ? t.checks + ' (' + review + ')' : t.checks, initialOpen: false },
 				el( 'ul', { className: 'mwseo-cmp__checks' }, checks.map( function ( c ) {
 					var action = core.CHECK_ACTIONS[ c.id ];
 					if ( action && action.skipWhenOwned && core.cfg.ownsTitle ) {

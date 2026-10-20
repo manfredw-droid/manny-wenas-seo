@@ -53,9 +53,43 @@ for (const source of refused) for (const action of ['submit', 'preview']) {
         else f.$('#mw-import-preview-btn').handlers.click();
         assert.equal(f.requests.length, 1);
         assert.equal(f.texts['#mw-import-progress-text'], 'Error: ' + refusal);
-        assert.deepEqual(f.props[f.props.length - 1], ['#mw-import-run-btn, #mw-import-preview-btn', 'disabled', false]);
+        assert.deepEqual(f.props[f.props.length - 1], ['#mw-import-preview-btn', 'disabled', false]);
+        assert.equal(f.props.some(p => p[0] === '#mw-import-run-btn' && p[2] === false), false);
         passed++; console.log('PASS ' + name);
     } catch (error) { failed++; console.log('FAIL ' + name + ': ' + error.message); }
 }
+
+// 1.0.8: writing is possible only after a completed preview of the current choices.
+const done = { success: true, data: { imported: 0, skipped: 0, unchanged: 0, errors: 0, processed: 1, total: 1, done: true, details: [], field_outcomes: {} } };
+function gate(name, fn) { try { fn(); passed++; console.log('PASS ' + name); } catch (error) { failed++; console.log('FAIL ' + name + ': ' + error.message); } }
+const runProps = f => f.props.filter(p => p[0] === '#mw-import-run-btn');
+gate('Choosing a source does not enable writing', () => {
+    const f = fixture('yoast', false, false);
+    const source = f.$('#mw-import-source');
+    source.handlers.change.call(source);
+    assert.equal(runProps(f).some(p => p[2] === false), false);
+});
+gate('A completed preview enables writing', () => {
+    const f = fixture('yoast', false, false, done);
+    f.$('#mw-import-preview-btn').handlers.click();
+    assert.deepEqual(runProps(f).pop(), ['#mw-import-run-btn', 'disabled', false]);
+});
+gate('A completed write leaves the Run button disabled until the next preview', () => {
+    const f = fixture('yoast', false, false, done);
+    f.$('#mw-seo-import-form').handlers.submit({ preventDefault() {} });
+    assert.deepEqual(runProps(f).pop(), ['#mw-import-run-btn', 'disabled', true]);
+});
+gate('Changing a choice after the preview disables writing again', () => {
+    const f = fixture('yoast', false, false, done);
+    f.$('#mw-import-preview-btn').handlers.click();
+    f.$('#mw-seo-import-form').handlers.change({ target: { name: 'overwrite' } });
+    assert.deepEqual(runProps(f).pop(), ['#mw-import-run-btn', 'disabled', true]);
+});
+gate('Toggling Dry run does not discard a finished preview', () => {
+    const f = fixture('yoast', false, false, done);
+    f.$('#mw-import-preview-btn').handlers.click();
+    f.$('#mw-seo-import-form').handlers.change({ target: { name: 'dry_run' } });
+    assert.deepEqual(runProps(f).pop(), ['#mw-import-run-btn', 'disabled', false]);
+});
 console.log(`${passed} passed; ${failed} failed. Isolated UI routing, not WordPress runtime.`);
 process.exitCode = failed ? 1 : 0;

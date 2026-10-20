@@ -37,7 +37,9 @@ final class MWSEO_Plugin {
 		MWSEO_Meta::init();
 		MWSEO_Metabox::init();
 		MWSEO_Companion::init();
+		MWSEO_Admin::init();
 		MWSEO_Settings::init();
+		MWSEO_Setup::init();
 		MWSEO_Rest::init();
 		MWSEO_Head::init();
 		MWSEO_Schema::init();
@@ -59,9 +61,12 @@ final class MWSEO_Plugin {
 	 * Activation: defaults, rewrite rules and cron.
 	 */
 	public static function activate() {
-		if ( false === get_option( MWSEO_Options::KEY ) ) {
+		$is_new_install = ( false === get_option( MWSEO_Options::KEY ) );
+		if ( $is_new_install ) {
 			add_option( MWSEO_Options::KEY, MWSEO_Options::defaults(), '', false );
 		}
+		// Only a first-time installation lands on the setup screen; existing sites are never redirected.
+		MWSEO_Setup::flag_new_install( $is_new_install );
 		MWSEO_Options::flush();
 		MWSEO_Indexnow::ensure_key();
 		MWSEO_Sitemaps::add_rewrites();

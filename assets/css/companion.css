@@ -7,7 +7,9 @@
  */
 
 .mwseo-cmp { font-size: 13px; }
-.mwseo-cmp h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #50575e; }
+.mwseo-cmp h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #625A65; }
+.mwseo-cmp .mwseo-cmp__group { margin: 18px 0 8px; padding-top: 12px; border-top: 1px solid #E6E0E9; color: #27212B; }
+.mwseo-cmp .mwseo-cmp__group:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 
 .mwseo-cmp__head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; }
 .mwseo-cmp .mwseo-cmp__ring { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%; font-size: 15px; font-weight: 700; color: #fff; background: #8c8f94; }
@@ -58,3 +60,13 @@
 .mwseo-cmp__notices { margin: 12px 16px; }
 
 .mwseo-cmp__sections { margin: 0 16px 12px; color: #50575e; }
+
+/* 1.0.8: hierarchy. Palette tokens from docs/brand-palette.md. */
+.mwseo-cmp__note { margin: 0 16px 8px; color: #625A65; }
+.mwseo-cmp__slug { margin: 0 0 12px; }
+.mwseo-cmp__visibility { margin: 12px 0 0; padding: 0; border: 0; }
+.mwseo-cmp__visibility legend { margin: 0 0 4px; font-weight: 600; color: #27212B; }
+.mwseo-cmp .components-button.is-link { color: #721E97; }
+.mwseo-cmp button:focus-visible,
+.mwseo-cmp input:focus-visible,
+.mwseo-cmp textarea:focus-visible { outline-color: #721E97; }
