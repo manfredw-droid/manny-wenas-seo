@@ -5,16 +5,19 @@ Status: **release candidate for independent review. Not a Gold decision.** No ta
 ## Source and package
 
 - Branch `implementation/1.0.8-interface`, based on `main` `9b5e19c55d94fef4abc9ad715b997367c3ab5739` (1.0.7 plus the donation-link documentation).
-- Package built from code commit `09f19c6f8e3e93857b095e91726885125e4a4713`. Later commits on the branch change documentation only; the 41 distribution files are identical.
+- Package (release candidate 2) built from code commit `01e4fc1c2794786e3227900a5f72f35370820449`. Later commits on the branch change documentation only; the 41 distribution files are identical. RC2 differs from RC1 (built from `09f19c6f…`) in exactly two files: `includes/class-mwseo-importer.php` (the setup screen's preview hint) and `languages/manny-wenas-seo.pot` (php-format flags).
 - Version 1.0.8 in the plugin header, `MWSEO_VERSION`, the readme *Stable tag* and the POT. `SCORING_VERSION` is **1.2**. Scorer, analyzer, head/schema, sitemaps, llms.txt, GSC, REST and the metadata registration are byte-identical to 1.0.7.
-- `manny-wenas-seo-1.0.8-rc1.zip`: 41 files under `manny-wenas-seo/`, 162039 bytes, SHA-256 `28110573c67ccd33361913b1f8754f2c2325f9000a39722d7fa8713571057f40`. Allowlist: plugin file, `uninstall.php`, `readme.txt`, `LICENSE`, `assets/`, `includes/`, `languages/`. No tests, docs, Git data or build files. Per-file lengths and SHA-256: `docs/release-1.0.8-rc1-manifest.csv`.
-- All 41 packaged files were compared byte for byte with `git archive` of the code commit (0 differences). Against the 1.0.7 package built the same way: 12 files changed (`readme.txt`, `manny-wenas-seo.php`, `assets/css/admin.css`, `assets/css/companion.css`, `assets/js/companion-block.js`, `includes/class-mwseo-{companion,importer,notices,plugin,settings,verification}.php`, the POT) and 3 are new (`assets/js/admin.js`, `includes/class-mwseo-admin.php`, `includes/class-mwseo-setup.php`).
+- `manny-wenas-seo-1.0.8-rc2.zip`: 41 files under `manny-wenas-seo/`, 162148 bytes, SHA-256 `fa6bad1301f95ff5513bc48bbb0fb91cc6bade93cd340647c7ef8190033423e5`. Allowlist: plugin file, `uninstall.php`, `readme.txt`, `LICENSE`, `assets/`, `includes/`, `languages/`. No tests, docs, Git data or build files. Per-file lengths and SHA-256: `docs/release-1.0.8-rc2-manifest.csv`.
+- All 41 packaged files were compared byte for byte with `git archive` of the code commit `01e4fc1c` (0 differences). Against the 1.0.7 package built the same way: 12 files changed (`readme.txt`, `manny-wenas-seo.php`, `assets/css/admin.css`, `assets/css/companion.css`, `assets/js/companion-block.js`, `includes/class-mwseo-{companion,importer,notices,plugin,settings,verification}.php`, the POT) and 3 are new (`assets/js/admin.js`, `includes/class-mwseo-admin.php`, `includes/class-mwseo-setup.php`).
 
 ## What changes for writers
 
 New "Get started" screen (import first, then site identity), shown once after a *new* installation and never forced on existing sites; settings with a left navigation and a stable save bar; the logo and default social image picked from the media library (stored attachment ID unchanged); a clearer editor panel whose number is labelled as the score of automated checks. Existing SEO data, scoring and frontend output are unchanged.
 
-## Findings fixed during this preparation
+## Findings fixed during this preparation (including RC2)
+
+- After an import preview the setup screen told writers to untick "Dry run", an option that screen does not show. It now says to click "Run Import"; the Import page keeps the original instruction.
+- Eight messages with printf placeholders lacked `php-format` flags in the POT. It was regenerated with WP-CLI 2.12.0 `i18n make-pot`: no message ID missing, exactly one added (the new setup hint), eight flags added; a test checks every printf message is flagged.
 
 - The one-time setup flag was global: another administrator's page view could consume it. It now belongs to the activating user (WP-CLI activations let the first administrator use it).
 - `tests/uninstall-preservation.php` had been failing on 1.0.7 (missing `metadata_exists()` double); the harness now has it plus a double for the new setup class and a check that reactivation is not flagged as a new installation. Product code unaffected.
@@ -23,15 +26,15 @@ New "Get started" screen (import first, then site identity), shown once after a 
 
 | Check | WordPress 7.1.3 / PHP 8.3.6 | WordPress 6.4.3 / PHP 8.3.6 |
 | --- | --- | --- |
-| `interface-wordpress.php` (installed from the ZIP) | 66/66 | 66/66 |
+| `interface-wordpress.php` (installed from the ZIP) | 70/70 | 70/70 |
 | `native-editor-wordpress.php` | 41/41 | 41/41 |
 | `editor-custom-fields-wordpress.php` | 23/23 | 23/23 |
 | `importer-dry-run-wordpress.php` (ZIP contents) | 42 PASS, 0 FAIL | 42 PASS, 0 FAIL |
-| `native-frontend-wordpress.php` (HTTP, ZIP-installed) | 9/9 | 9/9 |
-| Browser: ZIP uploaded and installed through wp-admin, activated, setup landing, import preview then write, post and page saved in the block editor and reopened, frontend title/description/canonical/schema, sitemap | 21/21 | 21/21 |
+| `native-frontend-wordpress.php` (HTTP; run on RC1, no frontend file changed in RC2) | 9/9 | 9/9 |
+| Browser: ZIP uploaded and installed through wp-admin, activated, setup landing, import preview then write, post and page saved in the block editor and reopened, frontend title/description/canonical/schema, sitemap, plus the setup and Import-page preview hints | 23/23 | 23/23 |
 | Browser: setup, import gating, media picker, settings sections, 390 px width, scoping, post and page editor panel | 50/50 | 50/50 |
 
-Script tests: `importer-dry-run.cjs` 37/37, `companion-ui.cjs` 9/9, `rest-score-snapshot.php` 39/39, `related-without-focus.php` 23/23, `schema-word-count.php` 35/35, `uninstall-preservation.php` 61/61. PHP syntax (PHP 8.3) and `node --check` pass for every PHP and JavaScript file; `git diff --check` is clean.
+Script tests: `importer-dry-run.cjs` 40/40, `companion-ui.cjs` 9/9, `rest-score-snapshot.php` 39/39, `related-without-focus.php` 23/23, `schema-word-count.php` 35/35, `uninstall-preservation.php` 61/61. PHP syntax (PHP 8.3) and `node --check` pass for every PHP and JavaScript file; `git diff --check` is clean.
 
 ## Plugin Check 2.1.0 (static checks, run on the extracted ZIPs, same driver for both)
 
