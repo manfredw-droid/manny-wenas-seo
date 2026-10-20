@@ -73,12 +73,28 @@ class MWSEO_Setup {
 		if ( ! get_transient( self::TRANSIENT ) ) {
 			return;
 		}
-		if ( wp_doing_ajax() || is_network_admin() || isset( $_GET['activate-multi'] ) || ! current_user_can( 'manage_options' ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		// Only a plain page view (GET) of the dashboard-style admin may be redirected: never a POST,
+		// admin-post.php / admin-ajax.php / async-upload.php action, cron or REST request, a bulk or network
+		// activation, or a user who cannot manage options. The flag then stays until it expires or a later page view.
+		$method = isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) : 'GET';
+		if ( 'GET' !== $method || wp_doing_ajax() || wp_doing_cron() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || is_network_admin()
+			|| isset( $_GET['activate-multi'] ) || isset( $_GET['action'] ) || ! self::is_page_view() || ! current_user_can( 'manage_options' ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			return;
 		}
 		delete_transient( self::TRANSIENT );
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::SLUG ) );
 		exit;
+	}
+
+	/**
+	 * Is this a regular admin page view, not a handler script such as admin-post.php or admin-ajax.php?
+	 *
+	 * @return bool
+	 */
+	private static function is_page_view() {
+		global $pagenow;
+		$handlers = array( 'admin-post.php', 'admin-ajax.php', 'async-upload.php', 'options.php', 'update.php', 'upgrade.php', 'load-scripts.php', 'load-styles.php' );
+		return ! in_array( (string) $pagenow, $handlers, true );
 	}
 
 	/**

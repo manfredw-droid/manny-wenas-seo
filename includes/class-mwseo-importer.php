@@ -419,9 +419,16 @@ class MWSEO_Importer {
 		$('#mw-import-field-map').show();
 	});
 
-	/* ---- Writing is possible only after a preview of the current choices ---- */
+	/* ---- Writing is possible only after a completed preview of exactly the current choices ---- */
+	const choices = () => JSON.stringify([
+		$('#mw-import-source').val(),
+		$('input[name="post_types[]"]:checked').map((i, el) => el.value).get().sort(),
+		$('input[name="overwrite"]').is(':checked')
+	]);
+	let previewed = null; // choices of the last completed preview
 	$('#mw-seo-import-form').on('change', function(e){
 		if (e && e.target && e.target.name === 'dry_run') return;
+		previewed = null;
 		$('#mw-import-run-btn').prop('disabled', true);
 	});
 
@@ -432,7 +439,9 @@ class MWSEO_Importer {
 
 	$('#mw-seo-import-form').on('submit', function(e){
 		e.preventDefault();
-		runImport($('input[name="dry_run"]').is(':checked'));
+		const dry = $('input[name="dry_run"]').is(':checked');
+		if (!dry && previewed !== choices()) return; // never write without a preview of these choices
+		runImport(dry);
 	});
 
 	/* ---- Core import runner --------------------------------------- */
@@ -441,10 +450,12 @@ class MWSEO_Importer {
 		const postTypes = $('input[name="post_types[]"]:checked').map((i, el) => el.value).get();
 		const overwrite = $('input[name="overwrite"]').is(':checked');
 		const nonce     = $('#_mw_nonce').val();
+		const signature = choices();
 
 		if (!source)          { alert(cfg.i18n.please_select_a_source_plugin); return; }
 		if (!postTypes.length){ alert(cfg.i18n.please_select_at_least_one_post_type); return; }
 
+		previewed = null;
 		$('#mw-import-progress').show();
 		$('#mw-import-results').hide();
 		$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', true);
@@ -509,8 +520,10 @@ class MWSEO_Importer {
 					}
 					$('#mw-import-results-content').html(html);
 					$('#mw-import-results').show();
+					// The form may have been changed while this ran: only an unchanged form counts as previewed.
+					if (dryRun && choices() === signature) previewed = signature;
 					$('#mw-import-preview-btn').prop('disabled', false);
-					$('#mw-import-run-btn').prop('disabled', !dryRun);
+					$('#mw-import-run-btn').prop('disabled', previewed === null || previewed !== choices());
 				} else {
 					offset = d.next_offset;
 					batch();

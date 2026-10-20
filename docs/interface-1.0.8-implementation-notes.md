@@ -19,16 +19,22 @@ Not touched: scorer, analyzer, head/schema output, sitemaps, llms.txt, GSC/Trend
 
 ## Tests actually run (disposable WordPress 7.1.3, PHP 8.3.6, SQLite, tables `equinox_` / `solstice_dry_`)
 
-- `tests/interface-wordpress.php` (new): 56 checks, 0 failures.
+- `tests/interface-wordpress.php` (new): 64 checks, 0 failures (after the review fixes below).
 - `tests/native-editor-wordpress.php`: 41/41. `tests/editor-custom-fields-wordpress.php`: 23/23.
 - `tests/importer-dry-run-wordpress.php`: 42 PASS, 0 FAIL.
 - `tests/native-frontend-wordpress.php` (HTTP): 9/9.
-- `tests/importer-dry-run.cjs`: 29/29 (5 new gating checks; the refused-source expectation was updated for the new button state). `tests/companion-ui.cjs`: 9/9.
+- `tests/importer-dry-run.cjs`: 37/37 (13 gating and race checks; the write and refused-source cases were updated: a real write is only sent after a preview of the same choices). `tests/companion-ui.cjs`: 9/9.
 - Real Chromium (Playwright) against the disposable site: 50/50 checks on setup, import preview/run, media picker, settings sections, mobile width, scoping and the post and page editors; plus real plugin activation (fresh installation lands on the setup screen once; reactivation with stored options does not).
+
+## Review fixes (after commit `c11de14`)
+
+1. **Setup redirect:** `MWSEO_Setup::maybe_redirect()` now acts only on a plain GET page view. It never redirects a POST, `admin-post.php`, `admin-ajax.php`, `async-upload.php`, `options.php`, `update.php`/`upgrade.php`, cron or REST request, or a page view carrying an `action` parameter. The flag stays until it expires or a later plain page view, so the first landing after activation still works (checked in the browser).
+2. **Import preview:** the importer script records the exact choices (source, post types, overwrite) of the last *completed* preview. `Run Import` is enabled only if the form still holds those choices when the preview finishes, any change clears it, and a write submit without a matching preview sends nothing.
 
 ## Limitations
 
 - Only one browser (Chromium), WordPress 7.1.3. WordPress 6.4 / PHP 7.4 were not run for this change; PHP syntax was checked on PHP 8.3 only.
+- The preview race is tested with script doubles (a deferred response and changed choices), not by timing a real batch in the browser. If the flag is pending when an `admin-post.php` action finishes, that action's own redirect target counts as the later plain page view and lands on the setup screen once.
 - Live GSC/Trends were not exercised. The uninstall suite, scoring and other `solstice_*` suites were not rerun (untouched areas).
 - The setup flag transient (5 minutes) is not removed by `uninstall.php`; it expires on its own.
 - Screen reader behaviour and colour-contrast measurement were not tested; focus rings and non-colour cues were implemented, not audited.

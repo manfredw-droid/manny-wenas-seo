@@ -77,6 +77,29 @@ unset( $_GET['activate-multi'] );
 wp_set_current_user( 0 );
 check_ui( null === redirect_target(), 'a visitor without manage_options is never redirected' );
 wp_set_current_user( 1 );
+// The one-time landing must never intercept a POST or an administration action.
+$GLOBALS['pagenow'] = 'index.php';
+$_SERVER['REQUEST_METHOD'] = 'POST';
+check_ui( null === redirect_target() && (bool) get_transient( MWSEO_Setup::TRANSIENT ), 'a POST request is never redirected and keeps the flag' );
+$_SERVER['REQUEST_METHOD'] = 'GET';
+$GLOBALS['pagenow']        = 'admin-post.php';
+check_ui( null === redirect_target() && (bool) get_transient( MWSEO_Setup::TRANSIENT ), 'admin-post.php is never redirected (GET)' );
+$_SERVER['REQUEST_METHOD'] = 'POST';
+check_ui( null === redirect_target() && (bool) get_transient( MWSEO_Setup::TRANSIENT ), 'an admin-post.php action (POST) is not intercepted' );
+$_SERVER['REQUEST_METHOD'] = 'GET';
+foreach ( array( 'admin-ajax.php', 'async-upload.php', 'options.php' ) as $handler ) {
+	$GLOBALS['pagenow'] = $handler;
+	check_ui( null === redirect_target() && (bool) get_transient( MWSEO_Setup::TRANSIENT ), "$handler is never redirected" );
+}
+$GLOBALS['pagenow'] = 'index.php';
+$_GET['action']     = 'mwseo_indexnow_regenerate';
+check_ui( null === redirect_target() && (bool) get_transient( MWSEO_Setup::TRANSIENT ), 'a page view carrying an action parameter is not redirected' );
+unset( $_GET['action'] );
+add_filter( 'wp_doing_ajax', '__return_true' );
+check_ui( null === redirect_target() && (bool) get_transient( MWSEO_Setup::TRANSIENT ), 'an AJAX request is not redirected' );
+remove_filter( 'wp_doing_ajax', '__return_true' );
+$_SERVER['REQUEST_METHOD'] = 'GET';
+$GLOBALS['pagenow']        = 'index.php';
 $target = redirect_target();
 check_ui( is_string( $target ) && has( $target, 'page=mwseo-setup' ), 'administrator is sent to the setup screen once' );
 check_ui( false === get_transient( MWSEO_Setup::TRANSIENT ) && null === redirect_target(), 'the redirect happens only once' );
