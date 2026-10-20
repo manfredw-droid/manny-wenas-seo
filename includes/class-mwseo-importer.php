@@ -347,6 +347,7 @@ class MWSEO_Importer {
 				'unchanged_no_source_data_found'           => __( 'Unchanged (no source data found):', 'manny-wenas-seo' ),
 				'errors_see_php_error_log'                 => __( 'Errors:', 'manny-wenas-seo' ),
 				'uncheck_dry_run_and_click_run_import_to_' => __( 'Uncheck "Dry run" and click Run Import to apply changes.', 'manny-wenas-seo' ),
+				'click_run_import_to_apply_these_changes'  => __( 'Click "Run Import" to apply these changes.', 'manny-wenas-seo' ),
 			),
 		);
 	}
@@ -511,7 +512,9 @@ class MWSEO_Importer {
 					</ul>`;
 					if (cfg.nativeSources.includes(source)) html = `<p><strong>${safe(label)}</strong></p><p>${d.processed} posts processed; ${totals.errors} posts encountered errors.</p>`;
 					if (dryRun) {
-						html += `<p>${cfg.i18n.uncheck_dry_run_and_click_run_import_to_}</p>`;
+						// The setup screen has no Dry run option, so it must not tell the writer to untick one.
+						const setupForm = $('#mw-seo-importer').hasClass('mwseo-import--setup');
+						html += `<p>${setupForm ? cfg.i18n.click_run_import_to_apply_these_changes : cfg.i18n.uncheck_dry_run_and_click_run_import_to_}</p>`;
 					}
 					if (cfg.nativeSources.includes(source)) {
 						html += '<ul>' + Object.entries(fieldTotals).map(([key, count]) => `<li>${safe(cfg.outcomes[key])}: ${count}</li>`).join('') + '</ul>';

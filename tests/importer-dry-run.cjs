@@ -13,8 +13,8 @@ let passed = 0, failed = 0;
 const done = { success: true, data: { imported: 0, skipped: 0, unchanged: 0, errors: 0, processed: 1, total: 1, done: true, details: [], field_outcomes: {} } };
 function fixture(source, checked, overwrite, response, defer) {
     // The choices live in `state` so a test can change them while a request is still running.
-    const state = { source, checked, overwrite, types: ['fixture'] };
-    const nodes = new Map(), requests = [], texts = {}, props = [], pending = [];
+    const state = { source, checked, overwrite, types: ['fixture'], setup: false };
+    const nodes = new Map(), requests = [], texts = {}, props = [], pending = [], htmls = {};
     function $(selector) {
         if (!nodes.has(selector)) nodes.set(selector, {
             handlers: {}, on(event, fn) { this.handlers[event] = fn; return this; },
@@ -22,14 +22,15 @@ function fixture(source, checked, overwrite, response, defer) {
             is() { return selector.includes('dry_run') ? state.checked : state.overwrite; },
             map() { return { get: () => state.types.slice() }; },
             show() { return this; }, hide() { return this; }, prop(name, value) { props.push([selector, name, value]); return this; },
-            css() { return this; }, text(value) { if (value !== undefined) texts[selector] = value; return this; }, html() { return ''; }
+            css() { return this; }, text(value) { if (value !== undefined) texts[selector] = value; return this; },
+            html(value) { if (value !== undefined) { htmls[selector] = value; return this; } return ''; }, hasClass(name) { return name === 'mwseo-import--setup' && state.setup; }
         });
         return nodes.get(selector);
     }
     $.post = (url, data) => { requests.push({ url, data }); return { done(fn) { if (response) { if (defer) pending.push(() => fn(response)); else fn(response); } return this; }, fail() { return this; } }; };
     vm.runInNewContext(script, { jQuery: $, ajaxurl: '/wp-admin/admin-ajax.php', alert: message => { throw Error(message); },
-        cfg: { nativeSources: ['yoast', 'rankmath'], i18n: {}, fieldMaps: {}, outcomes: {}, batchSize: 50 } });
-    return { $, requests, texts, props, state, finish() { const run = pending.shift(); if (run) run(); } };
+        cfg: { nativeSources: ['yoast', 'rankmath'], i18n: { uncheck_dry_run_and_click_run_import_to_: 'UNCHECK-DRY-RUN-HINT', click_run_import_to_apply_these_changes: 'CLICK-RUN-HINT' }, fieldMaps: {}, outcomes: {}, batchSize: 50 } });
+    return { $, requests, texts, props, htmls, state, finish() { const run = pending.shift(); if (run) run(); } };
 }
 for (const source of sources) for (const overwrite of [false, true]) for (const checked of [false, true]) for (const action of ['submit', 'preview']) {
     const name = `${source} ${action} checked=${checked} overwrite=${overwrite}`;
@@ -158,6 +159,31 @@ gate('A second write needs a new preview', () => {
     f.$('#mw-seo-import-form').handlers.submit({ preventDefault() {} });
     f.$('#mw-seo-import-form').handlers.submit({ preventDefault() {} });
     assert.equal(f.requests.length, 2);
+});
+
+// 1.0.8 review fix: after a preview the setup screen (no Dry run option) gives its own next step.
+gate('Setup screen: the preview result tells the writer to click Run Import and never mentions Dry run', () => {
+    const f = fixture('yoast', false, false, done);
+    f.state.setup = true;
+    f.$('#mw-import-preview-btn').handlers.click();
+    const html = f.htmls['#mw-import-results-content'];
+    assert.match(html, /CLICK-RUN-HINT/);
+    assert.doesNotMatch(html, /UNCHECK-DRY-RUN-HINT/);
+});
+gate('Import page: the preview result keeps the "uncheck Dry run" instruction', () => {
+    const f = fixture('yoast', true, false, done);
+    f.$('#mw-import-preview-btn').handlers.click();
+    const html = f.htmls['#mw-import-results-content'];
+    assert.match(html, /UNCHECK-DRY-RUN-HINT/);
+    assert.doesNotMatch(html, /CLICK-RUN-HINT/);
+});
+gate('Setup screen: a finished real import shows no preview hint at all', () => {
+    const f = fixture('yoast', false, false, done);
+    f.state.setup = true;
+    f.$('#mw-import-preview-btn').handlers.click();
+    f.$('#mw-seo-import-form').handlers.submit({ preventDefault() {} });
+    const html = f.htmls['#mw-import-results-content'];
+    assert.doesNotMatch(html, /CLICK-RUN-HINT|UNCHECK-DRY-RUN-HINT/);
 });
 console.log(`${passed} passed; ${failed} failed. Isolated UI routing, not WordPress runtime.`);
 process.exitCode = failed ? 1 : 0;

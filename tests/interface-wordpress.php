@@ -284,6 +284,34 @@ $unknown = array_diff( array_unique( $used[1] ), array_keys( $strings ) );
 check_ui( ! $unknown, 'every string the sidebar script uses is defined in PHP' . ( $unknown ? ' (' . implode( ',', $unknown ) . ')' : '' ) );
 
 // ---------------------------------------------------------------------------------------------
+// Import preview hint: the setup screen gets its own next step, the Import page keeps the old one.
+$reset_assets();
+MWSEO_Importer::enqueue_assets( MWSEO_Setup::hook() );
+$inline = implode( "\n", (array) wp_scripts()->get_data( 'mwseo-importer', 'after' ) );
+check_ui( has( $inline, 'click_run_import_to_apply_these_changes' ) && has( $inline, 'uncheck_dry_run_and_click_run_import_to_' ) && has( $inline, "hasClass('mwseo-import--setup')" ), 'the importer script carries both preview hints and picks by screen' );
+$html = page_html( static function () {
+	MWSEO_Importer::render_import_form( 'setup' );
+} );
+check_ui( has( $html, 'mwseo-import--setup' ), 'the setup form is marked so the script can tell the screens apart' );
+$html = page_html( static function () {
+	MWSEO_Importer::render_import_form( 'import' );
+} );
+check_ui( has( $html, 'mwseo-import--import' ) && ! has( $html, 'mwseo-import--setup' ), 'the Import page form is not marked as setup' );
+$reset_assets();
+
+// ---------------------------------------------------------------------------------------------
+// POT: every message with a printf placeholder carries the php-format flag.
+$pot     = file_get_contents( MWSEO_DIR . 'languages/manny-wenas-seo.pot' );
+$missing = array();
+foreach ( preg_split( '/\n\n/', $pot ) as $block ) {
+	// A doubled percent sign is a literal, not a placeholder.
+	if ( preg_match( '/^msgid "(?:[^%"]|%%)*%(\d+\$)?[sd]/m', $block ) && false === strpos( $block, '#, php-format' ) ) {
+		$missing[] = strtok( substr( $block, strpos( $block, 'msgid' ) ), "\n" );
+	}
+}
+check_ui( ! $missing, 'POT: every printf message is flagged php-format' . ( $missing ? ' (' . implode( '; ', $missing ) . ')' : '' ) );
+
+// ---------------------------------------------------------------------------------------------
 // Scoring and metadata contract are untouched.
 check_ui( '1.2' === MWSEO_Scorer::SCORING_VERSION, 'SCORING_VERSION stays 1.2' );
 
