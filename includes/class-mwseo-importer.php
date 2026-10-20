@@ -288,7 +288,8 @@ class MWSEO_Importer {
 	 * @param string $hook Current admin page hook suffix.
 	 */
 	public static function enqueue_assets( $hook ): void {
-		if ( ! static::$page_hook || $hook !== static::$page_hook ) {
+		$screens = array_filter( array( static::$page_hook, MWSEO_Setup::hook() ) );
+		if ( ! $screens || ! in_array( $hook, $screens, true ) ) {
 			return;
 		}
 		// Handle without a file: it only carries the inline script.
@@ -346,6 +347,7 @@ class MWSEO_Importer {
 				'unchanged_no_source_data_found'           => __( 'Unchanged (no source data found):', 'manny-wenas-seo' ),
 				'errors_see_php_error_log'                 => __( 'Errors:', 'manny-wenas-seo' ),
 				'uncheck_dry_run_and_click_run_import_to_' => __( 'Uncheck "Dry run" and click Run Import to apply changes.', 'manny-wenas-seo' ),
+				'click_run_import_to_apply_these_changes'  => __( 'Click "Run Import" to apply these changes.', 'manny-wenas-seo' ),
 			),
 		);
 	}
@@ -416,7 +418,19 @@ class MWSEO_Importer {
 			</table>`
 		);
 		$('#mw-import-field-map').show();
-		$('#mw-import-run-btn').prop('disabled', false);
+	});
+
+	/* ---- Writing is possible only after a completed preview of exactly the current choices ---- */
+	const choices = () => JSON.stringify([
+		$('#mw-import-source').val(),
+		$('input[name="post_types[]"]:checked').map((i, el) => el.value).get().sort(),
+		$('input[name="overwrite"]').is(':checked')
+	]);
+	let previewed = null; // choices of the last completed preview
+	$('#mw-seo-import-form').on('change', function(e){
+		if (e && e.target && e.target.name === 'dry_run') return;
+		previewed = null;
+		$('#mw-import-run-btn').prop('disabled', true);
 	});
 
 	/* ---- Trigger handlers ----------------------------------------- */
@@ -426,7 +440,9 @@ class MWSEO_Importer {
 
 	$('#mw-seo-import-form').on('submit', function(e){
 		e.preventDefault();
-		runImport($('input[name="dry_run"]').is(':checked'));
+		const dry = $('input[name="dry_run"]').is(':checked');
+		if (!dry && previewed !== choices()) return; // never write without a preview of these choices
+		runImport(dry);
 	});
 
 	/* ---- Core import runner --------------------------------------- */
@@ -435,10 +451,12 @@ class MWSEO_Importer {
 		const postTypes = $('input[name="post_types[]"]:checked').map((i, el) => el.value).get();
 		const overwrite = $('input[name="overwrite"]').is(':checked');
 		const nonce     = $('#_mw_nonce').val();
+		const signature = choices();
 
 		if (!source)          { alert(cfg.i18n.please_select_a_source_plugin); return; }
 		if (!postTypes.length){ alert(cfg.i18n.please_select_at_least_one_post_type); return; }
 
+		previewed = null;
 		$('#mw-import-progress').show();
 		$('#mw-import-results').hide();
 		$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', true);
@@ -464,7 +482,7 @@ class MWSEO_Importer {
 			}).done(function(res){
 				if (!res.success) {
 					$('#mw-import-progress-text').text('Error: ' + (res.data || 'unknown error'));
-					$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', false);
+					$('#mw-import-preview-btn').prop('disabled', false);
 					return;
 				}
 
@@ -494,7 +512,9 @@ class MWSEO_Importer {
 					</ul>`;
 					if (cfg.nativeSources.includes(source)) html = `<p><strong>${safe(label)}</strong></p><p>${d.processed} posts processed; ${totals.errors} posts encountered errors.</p>`;
 					if (dryRun) {
-						html += `<p>${cfg.i18n.uncheck_dry_run_and_click_run_import_to_}</p>`;
+						// The setup screen has no Dry run option, so it must not tell the writer to untick one.
+						const setupForm = $('#mw-seo-importer').hasClass('mwseo-import--setup');
+						html += `<p>${setupForm ? cfg.i18n.click_run_import_to_apply_these_changes : cfg.i18n.uncheck_dry_run_and_click_run_import_to_}</p>`;
 					}
 					if (cfg.nativeSources.includes(source)) {
 						html += '<ul>' + Object.entries(fieldTotals).map(([key, count]) => `<li>${safe(cfg.outcomes[key])}: ${count}</li>`).join('') + '</ul>';
@@ -503,14 +523,17 @@ class MWSEO_Importer {
 					}
 					$('#mw-import-results-content').html(html);
 					$('#mw-import-results').show();
-					$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', false);
+					// The form may have been changed while this ran: only an unchanged form counts as previewed.
+					if (dryRun && choices() === signature) previewed = signature;
+					$('#mw-import-preview-btn').prop('disabled', false);
+					$('#mw-import-run-btn').prop('disabled', previewed === null || previewed !== choices());
 				} else {
 					offset = d.next_offset;
 					batch();
 				}
 			}).fail(function(){
 				$('#mw-import-progress-text').text('Request failed. Check your network connection.');
-				$('#mw-import-run-btn, #mw-import-preview-btn').prop('disabled', false);
+				$('#mw-import-preview-btn').prop('disabled', false);
 			});
 		}());
 	}
@@ -532,32 +555,19 @@ JS;
 			'mw-seo-import',
 			array( static::class, 'render_admin_page' )
 		);
+		MWSEO_Admin::register_screen( static::$page_hook );
 	}
 
 	/**
 	 * Render the import admin page.
 	 */
 	public static function render_admin_page(): void {
-		// Yoast and Rank Math are always offered (their metadata can outlive the plugin);
-		// other source plugins are not offered even when they are active.
-		$active = array( 'yoast' => 'Yoast SEO', 'rankmath' => 'RankMath SEO' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		MWSEO_Admin::shell_open( 'import', __( 'Import SEO Data', 'manny-wenas-seo' ), __( 'Preview and import supported post SEO data from Yoast SEO or Rank Math.', 'manny-wenas-seo' ) );
 		?>
-		<div class="wrap" id="mw-seo-importer">
-			<h1><?php esc_html_e( 'Import SEO Data', 'manny-wenas-seo' ); ?></h1>
-
-			<?php if ( empty( $active ) ) : ?>
-
-				<div class="notice notice-info"><p>
-					<?php
-					esc_html_e(
-						'Import currently supports Yoast SEO and Rank Math. Import from All in One SEO, SEOPress and The SEO Framework is switched off.',
-						'manny-wenas-seo'
-					);
-					?>
-				</p></div>
-
-			<?php else : ?>
-
+		<div class="mwseo-card">
 			<p class="description">
 				<?php
 				esc_html_e(
@@ -566,7 +576,29 @@ JS;
 				);
 				?>
 			</p>
+			<?php static::render_import_form( 'import' ); ?>
+		</div>
+		<?php
+		MWSEO_Admin::shell_close();
+	}
 
+	/**
+	 * The import form with progress and results, shared by the Import page and the setup screen.
+	 *
+	 * Yoast and Rank Math are always offered (their metadata can outlive the plugin); other
+	 * source plugins are not offered even when they are active. Writing is enabled by the script
+	 * only after a preview of the current choices. On the setup screen the dry-run option is not
+	 * shown: the Preview button previews and the Run button writes.
+	 *
+	 * @param string $context 'import' or 'setup'.
+	 */
+	public static function render_import_form( string $context = 'import' ): void {
+		$sources = array(
+			'yoast'    => 'Yoast SEO',
+			'rankmath' => 'Rank Math SEO',
+		);
+		?>
+		<div id="mw-seo-importer" class="mwseo-import mwseo-import--<?php echo esc_attr( $context ); ?>">
 			<form id="mw-seo-import-form" method="post" action="">
 				<?php wp_nonce_field( 'mw_seo_import', '_mw_nonce' ); ?>
 				<input type="hidden" name="page" value="mw-seo-import">
@@ -579,10 +611,8 @@ JS;
 						<td>
 							<select id="mw-import-source" name="source" required>
 								<option value=""><?php esc_html_e( '— select a plugin —', 'manny-wenas-seo' ); ?></option>
-								<?php foreach ( $active as $slug => $label ) : ?>
-									<option value="<?php echo esc_attr( $slug ); ?>">
-										<?php echo esc_html( $label ); ?>
-									</option>
+								<?php foreach ( $sources as $slug => $label ) : ?>
+									<option value="<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $label ); ?></option>
 								<?php endforeach; ?>
 							</select>
 						</td>
@@ -591,15 +621,11 @@ JS;
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Post types', 'manny-wenas-seo' ); ?></th>
 						<td>
-							<?php
-							$post_types = get_post_types( array( 'public' => true ), 'objects' );
-							foreach ( $post_types as $pt ) :
-								?>
-							<label style="margin-right:16px;display:inline-flex;align-items:center;gap:4px;">
-								<input type="checkbox" name="post_types[]" value="<?php echo esc_attr( $pt->name ); ?>"
-									<?php checked( in_array( $pt->name, array( 'post', 'page' ), true ) ); ?>>
-								<?php echo esc_html( $pt->label ); ?>
-							</label>
+							<?php foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $pt ) : ?>
+								<label class="mwseo-inline-check">
+									<input type="checkbox" name="post_types[]" value="<?php echo esc_attr( $pt->name ); ?>" <?php checked( in_array( $pt->name, array( 'post', 'page' ), true ) ); ?>>
+									<?php echo esc_html( $pt->label ); ?>
+								</label>
 							<?php endforeach; ?>
 						</td>
 					</tr>
@@ -607,53 +633,50 @@ JS;
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Options', 'manny-wenas-seo' ); ?></th>
 						<td>
-							<label style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+							<label class="mwseo-inline-check mwseo-block-check">
 								<input type="checkbox" name="overwrite" value="1">
 								<?php esc_html_e( 'Overwrite existing Manny Wenas SEO data', 'manny-wenas-seo' ); ?>
 							</label>
-							<label style="display:flex;align-items:center;gap:6px;">
-								<input type="checkbox" name="dry_run" value="1" checked>
-								<?php esc_html_e( 'Dry run — preview only, no data written', 'manny-wenas-seo' ); ?>
-							</label>
+							<?php if ( 'setup' === $context ) : ?>
+								<input type="hidden" name="dry_run" value="0">
+							<?php else : ?>
+								<label class="mwseo-inline-check mwseo-block-check">
+									<input type="checkbox" name="dry_run" value="1" checked>
+									<?php esc_html_e( 'Dry run — preview only, no data written', 'manny-wenas-seo' ); ?>
+								</label>
+							<?php endif; ?>
 						</td>
 					</tr>
 				</table>
 
 				<!-- Field-map preview (populated via JS on source change) -->
-				<div id="mw-import-field-map" style="display:none;margin-top:16px;">
+				<div id="mw-import-field-map" class="mwseo-import__map" style="display:none;">
 					<h3><?php esc_html_e( 'Field map', 'manny-wenas-seo' ); ?></h3>
 					<div id="mw-import-field-map-content"></div>
 				</div>
 
 				<p class="submit">
-					<button type="button" id="mw-import-preview-btn" class="button button-secondary">
-						<?php esc_html_e( 'Preview', 'manny-wenas-seo' ); ?>
+					<button type="button" id="mw-import-preview-btn" class="button button-primary">
+						<?php esc_html_e( 'Preview import', 'manny-wenas-seo' ); ?>
 					</button>
-					&nbsp;
-					<button type="submit" id="mw-import-run-btn" class="button button-primary" disabled>
+					<button type="submit" id="mw-import-run-btn" class="button" disabled aria-describedby="mw-import-run-hint">
 						<?php esc_html_e( 'Run Import', 'manny-wenas-seo' ); ?>
 					</button>
+					<span id="mw-import-run-hint" class="description"><?php esc_html_e( 'Available after a preview.', 'manny-wenas-seo' ); ?></span>
 				</p>
 			</form>
 
-			<!-- Progress bar -->
-			<div id="mw-import-progress" style="display:none;max-width:640px;">
+			<div id="mw-import-progress" class="mwseo-import__progress" style="display:none;">
 				<h3><?php esc_html_e( 'Progress', 'manny-wenas-seo' ); ?></h3>
-				<div style="background:#e0e0e0;border-radius:4px;height:22px;width:100%;overflow:hidden;">
-					<div id="mw-import-progress-bar"
-						style="background:#0073aa;height:100%;border-radius:4px;width:0;transition:width .25s;"></div>
-				</div>
-				<p id="mw-import-progress-text" style="margin-top:6px;"></p>
+				<div class="mwseo-import__bar"><div id="mw-import-progress-bar" class="mwseo-import__bar-fill"></div></div>
+				<p id="mw-import-progress-text" role="status"></p>
 			</div>
 
-			<!-- Results -->
-			<div id="mw-import-results" style="display:none;max-width:640px;">
+			<div id="mw-import-results" class="mwseo-import__results" style="display:none;">
 				<h3><?php esc_html_e( 'Results', 'manny-wenas-seo' ); ?></h3>
 				<div id="mw-import-results-content"></div>
 			</div>
-
-			<?php endif; ?>
-		</div><!-- .wrap -->
+		</div>
 		<?php
 	}
 

@@ -91,7 +91,7 @@ class MWSEO_Verification {
 	 */
 	public static function status( $value ) {
 		return '' === (string) $value
-			? __( 'Niet ingesteld', 'manny-wenas-seo' )
-			: __( 'Actief — controleer via Google Search Console.', 'manny-wenas-seo' );
+			? __( 'Not configured', 'manny-wenas-seo' )
+			: __( 'Configured locally; verify in the corresponding webmaster tool.', 'manny-wenas-seo' );
 	}
 }

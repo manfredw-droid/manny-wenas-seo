@@ -22,6 +22,7 @@ function update_option( $key, $value, $autoload = null ) { $GLOBALS['state']['op
 function delete_option( $key ) { $exists = array_key_exists( $key, $GLOBALS['state']['options'] ); unset( $GLOBALS['state']['options'][ $key ] ); return $exists; }
 function delete_transient( $key ) { if ( delete_option( '_transient_' . $key ) ) { delete_option( '_transient_timeout_' . $key ); } }
 function get_post_meta( $id, $key, $single = false ) { return $GLOBALS['state']['meta'][ $id ][ $key ] ?? ''; }
+function metadata_exists( $type, $id, $key ) { return array_key_exists( $key, $GLOBALS['state']['meta'][ $id ] ?? array() ); }
 function delete_post_meta_by_key( $key ) { foreach ( $GLOBALS['state']['meta'] as &$row ) { unset( $row[ $key ] ); } }
 function wp_clear_scheduled_hook( $hook ) { if ( 'mwseo_weekly' === $hook ) { $GLOBALS['state']['cron'] = false; } }
 function wp_next_scheduled( $hook ) { return $GLOBALS['state']['cron']; }
@@ -30,6 +31,7 @@ function flush_rewrite_rules() {}
 class MWSEO_Compat { public static function owns_title_fields() { return false; } }
 class MWSEO_Indexnow { public static function ensure_key() { return 'existing-key'; } }
 class MWSEO_Sitemaps { public static function add_rewrites() {} }
+class MWSEO_Setup { public static function flag_new_install( $is_new ) { $GLOBALS['state']['setup_flag'] = (bool) $is_new; } }
 class MWSEO_Llms_Txt { public static function add_rewrites() {} public static function regenerate() { update_option( 'mwseo_llms_txt', 'regenerated cache' ); } }
 class Uninstall_Test_DB {
 	public $prefix = 'test_';
@@ -79,6 +81,7 @@ check( 'deactivation preserves article information', $state['meta'][42] === $see
 MWSEO_Plugin::activate();
 check( 'reactivation preserves article information', $state['meta'][42] === $seed + array( '_mwseo_indexnow_pinged' => '1700000000' ) );
 check( 'reactivation preserves authored configuration', get_option( 'mwseo_options' ) === $configuration );
+check( 'reactivation with stored options is not flagged as a new installation', false === $state['setup_flag'] );
 require $source . '/uninstall.php';
 foreach ( $seed as $key => $value ) { foreach ( array( 42, 43 ) as $id ) { check( $id . ' preserves ' . $key, array_key_exists( $key, $state['meta'][ $id ] ) && $state['meta'][ $id ][ $key ] === $value ); } }
 check( 'rank history preserved', $state['rank'] === $rank_before );
