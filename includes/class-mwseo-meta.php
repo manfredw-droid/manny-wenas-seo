@@ -73,10 +73,22 @@ class MWSEO_Meta {
 	 * explicit opt-out (a saved empty value or 0) is respected even when an old
 	 * Yoast SEO or Rank Math flag is still present. Only when our key is absent
 	 * does the fallback apply: Yoast's value if it has one, otherwise Rank Math's.
-	 * Values are compared case-sensitively and without trailing-space padding, as
-	 * PHP does. Every test is a subquery bounded to one key (index post_id, meta_key),
-	 * so it adds no join and cannot multiply rows. With duplicate rows for one key
-	 * (not produced by this plugin) any row that qualifies counts.
+	 *
+	 * Details that keep the SQL identical to get():
+	 * - get_post_meta() reads the first row (lowest meta_id) of a key, so every
+	 *   value test looks at that row only, even when a key has duplicate rows.
+	 * - Keys are matched exactly as PHP does (case-sensitive), although the
+	 *   database compares them case-insensitively: the plain equality uses the
+	 *   index, the BINARY equality makes it exact.
+	 * - Values are compared case-sensitively and without trailing-space padding.
+	 *
+	 * Contract: values as the three plugins write them (plain strings, including
+	 * NULL and empty). PHP-serialized values (for example "b:1;") are not
+	 * interpreted: get() unserializes them, this SQL sees plain text. No plugin
+	 * here writes such values (WordPress stores booleans as "1" or "").
+	 *
+	 * Every test is a subquery bounded to one key, so it adds no join and cannot
+	 * multiply rows.
 	 *
 	 * @param string $id_sql Post ID column, for example "wp_posts.ID".
 	 * @return string
@@ -85,15 +97,23 @@ class MWSEO_Meta {
 		global $wpdb;
 		$yes = self::BOOLEAN_TRUE;
 		$in  = implode( ', ', array_fill( 0, count( $yes ), '%s' ) );
-		$has = static function ( $alias, $key, $extra = '', array $args = array() ) use ( $wpdb, $id_sql ) {
+		/*
+		 * One "key has a (first) row that satisfies $extra" test. $extra may use
+		 * the alias; $args are its placeholder values.
+		 */
+		$has = static function ( $alias, $key, $extra = '', array $args = array(), $first_row = true ) use ( $wpdb, $id_sql ) {
+			$earlier = $first_row
+				? " AND NOT EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS {$alias}e WHERE {$alias}e.post_id = {$alias}.post_id AND {$alias}e.meta_key = %s AND BINARY {$alias}e.meta_key = %s AND {$alias}e.meta_id < {$alias}.meta_id )"
+				: '';
+			$params  = array_merge( array( $key, $key ), $args, $first_row ? array( $key, $key ) : array() );
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- table, alias and column names are fixed or come from WP_Query; values are placeholders.
-			return $wpdb->prepare( "EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS {$alias} WHERE {$alias}.post_id = {$id_sql} AND {$alias}.meta_key = %s{$extra} )", array_merge( array( $key ), $args ) );
+			return $wpdb->prepare( "EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS {$alias} WHERE {$alias}.post_id = {$id_sql} AND {$alias}.meta_key = %s AND BINARY {$alias}.meta_key = %s{$extra}{$earlier} )", $params );
 		};
 		$own      = '_mwseo_cornerstone';
 		$yoast    = '_yoast_wpseo_is_cornerstone';
 		$rank     = 'rank_math_pillar_content';
 		$own_yes  = $has( 'mwseo_o1', $own, " AND BINARY mwseo_o1.meta_value IN ( {$in} )", $yes );
-		$own_any  = $has( 'mwseo_o2', $own );
+		$own_any  = $has( 'mwseo_o2', $own, '', array(), false );
 		$yoast_ok = $has( 'mwseo_y1', $yoast, " AND BINARY mwseo_y1.meta_value IN ( {$in} )", $yes );
 		$yoast_on = $has( 'mwseo_y2', $yoast, " AND mwseo_y2.meta_value <> ''" );
 		$rank_ok  = $has( 'mwseo_r1', $rank, " AND BINARY mwseo_r1.meta_value IN ( {$in} )", $yes );
