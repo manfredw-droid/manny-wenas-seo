@@ -101,7 +101,7 @@ runtime or browser compatibility certification.
 
 **Date:** 22 October 2026
 
-**Commit:** see the line added by the follow-up record commit on branch `implementation/1.0.9-slug-import-cornerstone` (based on `main` at `1620b86b9`, plugin 1.0.8)
+**Commit:** 768994ee875c71bf828123ad5a13d5bfc88fb07e (branch: implementation/1.0.9-slug-import-cornerstone, based on `main` at `1620b86b9`, plugin 1.0.8)
 
 **SCORING_VERSION:** 1.2 → 1.3
 

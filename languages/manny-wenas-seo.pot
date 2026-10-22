@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Manny Wenas SEO 1.0.8\n"
+"Project-Id-Version: Manny Wenas SEO 1.0.9\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/manny-wenas-seo\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-20T13:56:45+00:00\n"
+"POT-Creation-Date: 2026-10-22T21:18:20+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: manny-wenas-seo\n"
@@ -39,7 +39,7 @@ msgid "Manny Wenas"
 msgstr ""
 
 #: includes/class-mwseo-abilities.php:32
-#: includes/class-mwseo-metabox.php:58
+#: includes/class-mwseo-metabox.php:70
 msgid "SEO"
 msgstr ""
 
@@ -161,7 +161,7 @@ msgid "Tools"
 msgstr ""
 
 #: includes/class-mwseo-admin.php:137
-#: includes/class-mwseo-importer.php:553
+#: includes/class-mwseo-importer.php:561
 msgid "Import"
 msgstr ""
 
@@ -185,7 +185,7 @@ msgid "nofollow: do not follow links on this page"
 msgstr ""
 
 #: includes/class-mwseo-companion.php:49
-msgid "Anchor post (prioritised in llms.txt)"
+msgid "Cornerstone content (prioritised in llms.txt)"
 msgstr ""
 
 #: includes/class-mwseo-companion.php:50
@@ -452,7 +452,7 @@ msgid "Twitter image URL"
 msgstr ""
 
 #: includes/class-mwseo-importer.php:335
-msgid "Anchor post"
+msgid "Cornerstone content"
 msgstr ""
 
 #: includes/class-mwseo-importer.php:336
@@ -515,84 +515,88 @@ msgstr ""
 msgid "Click \"Run Import\" to apply these changes."
 msgstr ""
 
-#: includes/class-mwseo-importer.php:552
-#: includes/class-mwseo-importer.php:568
+#: includes/class-mwseo-importer.php:351
+msgid "No changes would be made with the current selections."
+msgstr ""
+
+#: includes/class-mwseo-importer.php:560
+#: includes/class-mwseo-importer.php:576
 msgid "Import SEO Data"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:568
+#: includes/class-mwseo-importer.php:576
 msgid "Preview and import supported post SEO data from Yoast SEO or Rank Math."
 msgstr ""
 
-#: includes/class-mwseo-importer.php:573
+#: includes/class-mwseo-importer.php:581
 msgid "Yoast and Rank Math imports support titles with compatible tokens, literal descriptions, primary focus phrases, explicit noindex/nofollow flags and cornerstone flags. Other fields are reported as unsupported. Source metadata must still exist; the source plugin may be inactive. Existing native records are preserved unless you check \"Overwrite\". Historical imports are not repaired. Import from All in One SEO, SEOPress and The SEO Framework is switched off."
 msgstr ""
 
-#: includes/class-mwseo-importer.php:609
+#: includes/class-mwseo-importer.php:617
 msgid "Import from"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:613
+#: includes/class-mwseo-importer.php:621
 msgid "— select a plugin —"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:622
+#: includes/class-mwseo-importer.php:630
 msgid "Post types"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:634
+#: includes/class-mwseo-importer.php:642
 msgid "Options"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:638
+#: includes/class-mwseo-importer.php:646
 msgid "Overwrite existing Manny Wenas SEO data"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:645
+#: includes/class-mwseo-importer.php:653
 msgid "Dry run — preview only, no data written"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:654
+#: includes/class-mwseo-importer.php:662
 msgid "Field map"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:660
+#: includes/class-mwseo-importer.php:668
 msgid "Preview import"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:663
+#: includes/class-mwseo-importer.php:671
 msgid "Run Import"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:665
+#: includes/class-mwseo-importer.php:673
 msgid "Available after a preview."
 msgstr ""
 
-#: includes/class-mwseo-importer.php:670
+#: includes/class-mwseo-importer.php:678
 msgid "Progress"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:676
+#: includes/class-mwseo-importer.php:684
 msgid "Results"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:698
-#: includes/class-mwseo-importer.php:702
-#: includes/class-mwseo-importer.php:703
+#: includes/class-mwseo-importer.php:706
+#: includes/class-mwseo-importer.php:710
+#: includes/class-mwseo-importer.php:711
 msgid "Unsupported — retained at source"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:728
+#: includes/class-mwseo-importer.php:736
 msgid "Insufficient permissions."
 msgstr ""
 
 #. translators: %s: source plugin identifier
-#: includes/class-mwseo-importer.php:742
+#: includes/class-mwseo-importer.php:750
 #, php-format
 msgid "Unknown source plugin: %s"
 msgstr ""
 
-#: includes/class-mwseo-importer.php:745
+#: includes/class-mwseo-importer.php:753
 msgid "Import currently supports Yoast SEO and Rank Math. Support for the other sources is switched off."
 msgstr ""
 
@@ -605,16 +609,37 @@ msgstr ""
 msgid "Key content"
 msgstr ""
 
-#: includes/class-mwseo-meta.php:141
+#: includes/class-mwseo-meta.php:166
 msgid "A requested metadata reset cannot be completed with the current stored value. The request was rejected before saving."
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:17
+#: includes/class-mwseo-metabox.php:29
 msgid "Manny Wenas SEO controls are unavailable because this post type does not support custom-fields. Your saved SEO data and frontend output continue to work."
 msgstr ""
 
-#: includes/class-mwseo-metabox.php:46
+#: includes/class-mwseo-metabox.php:58
 msgid "From version 1.0.7, Manny Wenas SEO requires the block editor for SEO controls. Your saved SEO data and frontend output continue to work."
+msgstr ""
+
+#: includes/class-mwseo-metabox.php:95
+#: includes/class-mwseo-metabox.php:110
+msgid "Cornerstone"
+msgstr ""
+
+#: includes/class-mwseo-metabox.php:112
+msgid "Not cornerstone content"
+msgstr ""
+
+#: includes/class-mwseo-metabox.php:136
+msgid "Filter by cornerstone content"
+msgstr ""
+
+#: includes/class-mwseo-metabox.php:138
+msgid "All content"
+msgstr ""
+
+#: includes/class-mwseo-metabox.php:139
+msgid "Only cornerstone"
 msgstr ""
 
 #: includes/class-mwseo-notices.php:52
@@ -709,98 +734,94 @@ msgstr ""
 msgid "Focus keyphrase not found in the meta description."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:387
+#: includes/class-mwseo-scorer.php:394
 msgid "The focus keyphrase appears in the URL slug."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:388
+#: includes/class-mwseo-scorer.php:395
 msgid "Focus keyphrase not found in the URL slug."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:411
+#: includes/class-mwseo-scorer.php:418
 msgid "No paragraph detected in the content."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:420
+#: includes/class-mwseo-scorer.php:427
 msgid "The focus keyphrase appears in the opening paragraph."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:421
+#: includes/class-mwseo-scorer.php:428
 msgid "Focus keyphrase not found in the opening paragraph."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:444
+#: includes/class-mwseo-scorer.php:451
 msgid "No subheadings detected."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:449
-#: includes/class-mwseo-scorer.php:561
-#: includes/class-mwseo-scorer.php:714
+#: includes/class-mwseo-scorer.php:456
+#: includes/class-mwseo-scorer.php:568
+#: includes/class-mwseo-scorer.php:721
 msgid "No focus keyphrase set."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:470
+#: includes/class-mwseo-scorer.php:477
 msgid "The focus keyphrase appears in a subheading."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:471
+#: includes/class-mwseo-scorer.php:478
 msgid "Focus keyphrase not found in any subheading."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:500
+#: includes/class-mwseo-scorer.php:507
 msgid "No images to check."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:507
+#: includes/class-mwseo-scorer.php:514
 msgid "All images have alt text."
 msgstr ""
 
 #. translators: 1: number of images without alt text, 2: total number of images
-#: includes/class-mwseo-scorer.php:509
+#: includes/class-mwseo-scorer.php:516
 #, php-format
 msgid "%1$d of %2$d images lack alt text."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:523
-msgid "The URL slug is generated when the post is saved."
-msgstr ""
-
-#: includes/class-mwseo-scorer.php:534
+#: includes/class-mwseo-scorer.php:541
 msgid "The URL slug is clean."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:535
+#: includes/class-mwseo-scorer.php:542
 msgid "URL slug contains double hyphens or consists only of stop words."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:564
+#: includes/class-mwseo-scorer.php:571
 msgid "No related keyphrases configured."
 msgstr ""
 
 #. translators: 1: related keyphrases found in the text, 2: total related keyphrases
-#: includes/class-mwseo-scorer.php:575
+#: includes/class-mwseo-scorer.php:582
 #, php-format
 msgid "%1$d of %2$d related keyphrases appear in the text."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:593
+#: includes/class-mwseo-scorer.php:600
 msgid "This post has fewer than 300 words."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:596
+#: includes/class-mwseo-scorer.php:603
 msgid "No external links detected."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:628
+#: includes/class-mwseo-scorer.php:635
 msgid "Focus keyphrase not set. Keyphrase checks are inactive."
 msgstr ""
 
-#: includes/class-mwseo-scorer.php:669
+#: includes/class-mwseo-scorer.php:676
 msgid "All applicable checks received full credit."
 msgstr ""
 
 #. translators: %d: number of checks with no credit
-#: includes/class-mwseo-scorer.php:676
+#: includes/class-mwseo-scorer.php:683
 #, php-format
 msgid "%d check received no credit"
 msgid_plural "%d checks received no credit"
@@ -808,12 +829,16 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of checks with partial credit
-#: includes/class-mwseo-scorer.php:683
+#: includes/class-mwseo-scorer.php:690
 #, php-format
 msgid "%d received partial credit"
 msgid_plural "%d received partial credit"
 msgstr[0] ""
 msgstr[1] ""
+
+#: includes/class-mwseo-scorer.php:808
+msgid "The URL slug is generated when the post is saved."
+msgstr ""
 
 #: includes/class-mwseo-settings.php:41
 msgid "Titles, the post types that get SEO controls, and optional indicators."
@@ -992,7 +1017,7 @@ msgid "Serve /llms.txt"
 msgstr ""
 
 #: includes/class-mwseo-settings.php:143
-msgid "Built whenever /llms.txt is requested. Anchor posts are listed first."
+msgid "Built whenever /llms.txt is requested. Cornerstone content is listed first."
 msgstr ""
 
 #: includes/class-mwseo-settings.php:144

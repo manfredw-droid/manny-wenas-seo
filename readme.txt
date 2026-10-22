@@ -5,7 +5,7 @@ Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.8
+Stable tag: 1.0.9
 License: GPLv2 or later
 
 Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
@@ -32,7 +32,7 @@ An optional Search Console connection shows you the actual queries people used t
 * SEO title, meta description, noindex/nofollow per post
 * Open Graph and X/Twitter cards
 * Sitemaps: posts, news, images, videos, categories, tags, authors, plus an HTML sitemap shortcode
-* robots.txt management and llms.txt built when requested (anchor posts first)
+* robots.txt management and llms.txt built when requested (cornerstone content first)
 * Connected @graph JSON-LD, server-side rendered
 * Yoast SEO and Rank Math coexistence (we defer: no duplicate meta, schema or sitemaps)
 * Google Search Console (OAuth), per-post query data
@@ -75,6 +75,11 @@ Terms of use: https://policies.google.com/terms
 Privacy policy: https://policies.google.com/privacy
 
 == Changelog ==
+
+= 1.0.9 =
+* Scoring (version 1.3): the keyphrase-in-URL-slug check is not scored while a post has no slug yet, such as a new draft. It no longer counts as 0 out of 6, so that draft can score higher. A slug that exists is scored as before. Re-analysing a post can change its score; stored scores are not migrated
+* Fixed: an import preview that finds nothing to change now says "No changes would be made with the current selections." instead of telling you to click Run Import. What an import maps and writes is unchanged
+* Added: a Cornerstone column and an "Only cornerstone" filter on the Posts and Pages lists. They use the existing setting, which is now labelled Cornerstone content (it was called Anchor post). No data is changed and the score is not affected
 
 = 1.0.8 =
 * Added: a first-time "Get started" screen. It offers a previewed import of supported post SEO data from Yoast SEO or Rank Math, then a site identity step (name and logo). It opens once after a new installation, can be skipped, and is never forced on existing sites; "Get started" stays in the menu
