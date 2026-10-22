@@ -94,3 +94,45 @@ points and denominator, N/A classifications and the no-focus verdict. It also
 compares complete focused-analysis outputs with the recorded 1.1 baseline and
 covers both score-change examples. These are isolated PHP checks, not WordPress
 runtime or browser compatibility certification.
+
+---
+
+## Amendment 4 — SCORING_VERSION 1.3: keyphrase in the URL slug is N/A until the post has a slug
+
+**Date:** 22 October 2026
+
+**Commit:** see the line added by the follow-up record commit on branch `implementation/1.0.9-slug-import-cornerstone` (based on `main` at `1620b86b9`, plugin 1.0.8)
+
+**SCORING_VERSION:** 1.2 → 1.3
+
+**Principles clarified:** §2.2, §4.3
+
+**Authority:** explicit owner approval of the agreed 1.0.9 changes, item 1 (empty URL slug).
+
+When a focus keyphrase is set but the post has no slug yet (a new draft whose slug WordPress
+has not generated), `slug_keyphrase` is N/A. It contributes neither earned points nor an
+applicable maximum of 6 to the rescaled score. An empty slug cannot lack a keyphrase, so it
+is no longer scored 0/6.
+
+A slug that exists is scored exactly as before: with the keyphrase it earns 6/6, without it
+0/6, and a partial semantic match keeps its existing half credit. With no focus keyphrase the
+check stays N/A for its own reason ("No focus keyphrase set."), with or without a slug.
+
+The technical `clean_slug` check was already N/A without a slug. Both slug checks now give the
+same explanation in that state: "The URL slug is generated when the post is saved."
+
+An empty slug could never earn those 6 points under 1.2, so the change can only raise the
+score of such a draft, or leave it at 100. Recorded fixture (focus "solar garden", title and
+description containing it): empty slug 92 (69/75) under 1.2 becomes 100 (69/69) under 1.3. The
+same article with slug `solar-garden-notes` stays 100 (78/78) and with slug `quiet-afternoon`
+stays 92 (72/78). Section weights remain 45/30/11/10, with an absolute maximum of 96 before
+rescaling. Matching logic, thresholds and every other check are unchanged.
+
+No stored scores are rewritten and no migration or bulk recalculation is introduced. New
+analyses use 1.3; this version increment does not itself refresh existing stored scores.
+
+`tests/slug-unavailable.php` pins version 1.3 and covers the three slug states (empty, with the
+keyphrase, without it), the no-focus case, the shared explanation, the denominator arithmetic
+and the recorded fixture results above. It was also run against the unmodified 1.0.8 scorer,
+where the behaviour-change checks fail. These are isolated PHP checks, not WordPress runtime
+or browser compatibility certification.

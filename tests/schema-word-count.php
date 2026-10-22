@@ -108,7 +108,7 @@ if ( $other !== $expected_other ) { $failures[] = 'non-wordCount fields changed:
 if ( 'Article' !== $node['@type'] ) { $failures[] = '@type changed'; }
 
 // Scoring version stays pinned.
-if ( '1.2' !== MWSEO_Scorer::SCORING_VERSION ) { $failures[] = 'SCORING_VERSION is not 1.2'; }
+if ( '1.3' !== MWSEO_Scorer::SCORING_VERSION ) { $failures[] = 'SCORING_VERSION is not 1.3'; }
 
 echo ( $checks - count( $failures ) ) . '/' . $checks . " checks passed\n";
 foreach ( $failures as $f ) { echo "FAIL: $f\n"; }

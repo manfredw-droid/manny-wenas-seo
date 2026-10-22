@@ -25,7 +25,7 @@ final class MWSEO_Scorer {
 	 * version) whenever a scoring rule changes intentionally, so constitutional
 	 * tests have a defined contract to verify against.
 	 */
-	const SCORING_VERSION = '1.2';
+	const SCORING_VERSION = '1.3';
 
 	/**
 	 * Points per section.
@@ -374,10 +374,17 @@ final class MWSEO_Scorer {
 	/**
 	 * URL slug contains the keyphrase (6).
 	 *
+	 * N/A while the post has no slug yet (a draft whose slug WordPress has not
+	 * generated): an empty slug cannot lack the keyphrase. A nonempty slug scores
+	 * as before: 6 with the keyphrase, 0 without it.
+	 *
 	 * @param array $ctx Context.
 	 * @return array
 	 */
 	public static function check_slug( array $ctx ) {
+		if ( '' !== $ctx['focus'] && '' === $ctx['slug'] ) {
+			return self::not_applicable( 'slug_keyphrase', 'placement', 6, self::slug_unavailable_message() );
+		}
 		return self::keyphrase_check(
 			'slug_keyphrase',
 			'placement',
@@ -520,7 +527,7 @@ final class MWSEO_Scorer {
 	public static function check_clean_slug( array $ctx ) {
 		$slug = $ctx['slug'];
 		if ( '' === $slug ) {
-			return self::not_applicable( 'clean_slug', 'technical', 3, __( 'The URL slug is generated when the post is saved.', 'manny-wenas-seo' ) );
+			return self::not_applicable( 'clean_slug', 'technical', 3, self::slug_unavailable_message() );
 		}
 		$stop    = MWSEO_Analyzer::lang()['stop'];
 		$tokens  = array_filter( explode( '-', strtolower( $slug ) ) );
@@ -790,6 +797,15 @@ final class MWSEO_Scorer {
 			'na'             => false,
 			'message'        => 'full' === $classification ? $good : $bad,
 		);
+	}
+
+	/**
+	 * Explanation shown by both slug checks while the post has no slug yet.
+	 *
+	 * @return string
+	 */
+	private static function slug_unavailable_message() {
+		return __( 'The URL slug is generated when the post is saved.', 'manny-wenas-seo' );
 	}
 
 	/**

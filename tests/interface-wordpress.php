@@ -313,7 +313,7 @@ check_ui( ! $missing, 'POT: every printf message is flagged php-format' . ( $mis
 
 // ---------------------------------------------------------------------------------------------
 // Scoring and metadata contract are untouched.
-check_ui( '1.2' === MWSEO_Scorer::SCORING_VERSION, 'SCORING_VERSION stays 1.2' );
+check_ui( '1.3' === MWSEO_Scorer::SCORING_VERSION, 'SCORING_VERSION is 1.3 (1.0.9 slug amendment)' );
 
 if ( false !== $original ) {
 	update_option( MWSEO_Options::KEY, $original );
