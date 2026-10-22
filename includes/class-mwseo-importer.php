@@ -332,7 +332,7 @@ class MWSEO_Importer {
 				'twitter_title'                            => __( 'Twitter title', 'manny-wenas-seo' ),
 				'twitter_description'                      => __( 'Twitter description', 'manny-wenas-seo' ),
 				'twitter_image_url'                        => __( 'Twitter image URL', 'manny-wenas-seo' ),
-				'anchor_post'                              => __( 'Anchor post', 'manny-wenas-seo' ),
+				'anchor_post'                              => __( 'Cornerstone content', 'manny-wenas-seo' ),
 				'schema_page_type'                         => __( 'Schema page type', 'manny-wenas-seo' ),
 				'schema_article_type'                      => __( 'Schema article type', 'manny-wenas-seo' ),
 				'please_select_a_source_plugin'            => __( 'Please select a source plugin.', 'manny-wenas-seo' ),

@@ -30,6 +30,31 @@ class MWSEO_Meta {
 	}
 
 	/**
+	 * Meta query matching cornerstone content: our own flag, or the flag a
+	 * previously active Yoast SEO or Rank Math left behind. Mirrors the fallback
+	 * read by get() and the selection used by llms.txt; no second flag exists.
+	 *
+	 * @return array
+	 */
+	public static function cornerstone_meta_query() {
+		return array(
+			'relation' => 'OR',
+			array(
+				'key'   => '_mwseo_cornerstone',
+				'value' => '1',
+			),
+			array(
+				'key'   => '_yoast_wpseo_is_cornerstone',
+				'value' => '1',
+			),
+			array(
+				'key'   => 'rank_math_pillar_content',
+				'value' => 'on',
+			),
+		);
+	}
+
+	/**
 	 * Hook registration.
 	 */
 	public static function init() {

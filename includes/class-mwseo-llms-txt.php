@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
  */
 
 /**
- * Serves fresh /llms.txt output and maintains weekly snapshots. Anchor posts are listed first.
+ * Serves fresh /llms.txt output and maintains weekly snapshots. Cornerstone content is listed first.
  */
 class MWSEO_Llms_Txt {
 
