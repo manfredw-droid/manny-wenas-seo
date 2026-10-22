@@ -80,6 +80,7 @@ Privacy policy: https://policies.google.com/privacy
 * Scoring (version 1.3): the keyphrase-in-URL-slug check is not scored while a post has no slug yet, such as a new draft. It no longer counts as 0 out of 6, so that draft can score higher. A slug that exists is scored as before. Re-analysing a post can change its score; stored scores are not migrated
 * Fixed: an import preview that finds nothing to change now says "No changes would be made with the current selections." instead of telling you to click Run Import. What an import maps and writes is unchanged
 * Added: a Cornerstone column and an "Only cornerstone" filter on the Posts and Pages lists. They use the existing setting, which is now labelled Cornerstone content (it was called Anchor post). No data is changed and the score is not affected
+* Fixed: unticking Cornerstone content is now respected everywhere. Previously a post you had unticked could still be listed first in llms.txt because an older Yoast SEO or Rank Math cornerstone flag remained. The checkbox, the Cornerstone column, the filter and llms.txt now agree; a post that was never set in this plugin still follows an older Yoast or Rank Math flag
 
 = 1.0.8 =
 * Added: a first-time "Get started" screen. It offers a previewed import of supported post SEO data from Yoast SEO or Rank Math, then a site identity step (name and logo). It opens once after a new installation, can be skipped, and is never forced on existing sites; "Get started" stays in the menu

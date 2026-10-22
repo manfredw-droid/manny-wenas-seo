@@ -155,8 +155,10 @@ class MWSEO_Metabox {
 		if ( ! is_string( $post_type ) || ! in_array( $post_type, (array) MWSEO_Options::get( 'post_types' ), true ) ) {
 			return;
 		}
+		// The exact rule is applied by MWSEO_Meta::limit_to_cornerstone_sql(); the meta query is its cheap prefilter.
 		$existing = $query->get( 'meta_query' );
-		$clause   = MWSEO_Meta::cornerstone_meta_query();
+		$clause   = MWSEO_Meta::cornerstone_candidate_meta_query();
+		$query->set( 'mwseo_effective_cornerstone', 1 );
 		$query->set( 'meta_query', $existing ? array( 'relation' => 'AND', $existing, $clause ) : $clause ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 	}
 }

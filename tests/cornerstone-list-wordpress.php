@@ -132,6 +132,90 @@ set_current_screen( 'front' );
 $q = new WP_Query( array( 'post_type' => 'post', 'post_status' => 'any', 'posts_per_page' => -1, 'fields' => 'ids' ) );
 cs_check( count( array_intersect( $q->posts, $created ) ) === 5, 'outside the admin list the argument does nothing' );
 
+// ---- One effective value: checkbox, column, filter and llms.txt -------------------------------
+// Rule (MWSEO_Meta::get): if our own key exists it alone decides, so an explicit opt-out (a saved empty
+// value or 0) wins over an old Yoast/Rank Math flag; only an absent key falls back to Yoast's value
+// when it has one, otherwise Rank Math's. This oracle is written out by hand, not taken from the code.
+function cs_expected( $own, $yoast, $rank ) {
+	$yes = array( '1', 'true', 'on' );
+	if ( null !== $own ) { return in_array( $own, $yes, true ); }
+	if ( null !== $yoast && '' !== $yoast ) { return in_array( $yoast, $yes, true ); }
+	return null !== $rank && in_array( $rank, $yes, true );
+}
+function cs_llms_key_section( $body ) {
+	if ( ! preg_match( '/^## Key content\R(.*?)(?=^## |\z)/ms', $body, $m ) ) { return ''; }
+	return $m[1];
+}
+$matrix = array();
+foreach ( array( 'absent' => null, 'empty' => '', 'zero' => '0', 'one' => '1' ) as $o_name => $o ) {
+	foreach ( array( 'absent' => null, 'empty' => '', 'zero' => '0', 'one' => '1' ) as $y_name => $y ) {
+		foreach ( array( 'absent' => null, 'empty' => '', 'off' => 'off', 'on' => 'on' ) as $r_name => $r ) {
+			$meta = array();
+			if ( null !== $o ) { $meta['_mwseo_cornerstone'] = $o; }
+			if ( null !== $y ) { $meta['_yoast_wpseo_is_cornerstone'] = $y; }
+			if ( null !== $r ) { $meta['rank_math_pillar_content'] = $r; }
+			$title = "mx own=$o_name yoast=$y_name rank=$r_name";
+			$id = cs_post( $title, 'post', $meta );
+			$matrix[ $id ] = array( 'title' => $title, 'expected' => cs_expected( $o, $y, $r ), 'own_exists' => null !== $o );
+		}
+	}
+}
+cs_check( 64 === count( $matrix ), 'the matrix has every combination' );
+
+$_GET['mwseo_cornerstone'] = '1';
+$listed = array_intersect( cs_list( 'post' ), array_keys( $matrix ) );
+unset( $_GET['mwseo_cornerstone'] );
+$key_section = cs_llms_key_section( MWSEO_Llms_Txt::build() );
+foreach ( $matrix as $id => $row ) {
+	$label = $row['title'];
+	$want  = $row['expected'];
+	cs_check( $want === MWSEO_Meta::get( $id, 'cornerstone' ), "$label: effective value is " . json_encode( $want ) );
+	cs_check( $want === ( false !== strpos( cs_cell( 'post', $id ), 'dashicons-star-filled' ) ), "$label: column agrees" );
+	cs_check( $want === in_array( $id, $listed, true ), "$label: 'Only cornerstone' agrees" );
+	cs_check( $want === ( false !== strpos( $key_section, '[' . $row['title'] . ']' ) ), "$label: llms.txt Key content agrees" );
+}
+
+// The four cases named in the review, spelled out.
+$by_title = array_column( array_map( null, array_keys( $matrix ), array_column( $matrix, 'title' ) ), 0, 1 );
+foreach ( array(
+	'Manny flag 1: included'                                   => array( 'mx own=one yoast=absent rank=absent', true ),
+	'Manny flag 0 plus an old Yoast flag: excluded'            => array( 'mx own=zero yoast=one rank=absent', false ),
+	'Manny flag 0 plus an old Rank Math flag: excluded'        => array( 'mx own=zero yoast=absent rank=on', false ),
+	'No Manny flag plus an old Yoast flag: included'           => array( 'mx own=absent yoast=one rank=absent', true ),
+	'No Manny flag plus an old Rank Math flag: included'       => array( 'mx own=absent yoast=absent rank=on', true ),
+	'Manny flag saved empty (unticked) plus Yoast: excluded'   => array( 'mx own=empty yoast=one rank=absent', false ),
+) as $label => $case ) {
+	$id = $by_title[ $case[0] ];
+	cs_check( $case[1] === in_array( $id, $listed, true ), "filter: $label" );
+	cs_check( $case[1] === ( false !== strpos( cs_cell( 'post', $id ), 'dashicons-star-filled' ) ), "column: $label" );
+	cs_check( $case[1] === ( false !== strpos( $key_section, '[' . $case[0] . ']' ) ), "llms.txt: $label" );
+}
+
+// Unticking the checkbox in the editor saves the flag through the REST API: that opt-out must win everywhere.
+$ticked = cs_post( 'rest optout', 'post', array( '_mwseo_cornerstone' => '1', '_yoast_wpseo_is_cornerstone' => '1' ) );
+$req    = new WP_REST_Request( 'POST', '/wp/v2/posts/' . $ticked );
+$req->set_body_params( array( 'meta' => array( '_mwseo_cornerstone' => false ) ) );
+$res = rest_do_request( $req );
+cs_check( ! $res->is_error() && metadata_exists( 'post', $ticked, '_mwseo_cornerstone' ), 'REST opt-out keeps an explicit (empty) flag row' );
+$_GET['mwseo_cornerstone'] = '1';
+cs_check( ! in_array( $ticked, cs_list( 'post' ), true ), 'REST opt-out: removed from Only cornerstone despite the old Yoast flag' );
+unset( $_GET['mwseo_cornerstone'] );
+cs_check( false === strpos( cs_cell( 'post', $ticked ), 'dashicons-star-filled' ), 'REST opt-out: column agrees' );
+cs_check( false === strpos( cs_llms_key_section( MWSEO_Llms_Txt::build() ), '[rest optout]' ), 'REST opt-out: llms.txt agrees' );
+
+// noindex keeps excluding posts from llms.txt, cornerstone or not; it does not change what is cornerstone.
+$n_own  = cs_post( 'ni own noindex', 'post', array( '_mwseo_cornerstone' => '1', '_mwseo_noindex' => '1' ) );
+$n_ok   = cs_post( 'ni own indexable', 'post', array( '_mwseo_cornerstone' => '1', '_mwseo_noindex' => '0' ) );
+$n_yoa  = cs_post( 'ni yoast noindex', 'post', array( '_yoast_wpseo_is_cornerstone' => '1', '_mwseo_noindex' => '1' ) );
+$n_out  = cs_post( 'ni optout noindex', 'post', array( '_mwseo_cornerstone' => '0', '_yoast_wpseo_is_cornerstone' => '1', '_mwseo_noindex' => '1' ) );
+$body   = MWSEO_Llms_Txt::build();
+$keys   = cs_llms_key_section( $body );
+cs_check( false === strpos( $body, '[ni own noindex]' ), 'noindex cornerstone post is absent from llms.txt' );
+cs_check( false === strpos( $body, '[ni yoast noindex]' ), 'noindex post with an old Yoast flag is absent from llms.txt' );
+cs_check( false === strpos( $body, '[ni optout noindex]' ), 'noindex opted-out post is absent from llms.txt' );
+cs_check( false !== strpos( $keys, '[ni own indexable]' ), 'an indexable cornerstone post is still in Key content' );
+cs_check( false !== strpos( cs_cell( 'post', $n_own ), 'dashicons-star-filled' ), 'a noindex cornerstone post is still marked cornerstone in the list' );
+
 // ---- Reuses the existing flag; no second flag; no scoring link ----------------------------------
 $keys = array_filter( array_keys( get_post_meta( $own ) ), static function ( $key ) { return false !== strpos( $key, 'cornerstone' ); } );
 cs_check( array( '_mwseo_cornerstone' ) === array_values( $keys ), 'the list reads and writes only _mwseo_cornerstone' );

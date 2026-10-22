@@ -30,28 +30,98 @@ class MWSEO_Meta {
 	}
 
 	/**
-	 * Meta query matching cornerstone content: our own flag, or the flag a
-	 * previously active Yoast SEO or Rank Math left behind. Mirrors the fallback
-	 * read by get() and the selection used by llms.txt; no second flag exists.
+	 * Values that read as "true" for a boolean flag, in our own key and in the
+	 * keys of other SEO plugins.
+	 */
+	const BOOLEAN_TRUE = array( '1', 'true', 'on' );
+
+	/**
+	 * Cheap candidate filter for cornerstone queries: posts where any of the three
+	 * flag keys holds a true-looking value. Every post for which get( $id,
+	 * 'cornerstone' ) is true qualifies, so it is a superset; WordPress shares one
+	 * postmeta join between OR clauses that use IN. The exact rule is applied by
+	 * limit_to_cornerstone_sql() once a query carries mwseo_effective_cornerstone.
 	 *
 	 * @return array
 	 */
-	public static function cornerstone_meta_query() {
+	public static function cornerstone_candidate_meta_query() {
+		$yes = self::BOOLEAN_TRUE;
 		return array(
 			'relation' => 'OR',
 			array(
-				'key'   => '_mwseo_cornerstone',
-				'value' => '1',
+				'key'     => '_mwseo_cornerstone',
+				'value'   => $yes,
+				'compare' => 'IN',
 			),
 			array(
-				'key'   => '_yoast_wpseo_is_cornerstone',
-				'value' => '1',
+				'key'     => '_yoast_wpseo_is_cornerstone',
+				'value'   => $yes,
+				'compare' => 'IN',
 			),
 			array(
-				'key'   => 'rank_math_pillar_content',
-				'value' => 'on',
+				'key'     => 'rank_math_pillar_content',
+				'value'   => $yes,
+				'compare' => 'IN',
 			),
 		);
+	}
+
+	/**
+	 * SQL condition that is true exactly when get( $id, 'cornerstone' ) is true.
+	 *
+	 * get() rules, mirrored here: if our own key exists it alone decides, so an
+	 * explicit opt-out (a saved empty value or 0) is respected even when an old
+	 * Yoast SEO or Rank Math flag is still present. Only when our key is absent
+	 * does the fallback apply: Yoast's value if it has one, otherwise Rank Math's.
+	 * Values are compared case-sensitively and without trailing-space padding, as
+	 * PHP does. Every test is a subquery bounded to one key (index post_id, meta_key),
+	 * so it adds no join and cannot multiply rows. With duplicate rows for one key
+	 * (not produced by this plugin) any row that qualifies counts.
+	 *
+	 * @param string $id_sql Post ID column, for example "wp_posts.ID".
+	 * @return string
+	 */
+	public static function cornerstone_where_sql( $id_sql ) {
+		global $wpdb;
+		$yes = self::BOOLEAN_TRUE;
+		$in  = implode( ', ', array_fill( 0, count( $yes ), '%s' ) );
+		$has = static function ( $alias, $key, $extra = '', array $args = array() ) use ( $wpdb, $id_sql ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- table, alias and column names are fixed or come from WP_Query; values are placeholders.
+			return $wpdb->prepare( "EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS {$alias} WHERE {$alias}.post_id = {$id_sql} AND {$alias}.meta_key = %s{$extra} )", array_merge( array( $key ), $args ) );
+		};
+		$own      = '_mwseo_cornerstone';
+		$yoast    = '_yoast_wpseo_is_cornerstone';
+		$rank     = 'rank_math_pillar_content';
+		$own_yes  = $has( 'mwseo_o1', $own, " AND BINARY mwseo_o1.meta_value IN ( {$in} )", $yes );
+		$own_any  = $has( 'mwseo_o2', $own );
+		$yoast_ok = $has( 'mwseo_y1', $yoast, " AND BINARY mwseo_y1.meta_value IN ( {$in} )", $yes );
+		$yoast_on = $has( 'mwseo_y2', $yoast, " AND mwseo_y2.meta_value <> ''" );
+		$rank_ok  = $has( 'mwseo_r1', $rank, " AND BINARY mwseo_r1.meta_value IN ( {$in} )", $yes );
+		return "( {$own_yes} OR ( NOT {$own_any} AND ( {$yoast_ok} OR ( NOT {$yoast_on} AND {$rank_ok} ) ) ) )";
+	}
+
+	/**
+	 * Apply the exact cornerstone rule to queries that ask for it.
+	 *
+	 * Hooked on get_meta_sql, like the noindex exclusion of llms.txt, because that
+	 * filter still runs for get_posts() calls, which suppress other query filters.
+	 * Only queries with the mwseo_effective_cornerstone query variable (and a meta
+	 * query, which is what makes WordPress build meta SQL) are touched.
+	 *
+	 * @param array  $sql               Meta SQL parts (join, where).
+	 * @param array  $queries           Meta queries.
+	 * @param string $type              Meta type.
+	 * @param string $primary_table     Primary table.
+	 * @param string $primary_id_column Primary ID column.
+	 * @param mixed  $context           The WP_Query being built.
+	 * @return array
+	 */
+	public static function limit_to_cornerstone_sql( $sql, $queries, $type, $primary_table, $primary_id_column, $context = null ) {
+		if ( 'post' !== $type || ! $context instanceof WP_Query || ! $context->get( 'mwseo_effective_cornerstone' ) || ! is_array( $sql ) ) {
+			return $sql;
+		}
+		$sql['where'] = ( isset( $sql['where'] ) ? $sql['where'] : '' ) . ' AND ' . self::cornerstone_where_sql( esc_sql( $primary_table ) . '.' . esc_sql( $primary_id_column ) );
+		return $sql;
 	}
 
 	/**
@@ -60,6 +130,7 @@ class MWSEO_Meta {
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register' ) );
 		add_action( 'save_post', array( __CLASS__, 'flush_caches' ) );
+		add_filter( 'get_meta_sql', array( __CLASS__, 'limit_to_cornerstone_sql' ), 10, 6 );
 	}
 
 	/**
@@ -232,7 +303,7 @@ class MWSEO_Meta {
 			return is_array( $value ) ? array_values( array_filter( $value ) ) : array();
 		}
 		if ( 'boolean' === $def[0] ) {
-			return in_array( (string) $value, array( '1', 'true', 'on' ), true );
+			return in_array( (string) $value, self::BOOLEAN_TRUE, true );
 		}
 		if ( 'integer' === $def[0] ) {
 			return (int) $value;
