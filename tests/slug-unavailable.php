@@ -21,7 +21,7 @@ if ( ! function_exists( 'mb_strtolower' ) ) { function mb_strtolower( $s ) { ret
 $root = $argv[1] ?? dirname( __DIR__ );
 require $root . '/includes/class-mwseo-analyzer.php';
 require $root . '/includes/class-mwseo-scorer.php';
-$UNAVAILABLE = 'The URL slug is generated when the post is saved.';
+$UNAVAILABLE = 'The URL slug is not available yet.';
 $base = array(
 	'title'   => 'Solar garden notes',
 	'desc'    => 'Solar garden notes for a quiet afternoon.',

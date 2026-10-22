@@ -119,7 +119,7 @@ A slug that exists is scored exactly as before: with the keyphrase it earns 6/6,
 check stays N/A for its own reason ("No focus keyphrase set."), with or without a slug.
 
 The technical `clean_slug` check was already N/A without a slug. Both slug checks now give the
-same explanation in that state: "The URL slug is generated when the post is saved."
+same explanation in that state: "The URL slug is not available yet." (A saved draft can still have no stored slug, so the text does not promise that saving creates one.)
 
 An empty slug could never earn those 6 points under 1.2, so the change can only raise the
 score of such a draft, or leave it at 100. Recorded fixture (focus "solar garden", title and

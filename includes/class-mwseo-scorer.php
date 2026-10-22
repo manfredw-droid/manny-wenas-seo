@@ -805,7 +805,7 @@ final class MWSEO_Scorer {
 	 * @return string
 	 */
 	private static function slug_unavailable_message() {
-		return __( 'The URL slug is generated when the post is saved.', 'manny-wenas-seo' );
+		return __( 'The URL slug is not available yet.', 'manny-wenas-seo' );
 	}
 
 	/**
