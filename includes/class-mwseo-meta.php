@@ -107,7 +107,7 @@ class MWSEO_Meta {
 				: '';
 			$params  = array_merge( array( $key, $key ), $args, $first_row ? array( $key, $key ) : array() );
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- table, alias and column names are fixed or come from WP_Query; values are placeholders.
-			return $wpdb->prepare( "EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS {$alias} WHERE {$alias}.post_id = {$id_sql} AND {$alias}.meta_key = %s AND BINARY {$alias}.meta_key = %s{$extra}{$earlier} )", $params );
+			return $wpdb->prepare( "EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS {$alias} WHERE {$alias}.post_id = {$id_sql} AND {$alias}.meta_key = %s AND BINARY {$alias}.meta_key = %s{$extra}{$earlier} )", ...$params );
 		};
 		$own      = '_mwseo_cornerstone';
 		$yoast    = '_yoast_wpseo_is_cornerstone';
