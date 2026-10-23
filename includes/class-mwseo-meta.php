@@ -30,11 +30,127 @@ class MWSEO_Meta {
 	}
 
 	/**
+	 * Values that read as "true" for a boolean flag, in our own key and in the
+	 * keys of other SEO plugins.
+	 */
+	const BOOLEAN_TRUE = array( '1', 'true', 'on' );
+
+	/**
+	 * Cheap candidate filter for cornerstone queries: posts where any of the three
+	 * flag keys holds a true-looking value. Every post for which get( $id,
+	 * 'cornerstone' ) is true qualifies, so it is a superset; WordPress shares one
+	 * postmeta join between OR clauses that use IN. The exact rule is applied by
+	 * limit_to_cornerstone_sql() once a query carries mwseo_effective_cornerstone.
+	 *
+	 * @return array
+	 */
+	public static function cornerstone_candidate_meta_query() {
+		$yes = self::BOOLEAN_TRUE;
+		return array(
+			'relation' => 'OR',
+			array(
+				'key'     => '_mwseo_cornerstone',
+				'value'   => $yes,
+				'compare' => 'IN',
+			),
+			array(
+				'key'     => '_yoast_wpseo_is_cornerstone',
+				'value'   => $yes,
+				'compare' => 'IN',
+			),
+			array(
+				'key'     => 'rank_math_pillar_content',
+				'value'   => $yes,
+				'compare' => 'IN',
+			),
+		);
+	}
+
+	/**
+	 * SQL condition that is true exactly when get( $id, 'cornerstone' ) is true.
+	 *
+	 * get() rules, mirrored here: if our own key exists it alone decides, so an
+	 * explicit opt-out (a saved empty value or 0) is respected even when an old
+	 * Yoast SEO or Rank Math flag is still present. Only when our key is absent
+	 * does the fallback apply: Yoast's value if it has one, otherwise Rank Math's.
+	 *
+	 * Details that keep the SQL identical to get():
+	 * - get_post_meta() reads the first row (lowest meta_id) of a key, so every
+	 *   value test looks at that row only, even when a key has duplicate rows.
+	 * - Keys are matched exactly as PHP does (case-sensitive), although the
+	 *   database compares them case-insensitively: the plain equality uses the
+	 *   index, the BINARY equality makes it exact.
+	 * - Values are compared case-sensitively and without trailing-space padding.
+	 *
+	 * Contract: values as the three plugins write them (plain strings, including
+	 * NULL and empty). PHP-serialized values (for example "b:1;") are not
+	 * interpreted: get() unserializes them, this SQL sees plain text. No plugin
+	 * here writes such values (WordPress stores booleans as "1" or "").
+	 *
+	 * Every test is a subquery bounded to one key, so it adds no join and cannot
+	 * multiply rows.
+	 *
+	 * @param string $id_sql Post ID column, for example "wp_posts.ID".
+	 * @return string
+	 */
+	public static function cornerstone_where_sql( $id_sql ) {
+		global $wpdb;
+		$yes = self::BOOLEAN_TRUE;
+		$in  = implode( ', ', array_fill( 0, count( $yes ), '%s' ) );
+		/*
+		 * One "key has a (first) row that satisfies $extra" test. $extra may use
+		 * the alias; $args are its placeholder values.
+		 */
+		$has = static function ( $alias, $key, $extra = '', array $args = array(), $first_row = true ) use ( $wpdb, $id_sql ) {
+			$earlier = $first_row
+				? " AND NOT EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS {$alias}e WHERE {$alias}e.post_id = {$alias}.post_id AND {$alias}e.meta_key = %s AND BINARY {$alias}e.meta_key = %s AND {$alias}e.meta_id < {$alias}.meta_id )"
+				: '';
+			$params  = array_merge( array( $key, $key ), $args, $first_row ? array( $key, $key ) : array() );
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- table, alias and column names are fixed or come from WP_Query; values are placeholders.
+			return $wpdb->prepare( "EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS {$alias} WHERE {$alias}.post_id = {$id_sql} AND {$alias}.meta_key = %s AND BINARY {$alias}.meta_key = %s{$extra}{$earlier} )", $params );
+		};
+		$own      = '_mwseo_cornerstone';
+		$yoast    = '_yoast_wpseo_is_cornerstone';
+		$rank     = 'rank_math_pillar_content';
+		$own_yes  = $has( 'mwseo_o1', $own, " AND BINARY mwseo_o1.meta_value IN ( {$in} )", $yes );
+		$own_any  = $has( 'mwseo_o2', $own, '', array(), false );
+		$yoast_ok = $has( 'mwseo_y1', $yoast, " AND BINARY mwseo_y1.meta_value IN ( {$in} )", $yes );
+		$yoast_on = $has( 'mwseo_y2', $yoast, " AND mwseo_y2.meta_value <> ''" );
+		$rank_ok  = $has( 'mwseo_r1', $rank, " AND BINARY mwseo_r1.meta_value IN ( {$in} )", $yes );
+		return "( {$own_yes} OR ( NOT {$own_any} AND ( {$yoast_ok} OR ( NOT {$yoast_on} AND {$rank_ok} ) ) ) )";
+	}
+
+	/**
+	 * Apply the exact cornerstone rule to queries that ask for it.
+	 *
+	 * Hooked on get_meta_sql, like the noindex exclusion of llms.txt, because that
+	 * filter still runs for get_posts() calls, which suppress other query filters.
+	 * Only queries with the mwseo_effective_cornerstone query variable (and a meta
+	 * query, which is what makes WordPress build meta SQL) are touched.
+	 *
+	 * @param array  $sql               Meta SQL parts (join, where).
+	 * @param array  $queries           Meta queries.
+	 * @param string $type              Meta type.
+	 * @param string $primary_table     Primary table.
+	 * @param string $primary_id_column Primary ID column.
+	 * @param mixed  $context           The WP_Query being built.
+	 * @return array
+	 */
+	public static function limit_to_cornerstone_sql( $sql, $queries, $type, $primary_table, $primary_id_column, $context = null ) {
+		if ( 'post' !== $type || ! $context instanceof WP_Query || ! $context->get( 'mwseo_effective_cornerstone' ) || ! is_array( $sql ) ) {
+			return $sql;
+		}
+		$sql['where'] = ( isset( $sql['where'] ) ? $sql['where'] : '' ) . ' AND ' . self::cornerstone_where_sql( esc_sql( $primary_table ) . '.' . esc_sql( $primary_id_column ) );
+		return $sql;
+	}
+
+	/**
 	 * Hook registration.
 	 */
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register' ) );
 		add_action( 'save_post', array( __CLASS__, 'flush_caches' ) );
+		add_filter( 'get_meta_sql', array( __CLASS__, 'limit_to_cornerstone_sql' ), 10, 6 );
 	}
 
 	/**
@@ -207,7 +323,7 @@ class MWSEO_Meta {
 			return is_array( $value ) ? array_values( array_filter( $value ) ) : array();
 		}
 		if ( 'boolean' === $def[0] ) {
-			return in_array( (string) $value, array( '1', 'true', 'on' ), true );
+			return in_array( (string) $value, self::BOOLEAN_TRUE, true );
 		}
 		if ( 'integer' === $def[0] ) {
 			return (int) $value;

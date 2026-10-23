@@ -72,8 +72,8 @@ function no_focus_contract( $analysis, $earned, $max, $score ) {
     same( array( 'summary' => 'Focus keyphrase not set. Keyphrase checks are inactive.', 'observations' => array(), 'full_count' => 0, 'partial_count' => 0, 'none_count' => 0 ), $analysis['verdict'] );
 }
 $tests = array();
-$tests['Approved version 1.2 and unchanged section weights'] = function () {
-    same( '1.2', MWSEO_Scorer::SCORING_VERSION );
+$tests['Current scoring version (1.3 since 1.0.9; the related-phrase rule is from 1.2) and unchanged section weights'] = function () {
+    same( '1.3', MWSEO_Scorer::SCORING_VERSION );
     same( array( 'content' => 45, 'placement' => 30, 'technical' => 11, 'optional' => 10 ), MWSEO_Scorer::SECTIONS );
 };
 foreach ( array( '', " \t\n" ) as $focus_index => $focus ) {

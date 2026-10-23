@@ -11,6 +11,10 @@ const refused = ['aioseo', 'seopress', 'tsf', 'nosuchplugin'];
 const refusal = 'Import currently supports Yoast SEO and Rank Math. Support for the other sources is switched off.';
 let passed = 0, failed = 0;
 const done = { success: true, data: { imported: 0, skipped: 0, unchanged: 0, errors: 0, processed: 1, total: 1, done: true, details: [], field_outcomes: {} } };
+// A finished batch whose preview plans `wouldChange` native field writes / `imported` legacy posts.
+const batchResult = (extra, last = true) => ({ success: true, data: Object.assign({}, done.data, { done: last, next_offset: 1 }, extra) });
+const native = (wouldChange, last = true) => batchResult({ field_outcomes: { would_change: wouldChange } }, last);
+const legacy = (imported, last = true) => batchResult({ imported }, last);
 function fixture(source, checked, overwrite, response, defer) {
     // The choices live in `state` so a test can change them while a request is still running.
     const state = { source, checked, overwrite, types: ['fixture'], setup: false };
@@ -27,9 +31,10 @@ function fixture(source, checked, overwrite, response, defer) {
         });
         return nodes.get(selector);
     }
-    $.post = (url, data) => { requests.push({ url, data }); return { done(fn) { if (response) { if (defer) pending.push(() => fn(response)); else fn(response); } return this; }, fail() { return this; } }; };
+    const sequence = Array.isArray(response) ? response.slice() : null; // one response per batch, in order
+    $.post = (url, data) => { requests.push({ url, data }); return { done(fn) { const res = sequence ? sequence.shift() : response; if (res) { if (defer) pending.push(() => fn(res)); else fn(res); } return this; }, fail() { return this; } }; };
     vm.runInNewContext(script, { jQuery: $, ajaxurl: '/wp-admin/admin-ajax.php', alert: message => { throw Error(message); },
-        cfg: { nativeSources: ['yoast', 'rankmath'], i18n: { uncheck_dry_run_and_click_run_import_to_: 'UNCHECK-DRY-RUN-HINT', click_run_import_to_apply_these_changes: 'CLICK-RUN-HINT' }, fieldMaps: {}, outcomes: {}, batchSize: 50 } });
+        cfg: { nativeSources: ['yoast', 'rankmath'], i18n: { uncheck_dry_run_and_click_run_import_to_: 'UNCHECK-DRY-RUN-HINT', click_run_import_to_apply_these_changes: 'CLICK-RUN-HINT', no_changes_would_be_made: 'NO-CHANGES-MESSAGE' }, fieldMaps: {}, outcomes: { would_change: 'Would change' }, batchSize: 50 } });
     return { $, requests, texts, props, htmls, state, finish() { const run = pending.shift(); if (run) run(); } };
 }
 for (const source of sources) for (const overwrite of [false, true]) for (const checked of [false, true]) for (const action of ['submit', 'preview']) {
@@ -162,28 +167,94 @@ gate('A second write needs a new preview', () => {
 });
 
 // 1.0.8 review fix: after a preview the setup screen (no Dry run option) gives its own next step.
-gate('Setup screen: the preview result tells the writer to click Run Import and never mentions Dry run', () => {
-    const f = fixture('yoast', false, false, done);
+gate('Setup screen: a preview with changes tells the writer to click Run Import and never mentions Dry run', () => {
+    const f = fixture('yoast', false, false, native(2));
     f.state.setup = true;
     f.$('#mw-import-preview-btn').handlers.click();
     const html = f.htmls['#mw-import-results-content'];
     assert.match(html, /CLICK-RUN-HINT/);
-    assert.doesNotMatch(html, /UNCHECK-DRY-RUN-HINT/);
+    assert.doesNotMatch(html, /UNCHECK-DRY-RUN-HINT|NO-CHANGES-MESSAGE/);
 });
-gate('Import page: the preview result keeps the "uncheck Dry run" instruction', () => {
-    const f = fixture('yoast', true, false, done);
+gate('Import page: a preview with changes keeps the "uncheck Dry run" instruction', () => {
+    const f = fixture('yoast', true, false, native(2));
     f.$('#mw-import-preview-btn').handlers.click();
     const html = f.htmls['#mw-import-results-content'];
     assert.match(html, /UNCHECK-DRY-RUN-HINT/);
-    assert.doesNotMatch(html, /CLICK-RUN-HINT/);
+    assert.doesNotMatch(html, /CLICK-RUN-HINT|NO-CHANGES-MESSAGE/);
 });
 gate('Setup screen: a finished real import shows no preview hint at all', () => {
-    const f = fixture('yoast', false, false, done);
+    const f = fixture('yoast', false, false, native(2));
     f.state.setup = true;
     f.$('#mw-import-preview-btn').handlers.click();
     f.$('#mw-seo-import-form').handlers.submit({ preventDefault() {} });
     const html = f.htmls['#mw-import-results-content'];
-    assert.doesNotMatch(html, /CLICK-RUN-HINT|UNCHECK-DRY-RUN-HINT/);
+    assert.doesNotMatch(html, /CLICK-RUN-HINT|UNCHECK-DRY-RUN-HINT|NO-CHANGES-MESSAGE/);
+});
+
+// 1.0.9: a preview that finds nothing to change must not tell the writer to apply anything.
+for (const source of ['yoast', 'rankmath']) {
+    gate(`${source}: a zero-change preview on the setup screen says no changes and shows no Run Import instruction`, () => {
+        const f = fixture(source, false, false, native(0));
+        f.state.setup = true;
+        f.$('#mw-import-preview-btn').handlers.click();
+        const html = f.htmls['#mw-import-results-content'];
+        assert.match(html, /NO-CHANGES-MESSAGE/);
+        assert.doesNotMatch(html, /CLICK-RUN-HINT|UNCHECK-DRY-RUN-HINT/);
+    });
+    gate(`${source}: a zero-change preview on the import page says no changes and shows no Dry run instruction`, () => {
+        const f = fixture(source, true, false, native(0));
+        f.$('#mw-import-preview-btn').handlers.click();
+        const html = f.htmls['#mw-import-results-content'];
+        assert.match(html, /NO-CHANGES-MESSAGE/);
+        assert.doesNotMatch(html, /CLICK-RUN-HINT|UNCHECK-DRY-RUN-HINT/);
+    });
+}
+gate('A preview with no field outcomes at all says no changes', () => {
+    const f = fixture('yoast', false, false, done);
+    f.$('#mw-import-preview-btn').handlers.click();
+    assert.match(f.htmls['#mw-import-results-content'], /NO-CHANGES-MESSAGE/);
+});
+gate('Native sources decide on planned field writes, not on the imported count', () => {
+    const planned = fixture('yoast', false, false, batchResult({ imported: 0, field_outcomes: { would_change: 3 } }));
+    planned.$('#mw-import-preview-btn').handlers.click();
+    assert.match(planned.htmls['#mw-import-results-content'], /UNCHECK-DRY-RUN-HINT|CLICK-RUN-HINT/);
+    assert.doesNotMatch(planned.htmls['#mw-import-results-content'], /NO-CHANGES-MESSAGE/);
+    const none = fixture('yoast', false, false, batchResult({ imported: 5, field_outcomes: { would_change: 0 } }));
+    none.$('#mw-import-preview-btn').handlers.click();
+    assert.match(none.htmls['#mw-import-results-content'], /NO-CHANGES-MESSAGE/);
+});
+gate('Planned changes are totalled across batches', () => {
+    const f = fixture('yoast', false, false, [native(0, false), native(0, false), native(1, true)]);
+    f.$('#mw-import-preview-btn').handlers.click();
+    assert.equal(f.requests.length, 3);
+    assert.match(f.htmls['#mw-import-results-content'], /UNCHECK-DRY-RUN-HINT|CLICK-RUN-HINT/);
+    assert.doesNotMatch(f.htmls['#mw-import-results-content'], /NO-CHANGES-MESSAGE/);
+    const none = fixture('yoast', false, false, [native(0, false), native(0, true)]);
+    none.$('#mw-import-preview-btn').handlers.click();
+    assert.equal(none.requests.length, 2);
+    assert.match(none.htmls['#mw-import-results-content'], /NO-CHANGES-MESSAGE/);
+});
+gate('Other sources decide on the posts that would be imported', () => {
+    const zero = fixture('aioseo', true, false, legacy(0));
+    zero.$('#mw-import-preview-btn').handlers.click();
+    assert.match(zero.htmls['#mw-import-results-content'], /NO-CHANGES-MESSAGE/);
+    assert.doesNotMatch(zero.htmls['#mw-import-results-content'], /UNCHECK-DRY-RUN-HINT|CLICK-RUN-HINT/);
+    const some = fixture('aioseo', true, false, legacy(3));
+    some.$('#mw-import-preview-btn').handlers.click();
+    assert.match(some.htmls['#mw-import-results-content'], /UNCHECK-DRY-RUN-HINT/);
+    assert.doesNotMatch(some.htmls['#mw-import-results-content'], /NO-CHANGES-MESSAGE/);
+});
+gate('Writing is unchanged after a zero-change preview: Run is enabled and sends the same write request', () => {
+    const f = fixture('yoast', false, true, native(0));
+    f.$('#mw-import-preview-btn').handlers.click();
+    assert.deepEqual(runProps(f).pop(), ['#mw-import-run-btn', 'disabled', false]);
+    f.$('#mw-seo-import-form').handlers.submit({ preventDefault() {} });
+    assert.equal(f.requests.length, 2);
+    const preview = f.requests[0].data, write = f.requests[1].data;
+    assert.equal(preview.dry_run, 1);
+    assert.equal(write.dry_run, 0);
+    assert.equal(JSON.stringify(Object.assign({}, write, { dry_run: 1 })), JSON.stringify(preview)); // identical request apart from dry_run
+    assert.doesNotMatch(f.htmls['#mw-import-results-content'], /NO-CHANGES-MESSAGE|CLICK-RUN-HINT|UNCHECK-DRY-RUN-HINT/);
 });
 console.log(`${passed} passed; ${failed} failed. Isolated UI routing, not WordPress runtime.`);
 process.exitCode = failed ? 1 : 0;

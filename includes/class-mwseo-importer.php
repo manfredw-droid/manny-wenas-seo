@@ -332,7 +332,7 @@ class MWSEO_Importer {
 				'twitter_title'                            => __( 'Twitter title', 'manny-wenas-seo' ),
 				'twitter_description'                      => __( 'Twitter description', 'manny-wenas-seo' ),
 				'twitter_image_url'                        => __( 'Twitter image URL', 'manny-wenas-seo' ),
-				'anchor_post'                              => __( 'Anchor post', 'manny-wenas-seo' ),
+				'anchor_post'                              => __( 'Cornerstone content', 'manny-wenas-seo' ),
 				'schema_page_type'                         => __( 'Schema page type', 'manny-wenas-seo' ),
 				'schema_article_type'                      => __( 'Schema article type', 'manny-wenas-seo' ),
 				'please_select_a_source_plugin'            => __( 'Please select a source plugin.', 'manny-wenas-seo' ),
@@ -348,6 +348,7 @@ class MWSEO_Importer {
 				'errors_see_php_error_log'                 => __( 'Errors:', 'manny-wenas-seo' ),
 				'uncheck_dry_run_and_click_run_import_to_' => __( 'Uncheck "Dry run" and click Run Import to apply changes.', 'manny-wenas-seo' ),
 				'click_run_import_to_apply_these_changes'  => __( 'Click "Run Import" to apply these changes.', 'manny-wenas-seo' ),
+				'no_changes_would_be_made'                 => __( 'No changes would be made with the current selections.', 'manny-wenas-seo' ),
 			),
 		);
 	}
@@ -512,9 +513,16 @@ class MWSEO_Importer {
 					</ul>`;
 					if (cfg.nativeSources.includes(source)) html = `<p><strong>${safe(label)}</strong></p><p>${d.processed} posts processed; ${totals.errors} posts encountered errors.</p>`;
 					if (dryRun) {
-						// The setup screen has no Dry run option, so it must not tell the writer to untick one.
-						const setupForm = $('#mw-seo-importer').hasClass('mwseo-import--setup');
-						html += `<p>${setupForm ? cfg.i18n.click_run_import_to_apply_these_changes : cfg.i18n.uncheck_dry_run_and_click_run_import_to_}</p>`;
+						// A preview that finds nothing to write must not tell the writer to apply anything. Native
+						// sources report planned writes as would_change; other sources count the posts they would import.
+						const wouldChange = cfg.nativeSources.includes(source) ? fieldTotals.would_change : totals.imported;
+						if (!wouldChange) {
+							html += `<p>${cfg.i18n.no_changes_would_be_made}</p>`;
+						} else {
+							// The setup screen has no Dry run option, so it must not tell the writer to untick one.
+							const setupForm = $('#mw-seo-importer').hasClass('mwseo-import--setup');
+							html += `<p>${setupForm ? cfg.i18n.click_run_import_to_apply_these_changes : cfg.i18n.uncheck_dry_run_and_click_run_import_to_}</p>`;
+						}
 					}
 					if (cfg.nativeSources.includes(source)) {
 						html += '<ul>' + Object.entries(fieldTotals).map(([key, count]) => `<li>${safe(cfg.outcomes[key])}: ${count}</li>`).join('') + '</ul>';

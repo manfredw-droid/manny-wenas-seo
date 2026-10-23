@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
  */
 
 /**
- * Serves fresh /llms.txt output and maintains weekly snapshots. Anchor posts are listed first.
+ * Serves fresh /llms.txt output and maintains weekly snapshots. Cornerstone content is listed first.
  */
 class MWSEO_Llms_Txt {
 
@@ -121,27 +121,16 @@ class MWSEO_Llms_Txt {
 		try {
 			$cornerstone = get_posts(
 				array(
-					'post_type'              => $types,
-					'post_status'            => 'publish',
-					'posts_per_page'         => 50,
-					'has_password'           => false,
-					'orderby'                => 'modified',
-					'mwseo_llms_cornerstone' => 1,
-					'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-						'relation' => 'OR',
-						array(
-							'key'   => '_mwseo_cornerstone',
-							'value' => '1',
-						),
-						array(
-							'key'   => '_yoast_wpseo_is_cornerstone',
-							'value' => '1',
-						),
-						array(
-							'key'   => 'rank_math_pillar_content',
-							'value' => 'on',
-						),
-					),
+					'post_type'                   => $types,
+					'post_status'                 => 'publish',
+					'posts_per_page'              => 50,
+					'has_password'                => false,
+					'orderby'                     => 'modified',
+					'mwseo_llms_cornerstone'      => 1,
+					// The same definition as the Cornerstone column and filter (an explicit opt-out wins over an old SEO
+					// plugin flag), applied as key-bounded subqueries. The meta query is only the cheap single-join prefilter.
+					'mwseo_effective_cornerstone' => 1,
+					'meta_query'                  => MWSEO_Meta::cornerstone_candidate_meta_query(), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				)
 			);
 		} finally {

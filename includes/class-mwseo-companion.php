@@ -46,7 +46,7 @@ class MWSEO_Companion {
 			'matching'       => __( 'Matching is semantic: word order and common variants (plurals, verb forms) count.', 'manny-wenas-seo' ),
 			'noindex'        => __( 'noindex: keep this out of search results', 'manny-wenas-seo' ),
 			'nofollow'       => __( 'nofollow: do not follow links on this page', 'manny-wenas-seo' ),
-			'cornerstone'    => __( 'Anchor post (prioritised in llms.txt)', 'manny-wenas-seo' ),
+			'cornerstone'    => __( 'Cornerstone content (prioritised in llms.txt)', 'manny-wenas-seo' ),
 			'visibility'     => __( 'Search engine visibility', 'manny-wenas-seo' ),
 			'noData'         => __( 'No Search Console data for this URL yet.', 'manny-wenas-seo' ),
 			'notConnected'   => __( 'Search Console is not connected. Go to Manny Wenas SEO → Search Console to connect.', 'manny-wenas-seo' ),
