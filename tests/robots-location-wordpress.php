@@ -45,6 +45,9 @@ function rl_warns() {
 	return false !== strpos( ob_get_clean(), 'physical robots.txt' );
 }
 function rl_path() {
+	if ( ! method_exists( 'MWSEO_Notices', 'physical_robots_path' ) ) {
+		return null; // Code that predates the location logic: the checks that need it fail instead of aborting.
+	}
 	$m = new ReflectionMethod( 'MWSEO_Notices', 'physical_robots_path' );
 	$m->setAccessible( true );
 	return $m->invoke( null );

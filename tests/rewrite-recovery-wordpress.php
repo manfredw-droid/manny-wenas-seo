@@ -3,7 +3,9 @@
  * Sitemap rewrite recovery with real HTTP requests.
  *
  * Disposable site only: table prefix `equinox_`, tests/mwseo-test-fixture.php copied to wp-content/mu-plugins/,
- * the site's home/siteurl pointing at a running web server (for example php -S with PHP_CLI_SERVER_WORKERS=4),
+ * the site's home/siteurl pointing at a running web server. With php -S use PHP_CLI_SERVER_WORKERS=4 and a router
+ * script that sends every path that is not a real file (also *.xml) to index.php, otherwise sitemap URLs 404 before
+ * WordPress runs,
  * pretty permalinks possible, Manny active, administrator ID 1.
  *
  * php tests/rewrite-recovery-wordpress.php /path/to/wp-load.php
@@ -52,11 +54,13 @@ function rr_pages( $n ) {
 }
 /** Known good starting state: pretty permalinks, no conflict, both rules stored, counters at zero. */
 function rr_reset( $conflict = '' ) {
+	wp_cache_flush(); // The HTTP requests changed the database behind this process's option cache.
 	update_option( 'mwseo_test_nosave', 0 );
 	update_option( 'mwseo_test_conflict', '' );
 	update_option( 'permalink_structure', '/%postname%/' );
-	delete_transient( MWSEO_Notices::REWRITE_LOCK );
+	delete_transient( 'mwseo_rewrite_flush_lock' );
 	delete_transient( MWSEO_Notices::REWRITE_TRANSIENT );
+	wp_cache_flush();
 	MWSEO_Sitemaps::add_rewrites();
 	flush_rewrite_rules( false );
 	wp_cache_flush();

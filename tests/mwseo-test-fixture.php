@@ -6,7 +6,7 @@
  * It does nothing on any other site. Behaviour is driven by options set by the tests:
  *
  *  - mwseo_test_conflict : '', 'rankmath', 'yoast' or 'filter' (simulated conflicting SEO plugin)
- *  - mwseo_test_nosave   : 1 makes the rewrite_rules option impossible to save or delete
+ *  - mwseo_test_nosave   : 1 makes the rewrite_rules option impossible to save
  *
  * It counts rewrite flushes in the option mwseo_test_flushes and offers two HTTP probes:
  *  ?mwseo_fx=state  prints JSON about the current request; ?mwseo_fx=flush flushes the rules like another plugin could.
@@ -24,17 +24,16 @@ if ( isset( $wpdb->prefix ) && 0 === strpos( $wpdb->prefix, 'equinox_' ) ) {
 		add_filter( 'mwseo_other_seo_active', '__return_true' );
 	}
 
-	// Every flush starts with delete_option( 'rewrite_rules' ); count it before anything can block it.
+	// A flush saves the rules with update_option( 'rewrite_rules' ); count every save before anything can block it.
 	add_filter(
-		'pre_delete_option_rewrite_rules',
-		static function ( $pre ) {
+		'pre_update_option_rewrite_rules',
+		static function ( $value ) {
 			update_option( 'mwseo_test_flushes', (int) get_option( 'mwseo_test_flushes', 0 ) + 1, false );
-			return $pre;
+			return $value;
 		},
 		1
 	);
 	if ( get_option( 'mwseo_test_nosave' ) ) {
-		add_filter( 'pre_delete_option_rewrite_rules', '__return_false', 10 );
 		add_filter(
 			'pre_update_option_rewrite_rules',
 			static function ( $value, $old ) {
