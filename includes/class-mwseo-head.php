@@ -68,13 +68,43 @@ class MWSEO_Head {
 	 */
 	public static function title( $title ) {
 		if ( is_singular() ) {
-			$custom = MWSEO_Meta::get( get_queried_object_id(), 'title' );
+			$id     = get_queried_object_id();
+			$custom = MWSEO_Meta::get( $id, 'title' );
 			if ( $custom ) {
-				return self::replace_vars( $custom, get_the_title() );
+				// A legacy (Yoast / Rank Math) title is only used when it resolves completely. Our own
+				// _mwseo_title row, even an empty one, is never second-guessed. A legacy template that
+				// still holds variables falls back to the default title format, which can replace
+				// custom wording that was stored in that legacy title.
+				$legacy = ! metadata_exists( 'post', $id, '_mwseo_title' );
+				if ( ! $legacy || ! self::has_unresolved_vars( $custom ) ) {
+					return self::replace_vars( $custom, get_the_title() );
+				}
 			}
 			return self::replace_vars( MWSEO_Options::get( 'title_template' ), get_the_title() );
 		}
 		return $title;
+	}
+
+	/**
+	 * Does a title template still contain variables replace_vars() cannot resolve?
+	 *
+	 * Only the template is inspected, never the finished title, so a post title such as
+	 * "example %name%" cannot trigger it.
+	 *
+	 * @param string $template Title template.
+	 * @return bool
+	 */
+	private static function has_unresolved_vars( $template ) {
+		$known = strtr(
+			(string) $template,
+			array(
+				'%%title%%'    => '',
+				'%%sitename%%' => '',
+				'%%tagline%%'  => '',
+				'%%sep%%'      => '',
+			)
+		);
+		return (bool) preg_match( '/%{1,2}[A-Za-z][A-Za-z0-9_]*%{1,2}/', $known );
 	}
 
 	/**

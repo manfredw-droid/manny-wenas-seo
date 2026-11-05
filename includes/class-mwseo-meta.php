@@ -408,8 +408,17 @@ class MWSEO_Meta {
 			}
 		}
 
-		if ( $is_queried ) {
-			$title = wp_get_document_title();
+		// wp_get_document_title() runs our own pre_get_document_title filter, which reads this
+		// field again. Without a guard a legacy template that no renderer can resolve would
+		// recurse until memory runs out; the nested call falls through to the raw template.
+		static $resolving = false;
+		if ( $is_queried && ! $resolving ) {
+			$resolving = true;
+			try {
+				$title = wp_get_document_title();
+			} finally {
+				$resolving = false;
+			}
 			if ( self::is_rendered( $title ) ) {
 				return $title;
 			}

@@ -5,7 +5,7 @@ Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.9
+Stable tag: 1.0.9.1
 License: GPLv2 or later
 
 Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
@@ -45,6 +45,12 @@ Existing saved SEO metadata and frontend output continue to work independently o
 
 Deliberately excluded: redirects, 404 monitor, analytics dashboard, AI writer.
 
+= Support development =
+
+If you find Manny Wenas SEO useful, consider supporting its continued development with a voluntary donation.
+
+[Donate via PayPal](https://paypal.me/manfr3dw)
+
 == External Services ==
 
 This plugin optionally connects to the following third-party services. All external 
@@ -75,6 +81,10 @@ Terms of use: https://policies.google.com/terms
 Privacy policy: https://policies.google.com/privacy
 
 == Changelog ==
+
+= 1.0.9.1 =
+* Fixed recursive title processing that could exhaust PHP memory when reading legacy Yoast or Rank Math titles.
+* Added fallback to the default title format for unresolved legacy title templates. Native Manny Wenas SEO titles remain unchanged.
 
 = 1.0.9 =
 * Scoring (version 1.3): the keyphrase-in-URL-slug check is not scored while a post has no slug yet, such as a new draft. It no longer counts as 0 out of 6, so that draft can score higher. A slug that exists is scored as before. Re-analysing a post can change its score; stored scores are not migrated

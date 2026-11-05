@@ -13,12 +13,13 @@ class MWSEO_Notices {
 
 	const REWRITE_TRANSIENT = 'mwseo_rewrite_missing';
 	const ROBOTS_META       = 'mwseo_dismiss_robots_notice';
+	const REWRITE_LOCK      = 'mwseo_rewrite_flush_lock';
 
 	/**
 	 * Hooks.
 	 */
 	public static function init() {
-		add_action( 'init', array( __CLASS__, 'check_rewrite' ), 99 );
+		add_action( 'wp_loaded', array( __CLASS__, 'check_rewrite' ) );
 		add_action( 'admin_notices', array( __CLASS__, 'rewrite_notice' ) );
 		add_action( 'admin_post_mwseo_flush_rewrite', array( __CLASS__, 'handle_flush' ) );
 		add_action( 'admin_notices', array( __CLASS__, 'robots_notice' ) );
@@ -26,18 +27,37 @@ class MWSEO_Notices {
 	}
 
 	/**
-	 * Re-add the sitemap rewrite rule if another plugin dropped it.
+	 * Are both sitemap rewrite rules present?
+	 *
+	 * @param mixed $rules Rewrite rules.
+	 * @return bool
+	 */
+	private static function has_sitemap_rules( $rules ) {
+		return is_array( $rules ) && isset( $rules['^mwseo-sitemap\.xml$'], $rules['^mwseo-([a-z0-9_]+)-sitemap([0-9]*)\.xml$'] );
+	}
+
+	/**
+	 * Restore the sitemap rewrite rules if another plugin dropped them.
 	 */
 	public static function check_rewrite() {
 		global $wp_rewrite;
 		if ( MWSEO_Compat::other_active() || ! get_option( 'permalink_structure' ) || ! is_object( $wp_rewrite ) ) {
 			return;
 		}
-		$rules = (array) $wp_rewrite->wp_rewrite_rules();
-		if ( isset( $rules['^mwseo-sitemap\.xml$'] ) ) {
+		if ( self::has_sitemap_rules( $wp_rewrite->wp_rewrite_rules() ) ) {
 			return;
 		}
+		if ( get_transient( self::REWRITE_LOCK ) ) {
+			return;
+		}
+		set_transient( self::REWRITE_LOCK, 1, HOUR_IN_SECONDS );
 		MWSEO_Sitemaps::add_rewrites();
+		flush_rewrite_rules( false );
+		if ( self::has_sitemap_rules( get_option( 'rewrite_rules' ) ) ) {
+			delete_transient( self::REWRITE_LOCK );
+			delete_transient( self::REWRITE_TRANSIENT );
+			return;
+		}
 		set_transient( self::REWRITE_TRANSIENT, 1, 12 * HOUR_IN_SECONDS );
 	}
 
@@ -52,6 +72,10 @@ class MWSEO_Notices {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'MWSEO: Rewrite rules have been flushed.', 'manny-wenas-seo' ) . '</p></div>';
 		}
 		if ( ! get_transient( self::REWRITE_TRANSIENT ) ) {
+			return;
+		}
+		if ( MWSEO_Compat::other_active() || ! get_option( 'permalink_structure' ) || self::has_sitemap_rules( get_option( 'rewrite_rules' ) ) ) {
+			delete_transient( self::REWRITE_TRANSIENT );
 			return;
 		}
 		?>
@@ -82,10 +106,38 @@ class MWSEO_Notices {
 	}
 
 	/**
+	 * Path of the robots.txt file that would shadow WordPress's virtual one.
+	 *
+	 * WordPress only serves a virtual robots.txt when home is the host root, and an empty result means no
+	 * warning should be shown.
+	 *
+	 * @return string
+	 */
+	private static function physical_robots_path() {
+		$home = wp_parse_url( home_url() );
+		$site = wp_parse_url( site_url() );
+		if ( ! empty( $home['path'] ) && '/' !== $home['path'] ) {
+			return '';
+		}
+		if ( strtolower( (string) ( $home['host'] ?? '' ) ) !== strtolower( (string) ( $site['host'] ?? '' ) ) ) {
+			return '';
+		}
+		if ( ! function_exists( 'get_home_path' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		$root = get_home_path();
+		if ( '/' === $root && '/' !== ABSPATH ) {
+			return '';
+		}
+		return $root . 'robots.txt';
+	}
+
+	/**
 	 * Warn when a physical robots.txt overrides the virtual one.
 	 */
 	public static function robots_notice() {
-		if ( ! current_user_can( 'manage_options' ) || ! file_exists( ABSPATH . 'robots.txt' ) ) {
+		$path = self::physical_robots_path();
+		if ( ! current_user_can( 'manage_options' ) || '' === $path || ! is_file( $path ) ) {
 			return;
 		}
 		if ( get_user_meta( get_current_user_id(), self::ROBOTS_META, true ) ) {
