@@ -4,8 +4,8 @@ Donate link: https://paypal.me/manfr3dw
 Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
-Requires PHP: 7.4
-Stable tag: 1.0.9.1
+Requires PHP: 8.2
+Stable tag: 1.0.9.2
 License: GPLv2 or later
 
 Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
@@ -81,6 +81,12 @@ Terms of use: https://policies.google.com/terms
 Privacy policy: https://policies.google.com/privacy
 
 == Changelog ==
+
+= 1.0.9.2 =
+* Fixed: sitemap rewrite rules are restored automatically after a conflicting SEO plugin is deactivated.
+* Fixed: the "sitemap rules missing" warning no longer stays after the rules are restored.
+* Fixed: the physical robots.txt warning now checks the public site root, including when WordPress has its own folder, and no longer appears when WordPress cannot serve a virtual robots.txt.
+* Changed: the minimum PHP version is now 8.2. PHP 8.1 and older no longer receive security fixes from the PHP project.
 
 = 1.0.9.1 =
 * Fixed recursive title processing that could exhaust PHP memory when reading legacy Yoast or Rank Math titles.
