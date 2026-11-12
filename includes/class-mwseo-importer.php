@@ -36,6 +36,18 @@ class MWSEO_Importer {
 	 */
 	const BATCH_SIZE = 50;
 
+	/**
+	 * Post statuses that are previewed and imported. A draft, pending, scheduled or private
+	 * post can be published later, and its robots flags have no fallback to the source
+	 * plugin's data, so they must be imported with the rest.
+	 */
+	const POST_STATUSES = array( 'publish', 'draft', 'pending', 'future', 'private' );
+
+	/**
+	 * Native keys that hold an on/off flag.
+	 */
+	const FLAG_KEYS = array( '_mwseo_noindex', '_mwseo_nofollow', '_mwseo_cornerstone' );
+
 	// -------------------------------------------------------------------------
 	// Source-plugin registry
 	// -------------------------------------------------------------------------
@@ -758,27 +770,36 @@ JS;
 			$batch_size = max( 1, $batch_size );
 		}
 
-		// Total posts (approximate — for progress display only).
-		$total = (int) array_sum(
-			array_map(
-				static fn( string $pt ) => (int) wp_count_posts( $pt )->publish,
-				$post_types
-			)
+		// Preview and import read the same posts: every status in POST_STATUSES. Trash, auto-drafts
+		// and revisions are never read.
+		$query_args = array(
+			'post_type'      => $post_types,
+			'post_status'    => static::POST_STATUSES,
+			'posts_per_page' => $batch_size,
+			'offset'         => $offset,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+			'orderby'        => 'ID',
+			'order'          => 'ASC',
 		);
 
-		// Fetch one batch ordered by ID for stable pagination.
-		$query = new WP_Query(
-			array(
-				'post_type'      => $post_types,
-				'post_status'    => 'publish',
-				'posts_per_page' => $batch_size,
-				'offset'         => $offset,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				'orderby'        => 'ID',
-				'order'          => 'ASC',
+		// Total posts: counted with the query that selects the batches, so it is the number processed.
+		// It is a separate one-row query on purpose: the batch query cannot report a total when a
+		// batch is empty (a total that is an exact multiple of the batch size ends on an empty batch).
+		$count_query = new WP_Query(
+			array_merge(
+				$query_args,
+				array(
+					'posts_per_page' => 1,
+					'offset'         => 0,
+					'no_found_rows'  => false,
+				)
 			)
 		);
+		$total       = (int) $count_query->found_posts;
+
+		// Fetch one batch ordered by ID for stable pagination.
+		$query = new WP_Query( $query_args );
 
 		$imported  = 0;
 		$skipped   = 0;
@@ -991,7 +1012,7 @@ JS;
 			try {
 				$exists = metadata_exists( 'post', $post_id, $key );
 				$existing = get_post_meta( $post_id, $key, true );
-				if ( $exists && $existing === $value ) {
+				if ( $exists && static::stored_matches( $key, $existing, $value ) ) {
 					$report( $key, 'matched', 'Native value already matches.' );
 				} elseif ( $exists && ! $overwrite ) {
 					$report( $key, 'conflict', 'Existing native record preserved.' );
@@ -1000,7 +1021,7 @@ JS;
 				} else {
 					// Unique add avoids deliberately overwriting a record created after the check.
 					$saved = $exists ? update_post_meta( $post_id, $key, wp_slash( $value ) ) : add_post_meta( $post_id, $key, wp_slash( $value ), true );
-					$matches = metadata_exists( 'post', $post_id, $key ) && get_post_meta( $post_id, $key, true ) === $value;
+					$matches = metadata_exists( 'post', $post_id, $key ) && static::stored_matches( $key, get_post_meta( $post_id, $key, true ), $value );
 					$report( $key, $matches ? ( false === $saved ? 'matched' : 'changed' ) : 'failed', $matches ? 'Stored value verified.' : 'Requested value was not stored; no rollback or cleanup attempted.' );
 				}
 			} catch ( \Throwable $e ) {
@@ -1008,6 +1029,28 @@ JS;
 			}
 		}
 		return $out;
+	}
+
+	/**
+	 * Does a stored native value represent the value the import asked for?
+	 *
+	 * Text fields must be identical. A flag is compared by what it means: the registered
+	 * sanitizer stores "off" as an empty string, and older rows can hold "0", so an existing
+	 * "off" row matches a requested "0" and a correctly stored "off" is a successful write.
+	 *
+	 * @param string $key    Native meta key.
+	 * @param mixed  $stored Stored value.
+	 * @param string $value  Requested value ('1' or '0' for a flag).
+	 * @return bool
+	 */
+	private static function stored_matches( string $key, $stored, string $value ): bool {
+		if ( ! in_array( $key, static::FLAG_KEYS, true ) ) {
+			return $stored === $value;
+		}
+		if ( null !== $stored && ! is_scalar( $stored ) ) {
+			return false;
+		}
+		return in_array( (string) $stored, MWSEO_Meta::BOOLEAN_TRUE, true ) === ( '1' === $value );
 	}
 
 	// -------------------------------------------------------------------------

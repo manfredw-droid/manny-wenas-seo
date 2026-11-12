@@ -30,6 +30,7 @@ function wp_schedule_event( $timestamp, $schedule, $hook ) { $GLOBALS['state']['
 function flush_rewrite_rules() {}
 class MWSEO_Compat { public static function owns_title_fields() { return false; } }
 class MWSEO_Indexnow { public static function ensure_key() { return 'existing-key'; } }
+class MWSEO_Media_Index { public static function reset() { delete_option( 'mwseo_media_index' ); } }
 class MWSEO_Sitemaps { public static function add_rewrites() {} }
 class MWSEO_Setup { public static function flag_new_install( $is_new ) { $GLOBALS['state']['setup_flag'] = (bool) $is_new; } }
 class MWSEO_Llms_Txt { public static function add_rewrites() {} public static function regenerate() { update_option( 'mwseo_llms_txt', 'regenerated cache' ); } }

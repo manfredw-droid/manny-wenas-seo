@@ -5,7 +5,7 @@ Tags: seo, schema, sitemap, llms.txt, search console
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 1.0.9.2
+Stable tag: 1.0.9.3
 License: GPLv2 or later
 
 Lean SEO: semantic keyphrase scoring, connected JSON-LD schema, sitemaps, llms.txt, Search Console and AI-agent abilities.
@@ -82,6 +82,11 @@ Privacy policy: https://policies.google.com/privacy
 
 == Changelog ==
 
+= 1.0.9.3 =
+* Fixed: canonical URLs for separate posts pages and paginated content and archives, including PATHINFO permalinks. Unrelated tracking parameters are omitted from paginated archive canonicals.
+* Fixed: image, video, tag, category and author sitemaps now cover entries beyond the first 1,000. Image and video sitemaps list only posts with the corresponding media after the background index has completed.
+* Fixed: the Yoast SEO and Rank Math importer includes draft, pending, scheduled and private posts, and correctly recognises disabled flags already stored by WordPress. Import remains previewed and manually started.
+* Changed: an existing site's media index is built in small background steps. During this initial build, media sitemaps continue to list eligible posts using the prior selection method.
 = 1.0.9.2 =
 * Fixed: sitemap rewrite rules are restored automatically after a conflicting SEO plugin is deactivated.
 * Fixed: the "sitemap rules missing" warning no longer stays after the rules are restored.

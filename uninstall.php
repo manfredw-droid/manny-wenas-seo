@@ -10,12 +10,18 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 global $wpdb;
 
 wp_clear_scheduled_hook( 'mwseo_weekly' );
+wp_clear_scheduled_hook( 'mwseo_media_index_step' );
 
 // Keep configuration, article metadata (including scores), and extension data.
 // mwseo_rank is Pro-owned ranking history, not a disposable Free cache.
 delete_option( 'mwseo_gsc' );
 delete_option( 'mwseo_llms_txt' );
 delete_post_meta_by_key( '_mwseo_indexnow_pinged' );
+// Derived data, rebuilt from the content: which posts have media for the image and video sitemaps.
+delete_post_meta_by_key( '_mwseo_has_image' );
+delete_post_meta_by_key( '_mwseo_has_video' );
+delete_option( 'mwseo_media_index' );
+delete_transient( 'mwseo_media_index_lock' );
 delete_transient( 'mwseo_sitemap_cache' );
 delete_transient( 'mwseo_rewrite_missing' );
 

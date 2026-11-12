@@ -37,10 +37,24 @@ class MWSEO_Head {
 	 * @return string
 	 */
 	public static function canonical() {
+		$url        = '';
+		$by_request = false;
 		if ( is_singular() ) {
-			$url = get_permalink( get_queried_object_id() );
-		} elseif ( is_front_page() || is_home() ) {
+			$id   = get_queried_object_id();
+			$url  = get_permalink( $id );
+			$page = (int) get_query_var( 'page' );
+			// A post split with <!--nextpage--> has one URL per content page; each is its own canonical.
+			if ( $url && $page > 1 && $page <= self::content_pages( $id ) ) {
+				$url = self::singular_page_url( $id, $url, $page );
+			}
+		} elseif ( is_front_page() ) {
 			$url = home_url( '/' );
+		} elseif ( is_home() ) {
+			// A separate posts page ("Posts page" under Settings > Reading) has its own URL. Only the
+			// request for that page counts: with a posts page but no homepage selected, WordPress
+			// also shows the latest posts at the site root, which stays its own canonical.
+			$posts_page = (int) get_option( 'page_for_posts' );
+			$url        = $posts_page && (int) get_queried_object_id() === $posts_page ? get_permalink( $posts_page ) : home_url( '/' );
 		} elseif ( is_category() || is_tag() || is_tax() ) {
 			$url = get_term_link( get_queried_object() );
 		} elseif ( is_author() ) {
@@ -48,16 +62,132 @@ class MWSEO_Head {
 		} elseif ( is_post_type_archive() ) {
 			$url = get_post_type_archive_link( get_query_var( 'post_type' ) );
 		} else {
-			$url = home_url( user_trailingslashit( $GLOBALS['wp']->request ) );
+			// Date archives, search results and anything else: the requested path, as before.
+			$by_request = true;
+			$url        = self::request_url();
 		}
 		if ( is_wp_error( $url ) || ! $url ) {
 			$url = home_url( '/' );
 		}
 		$paged = (int) get_query_var( 'paged' );
 		if ( $paged > 1 && ! is_singular() ) {
-			$url = get_pagenum_link( $paged );
+			// Built from the clean URL above, never from the request URI, so tracking and other
+			// unrelated query parameters cannot end up in the canonical.
+			$query = $by_request ? self::request_query_vars() : array();
+			if ( $query && ! get_option( 'permalink_structure' ) ) {
+				$url = self::paged_url( add_query_arg( $query, $url ), $paged );
+			} else {
+				$url = self::paged_url( $url, $paged );
+				$url = $query ? add_query_arg( $query, $url ) : $url;
+			}
 		}
 		return apply_filters( 'mwseo_canonical', $url );
+	}
+
+	/**
+	 * WordPress's own query variables of a request that only they identify, for example
+	 * ?s=term, ?m=201903 or ?m=2019&w=11. They are part of the address of a later page;
+	 * every other parameter of the request is left out.
+	 *
+	 * @return array Variable => URL-encoded value.
+	 */
+	private static function request_query_vars() {
+		global $wp;
+		$out = array();
+		foreach ( (array) $wp->public_query_vars as $var ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only: which variables the request used.
+			if ( 'paged' === $var || 'page' === $var || ! isset( $_GET[ $var ], $wp->query_vars[ $var ] ) ) {
+				continue;
+			}
+			$value = $wp->query_vars[ $var ];
+			if ( is_scalar( $value ) && '' !== (string) $value ) {
+				$out[ $var ] = rawurlencode( wp_unslash( (string) $value ) );
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Number of content pages of a post (1 without <!--nextpage-->).
+	 *
+	 * @param int $id Post ID.
+	 * @return int
+	 */
+	private static function content_pages( $id ) {
+		$post = get_post( $id );
+		return $post ? substr_count( (string) $post->post_content, '<!--nextpage-->' ) + 1 : 1;
+	}
+
+	/**
+	 * URL of a later content page of a paginated post, built like WordPress's own page links.
+	 *
+	 * @param int    $id   Post ID.
+	 * @param string $url  Permalink of the post.
+	 * @param int    $page Content page (2 or higher).
+	 * @return string
+	 */
+	private static function singular_page_url( $id, $url, $page ) {
+		global $wp_rewrite;
+		if ( ! get_option( 'permalink_structure' ) || false !== strpos( $url, '?' ) ) {
+			return add_query_arg( 'page', $page, $url );
+		}
+		if ( 'page' === get_option( 'show_on_front' ) && (int) get_option( 'page_on_front' ) === (int) $id ) {
+			return trailingslashit( $url ) . user_trailingslashit( $wp_rewrite->pagination_base . '/' . $page, 'single_paged' );
+		}
+		return trailingslashit( $url ) . user_trailingslashit( $page, 'single_paged' );
+	}
+
+	/**
+	 * URL of a later page of an archive, appended to its clean first-page URL.
+	 *
+	 * @param string $url   URL of the first page.
+	 * @param int    $paged Page number (2 or higher).
+	 * @return string
+	 */
+	private static function paged_url( $url, $paged ) {
+		global $wp_rewrite;
+		if ( ! get_option( 'permalink_structure' ) || false !== strpos( $url, '?' ) ) {
+			return add_query_arg( 'paged', $paged, $url );
+		}
+		return trailingslashit( self::with_index( $url ) ) . user_trailingslashit( $wp_rewrite->pagination_base . '/' . $paged, 'paged' );
+	}
+
+	/**
+	 * Add the index.php segment that "PATHINFO" permalinks (/index.php/%postname%/) need.
+	 *
+	 * With that structure WordPress serves pretty URLs only below /index.php/. Links built by
+	 * WordPress already carry the segment; a URL put together from the home URL or from the
+	 * requested path does not, and without it the web server would not find the page. The
+	 * site root itself and query-string URLs are left as they are.
+	 *
+	 * @param string $url URL on this site.
+	 * @return string
+	 */
+	private static function with_index( $url ) {
+		global $wp_rewrite;
+		if ( ! $wp_rewrite->using_index_permalinks() ) {
+			return $url;
+		}
+		$home = trailingslashit( home_url() );
+		if ( 0 !== strpos( $url, $home ) ) {
+			return $url;
+		}
+		$rest = (string) substr( $url, strlen( $home ) );
+		if ( $rest === $wp_rewrite->index || 0 === strpos( $rest, $wp_rewrite->index . '/' ) || ( '' !== $rest && '?' === $rest[0] ) ) {
+			return $url;
+		}
+		return $home . $wp_rewrite->index . '/' . $rest;
+	}
+
+	/**
+	 * URL of the requested path without its pagination segment, for requests no rule above covers.
+	 *
+	 * @return string
+	 */
+	private static function request_url() {
+		global $wp_rewrite;
+		$request = preg_replace( '#(^|/)' . preg_quote( $wp_rewrite->pagination_base, '#' ) . '/[0-9]+/?$#', '', (string) $GLOBALS['wp']->request );
+		return '' === (string) $request ? home_url( '/' ) : self::with_index( home_url( user_trailingslashit( $request ) ) );
 	}
 
 	/**
