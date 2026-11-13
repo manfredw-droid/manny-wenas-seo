@@ -21,6 +21,7 @@ delete_post_meta_by_key( '_mwseo_indexnow_pinged' );
 delete_post_meta_by_key( '_mwseo_has_image' );
 delete_post_meta_by_key( '_mwseo_has_video' );
 delete_option( 'mwseo_media_index' );
+delete_site_option( 'mwseo_media_index_epoch' );
 delete_transient( 'mwseo_media_index_lock' );
 delete_transient( 'mwseo_sitemap_cache' );
 delete_transient( 'mwseo_rewrite_missing' );

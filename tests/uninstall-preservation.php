@@ -28,6 +28,7 @@ function wp_clear_scheduled_hook( $hook ) { if ( 'mwseo_weekly' === $hook ) { $G
 function wp_next_scheduled( $hook ) { return $GLOBALS['state']['cron']; }
 function wp_schedule_event( $timestamp, $schedule, $hook ) { $GLOBALS['state']['cron'] = true; }
 function flush_rewrite_rules() {}
+function delete_site_option( $key ) { return delete_option( $key ); }
 class MWSEO_Compat { public static function owns_title_fields() { return false; } }
 class MWSEO_Indexnow { public static function ensure_key() { return 'existing-key'; } }
 class MWSEO_Media_Index { public static function reset() { delete_option( 'mwseo_media_index' ); } }

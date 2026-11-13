@@ -59,8 +59,10 @@ final class MWSEO_Plugin {
 
 	/**
 	 * Activation: defaults, rewrite rules and cron.
+	 *
+	 * @param bool $network_wide Whether the plugin is activated for a whole network (Multisite).
 	 */
-	public static function activate() {
+	public static function activate( $network_wide = false ) {
 		$is_new_install = ( false === get_option( MWSEO_Options::KEY ) );
 		if ( $is_new_install ) {
 			add_option( MWSEO_Options::KEY, MWSEO_Options::defaults(), '', false );
@@ -70,7 +72,7 @@ final class MWSEO_Plugin {
 		MWSEO_Options::flush();
 		// Content may have changed while the plugin was not running; also covers a plugin that
 		// was removed or disabled without being deactivated.
-		MWSEO_Media_Index::reset();
+		MWSEO_Media_Index::reset( (bool) $network_wide );
 		MWSEO_Indexnow::ensure_key();
 		MWSEO_Sitemaps::add_rewrites();
 		MWSEO_Llms_Txt::add_rewrites();
@@ -83,12 +85,14 @@ final class MWSEO_Plugin {
 
 	/**
 	 * Deactivation: clear cron and rewrite rules.
+	 *
+	 * @param bool $network_wide Whether the plugin is deactivated for a whole network (Multisite).
 	 */
-	public static function deactivate() {
+	public static function deactivate( $network_wide = false ) {
 		wp_clear_scheduled_hook( 'mwseo_weekly' );
 		// From here on nothing records which posts have media: stop the scheduled catch-up and
 		// make the next activation read the content again.
-		MWSEO_Media_Index::reset();
+		MWSEO_Media_Index::reset( (bool) $network_wide );
 		flush_rewrite_rules();
 	}
 }

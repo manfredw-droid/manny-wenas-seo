@@ -27,6 +27,7 @@ class MWSEO_Media_Index {
 	const OPTION    = 'mwseo_media_index';
 	const LOCK      = 'mwseo_media_index_lock';
 	const CRON      = 'mwseo_media_index_step';
+	const EPOCH     = 'mwseo_media_index_epoch';
 	const IMAGE_KEY = '_mwseo_has_image';
 	const VIDEO_KEY = '_mwseo_has_video';
 
@@ -228,20 +229,41 @@ class MWSEO_Media_Index {
 	/**
 	 * Stored progress, started afresh when the rules or the post types changed.
 	 *
-	 * @return array version, types, cursor (highest post ID read so far), done.
+	 * On a network, progress also starts afresh when the plugin was deactivated or activated
+	 * for the whole network since it was stored (see epoch()).
+	 *
+	 * @return array version, types, cursor (highest post ID read so far), done, epoch.
 	 */
 	private static function state() {
 		$state = get_option( self::OPTION );
 		$types = self::post_types();
-		if ( ! is_array( $state ) || ! isset( $state['version'], $state['types'], $state['cursor'] ) || self::RULES !== $state['version'] || array_diff( $types, (array) $state['types'] ) ) {
+		$epoch = self::epoch();
+		if ( ! is_array( $state ) || ! isset( $state['version'], $state['types'], $state['cursor'] ) || self::RULES !== $state['version'] || array_diff( $types, (array) $state['types'] )
+			|| ( isset( $state['epoch'] ) ? (string) $state['epoch'] : '0' ) !== $epoch ) {
 			$state = array(
 				'version' => self::RULES,
 				'types'   => $types,
 				'cursor'  => 0,
 				'done'    => false,
+				'epoch'   => $epoch,
 			);
 		}
 		return $state;
+	}
+
+	/**
+	 * Network-wide marker that changes whenever the plugin is deactivated or activated for a
+	 * whole network. Always '0' on a single site.
+	 *
+	 * WordPress runs the deactivation and activation code once per network, in the site the
+	 * administrator is on, so the other sites cannot be reset there without visiting every
+	 * one of them. Each site instead stores the marker with its progress and starts reading
+	 * its content again when it next looks at that progress and finds a different marker.
+	 *
+	 * @return string
+	 */
+	private static function epoch() {
+		return is_multisite() ? (string) get_site_option( self::EPOCH, '0' ) : '0';
 	}
 
 	/**
@@ -252,11 +274,18 @@ class MWSEO_Media_Index {
 	 * missing from the image and video sitemaps for good. Until the content has been read
 	 * again the sitemaps list every eligible post the former way. The flags themselves stay;
 	 * reading the content again corrects them.
+	 *
+	 * @param bool $network_wide The plugin is being deactivated or activated for a whole network:
+	 *                           every other site of the network starts afresh too, each when
+	 *                           it next reads its progress (see epoch()).
 	 */
-	public static function reset() {
+	public static function reset( $network_wide = false ) {
 		delete_option( self::OPTION );
 		delete_transient( self::LOCK );
 		wp_clear_scheduled_hook( self::CRON );
+		if ( $network_wide && is_multisite() ) {
+			update_site_option( self::EPOCH, (string) ( (int) get_site_option( self::EPOCH, 0 ) + 1 ) );
+		}
 	}
 
 	/**
